@@ -1,0 +1,8 @@
+README.md
+setup.py
+src/stojanovic_one/__init__.py
+src/stojanovic_one/main.py
+src/stojanovic_one.egg-info/PKG-INFO
+src/stojanovic_one.egg-info/SOURCES.txt
+src/stojanovic_one.egg-info/dependency_links.txt
+src/stojanovic_one.egg-info/top_level.txt
