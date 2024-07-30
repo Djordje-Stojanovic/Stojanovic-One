@@ -68,8 +68,8 @@ Solo Developer Workflow Summary:
     git add .
     git commit -m "Descriptive message"
 
-Push changes regularly: git push origin feature/issue-description
-Run tests locally
+    Push changes regularly: git push origin feature/issue-description
+    Run tests locally
 
     Start a New Feature:
     Choose an issue from your board.
@@ -107,15 +107,15 @@ Run tests locally
     Update Project Board:
     Move the completed issue to "Done" on your project board.
 
-4. Release Process
-   Group completed features into a meaningful release
-   Update version number (follow Semantic Versioning)
-   Create a GitHub Release with release notes
+4.  Release Process
+    Group completed features into a meaningful release
+    Update version number (follow Semantic Versioning)
+    Create a GitHub Release with release notes
 
-5. Best Practices
-   Commit often with meaningful messages
-   Push changes daily or after significant progress
-   Always review your own code before merging
-   Keep the main branch stable and deployable
-   Update documentation alongside code changes
-   Run tests before every merge to main
+5.  Best Practices
+    Commit often with meaningful messages
+    Push changes daily or after significant progress
+    Always review your own code before merging
+    Keep the main branch stable and deployable
+    Update documentation alongside code changes
+    Run tests before every merge to main
