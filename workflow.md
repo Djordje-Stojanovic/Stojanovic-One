@@ -68,44 +68,44 @@ Solo Developer Workflow Summary:
     git add .
     git commit -m "Descriptive message"
 
-    Push changes regularly: git push origin feature/issue-description
-    Run tests locally
+        Push changes regularly: git push origin feature/issue-description
+        Run tests locally
 
-    Start a New Feature:
-    Choose an issue from your board.
-    Create a new branch: git checkout -b feature/issue-description
+        Start a New Feature:
+        Choose an issue from your board.
+        Create a new branch: git checkout -b feature/issue-description
 
-    Work on the Feature:
-    Make small, logical changes.
-    Commit frequently with meaningful messages:
-    git add .
-    git commit -m "Add login form HTML structure"
+        Work on the Feature:
+        Make small, logical changes.
+        Commit frequently with meaningful messages:
+        git add .
+        git commit -m "Add login form HTML structure"
 
-    Push Changes:
-    Push your branch to GitHub regularly:
-    git push origin feature/issue-description
+        Push Changes:
+        Push your branch to GitHub regularly:
+        git push origin feature/issue-description
 
-    Complete the Feature:
-    Ensure all tests pass.
-    Update documentation if necessary.
-    Push final changes.
+        Complete the Feature:
+        Ensure all tests pass.
+        Update documentation if necessary.
+        Push final changes.
 
-    Code Review (Self-Review for Solo Devs):
-    Review your own changes in GitHub's interface.
-    Look for potential improvements or missed cases.
+        Code Review (Self-Review for Solo Devs):
+        Review your own changes in GitHub's interface.
+        Look for potential improvements or missed cases.
 
-    Merge the Feature:
-    If everything looks good, merge into main:
-    git checkout main
-    git merge feature/issue-description
-    git push origin main
+        Merge the Feature:
+        If everything looks good, merge into main:
+        git checkout main
+        git merge feature/issue-description
+        git push origin main
 
-    Delete the feature branch:
-    git branch -d feature/issue-description
-    git push origin --delete feature/issue-description
+        Delete the feature branch:
+        git branch -d feature/issue-description
+        git push origin --delete feature/issue-description
 
-    Update Project Board:
-    Move the completed issue to "Done" on your project board.
+        Update Project Board:
+        Move the completed issue to "Done" on your project board.
 
 4.  Release Process
     Group completed features into a meaningful release
