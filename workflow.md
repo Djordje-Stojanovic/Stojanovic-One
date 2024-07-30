@@ -15,7 +15,7 @@ Solo Developer Workflow Summary:
         Feature Issue
         Title: Implement User Authentication
         Description:
-        CopyAs a user, I want to be able to create an account and log in so that I can access personalized features.
+        As a user, I want to be able to create an account and log in so that I can access personalized features.
 
         Tasks:
         - [ ] Create user registration form
@@ -34,7 +34,7 @@ Solo Developer Workflow Summary:
         Bug Issue
         Title: Fix: Incorrect date format in user profile
         Description:
-        CopyThe user's date of birth is displayed in the incorrect format on the profile page.
+        The user's date of birth is displayed in the incorrect format on the profile page.
 
         Current behavior: YYYY-DD-MM
         Expected behavior: DD-MM-YYYY
@@ -49,7 +49,7 @@ Solo Developer Workflow Summary:
         Improvement Issue
         Title: Enhance form validation feedback
         Description:
-        CopyImprove the user experience by providing more immediate and specific feedback for form validation errors.
+        Improve the user experience by providing more immediate and specific feedback for form validation errors.
 
         Tasks:
         - [ ] Add real-time validation for email format
