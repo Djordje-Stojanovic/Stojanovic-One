@@ -88,12 +88,10 @@ Run tests locally
     git commit -m "Add login form HTML structure"
 
 
-
     Push Changes
 
     Push your branch to GitHub regularly:
     Copygit push origin feature/issue-description
-
 
 
     Complete the Feature
@@ -119,7 +117,6 @@ Run tests locally
     Delete the feature branch:
     Copygit branch -d feature/issue-description
     git push origin --delete feature/issue-description
-
 
 
     Update Project Board
