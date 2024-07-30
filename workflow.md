@@ -13,6 +13,56 @@ Create GitHub Issues for features, bugs, and improvements
 Organize issues into milestones
 Set up a GitHub Project board (Kanban-style)
 
+    GitHub Issues Examples
+    Feature Issue
+    Title: Implement User Authentication
+    Description:
+    CopyAs a user, I want to be able to create an account and log in so that I can access personalized features.
+
+    Tasks:
+    - [ ] Create user registration form
+    - [ ] Implement user registration API
+    - [ ] Create login form
+    - [ ] Implement login API
+    - [ ] Add JWT token-based authentication
+    - [ ] Create logout functionality
+
+    Acceptance Criteria:
+    1. Users can register with email and password
+    2. Users can log in with their credentials
+    3. Authenticated users receive a JWT token
+    4. Users can log out, invalidating their token
+    Bug Issue
+    Title: Fix: Incorrect date format in user profile
+    Description:
+    CopyThe user's date of birth is displayed in the incorrect format on the profile page.
+
+    Current behavior: YYYY-DD-MM
+    Expected behavior: DD-MM-YYYY
+
+    Steps to reproduce:
+    1. Log in to the application
+    2. Navigate to user profile page
+    3. Check the "Date of Birth" field
+
+    Priority: Medium
+    Improvement Issue
+    Title: Enhance form validation feedback
+    Description:
+    CopyImprove the user experience by providing more immediate and specific feedback for form validation errors.
+
+    Tasks:
+    - [ ] Add real-time validation for email format
+    - [ ] Show password strength indicator
+    - [ ] Display specific error messages for each field
+    - [ ] Highlight fields with errors
+
+    Acceptance Criteria:
+    1. Email format is validated as the user types
+    2. Password strength is indicated in real-time
+    3. Each field displays a specific error message when invalid
+    4. Fields with errors are visually highlighted
+
 3. Development Cycle
 
 Choose an issue to work on
@@ -61,5 +111,3 @@ Always review your own code before merging
 Keep the main branch stable and deployable
 Update documentation alongside code changes
 Run tests before every merge to main
-
-Remember to adjust this workflow as needed to best suit your project and working style. The key is maintaining a balance between good practices and efficiency.
