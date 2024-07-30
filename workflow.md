@@ -74,6 +74,58 @@ git commit -m "Descriptive message"
 Push changes regularly: git push origin feature/issue-description
 Run tests locally
 
+    Start a New Feature
+
+    Choose an issue from your board.
+    Create a new branch: git checkout -b feature/issue-description
+
+
+    Work on the Feature
+
+    Make small, logical changes.
+    Commit frequently with meaningful messages:
+    Copygit add .
+    git commit -m "Add login form HTML structure"
+
+
+
+    Push Changes
+
+    Push your branch to GitHub regularly:
+    Copygit push origin feature/issue-description
+
+
+
+    Complete the Feature
+
+    Ensure all tests pass.
+    Update documentation if necessary.
+    Push final changes.
+
+
+    Code Review (Self-Review for Solo Devs)
+
+    Review your own changes in GitHub's interface.
+    Look for potential improvements or missed cases.
+
+
+    Merge the Feature
+
+    If everything looks good, merge into main:
+    Copygit checkout main
+    git merge feature/issue-description
+    git push origin main
+
+    Delete the feature branch:
+    Copygit branch -d feature/issue-description
+    git push origin --delete feature/issue-description
+
+
+
+    Update Project Board
+
+    Move the completed issue to "Done" on your project board.
+
 4. Self Code Review
 
 Go to GitHub and create a new pull request
