@@ -10,11 +10,12 @@ Solo Developer Workflow Summary:
     Create GitHub Issues for features, bugs, and improvements
     Organize issues into milestones
     Set up a GitHub Project board (Kanban-style)
-    ********************************\_********************************
-    Feature Issue
-    Title: Implement User Authentication
-    Description:
-    CopyAs a user, I want to be able to create an account and log in so that I can access personalized features.
+
+        _________________________________________________________________
+        Feature Issue
+        Title: Implement User Authentication
+        Description:
+        CopyAs a user, I want to be able to create an account and log in so that I can access personalized features.
 
         Tasks:
         - [ ] Create user registration form
