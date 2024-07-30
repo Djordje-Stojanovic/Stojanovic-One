@@ -64,7 +64,10 @@ Solo Developer Workflow Summary:
         4. Fields with errors are visually highlighted
         _________________________________________________________________
 
-3.  Development Cycle
+3.  Refactoring
+    Refactor the Issue into multiple smaller Issues then add together as a Milestone.
+
+4.  Development Cycle
     Choose an issue to work on
     Create a feature branch: git checkout -b feature/issue-description
     Work on the feature, committing frequently:
@@ -110,12 +113,12 @@ Solo Developer Workflow Summary:
         Update Project Board:
         Move the completed issue to "Done" on your project board.
 
-4.  Release Process
+5.  Release Process
     Group completed features into a meaningful release
     Update version number (follow Semantic Versioning)
     Create a GitHub Release with release notes
 
-5.  Best Practices
+6.  Best Practices
     Commit often with meaningful messages
     Push changes daily or after significant progress
     Always review your own code before merging
