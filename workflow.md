@@ -10,12 +10,11 @@ Solo Developer Workflow Summary:
     Create GitHub Issues for features, bugs, and improvements
     Organize issues into milestones
     Set up a GitHub Project board (Kanban-style)
-
-        GitHub Issues Examples
-        Feature Issue
-        Title: Implement User Authentication
-        Description:
-        CopyAs a user, I want to be able to create an account and log in so that I can access personalized features.
+    ********************************\_********************************
+    Feature Issue
+    Title: Implement User Authentication
+    Description:
+    CopyAs a user, I want to be able to create an account and log in so that I can access personalized features.
 
         Tasks:
         - [ ] Create user registration form
@@ -30,6 +29,7 @@ Solo Developer Workflow Summary:
         2. Users can log in with their credentials
         3. Authenticated users receive a JWT token
         4. Users can log out, invalidating their token
+        _________________________________________________________________
         Bug Issue
         Title: Fix: Incorrect date format in user profile
         Description:
@@ -44,6 +44,7 @@ Solo Developer Workflow Summary:
         3. Check the "Date of Birth" field
 
         Priority: Medium
+        _________________________________________________________________
         Improvement Issue
         Title: Enhance form validation feedback
         Description:
@@ -60,6 +61,7 @@ Solo Developer Workflow Summary:
         2. Password strength is indicated in real-time
         3. Each field displays a specific error message when invalid
         4. Fields with errors are visually highlighted
+        _________________________________________________________________
 
 3.  Development Cycle
     Choose an issue to work on
