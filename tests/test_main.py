@@ -2,6 +2,7 @@
 
 import pytest
 import sys
+from PySide6 import __version__ as PYSIDE_VERSION
 from PySide6.QtWidgets import QApplication
 from stojanovic_one.main import main
 
@@ -19,8 +20,8 @@ def test_main(qtbot, capfd):
     """
     print("Starting test_main")
     print(f"Python version: {sys.version}")
-    print(f"PySide6 version: {PySide6.__version__}")
-    print(f"Qt version: {PySide6.QtCore.qVersion()}")
+    print(f"PySide6 version: {PYSIDE_VERSION}")
+    print(f"Qt version: {QApplication.instance().applicationVersion()}")
     
     # Run the main function in test mode
     main(test_mode=True)
