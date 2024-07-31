@@ -13,11 +13,20 @@ Stojanovic-One/
 │       ├── __init__.py
 │       ├── main.py
 │       ├── database/
-│       ├── ui/
-│       └── utils/
+│       │   ├── __init__.py
+│       │   ├── setup.py
+│       │   └── user_management.py
+│       └── ui/
+│           ├── __init__.py
+│           └── registration_form.py
 ├── tests/
 │   ├── __init__.py
-│   └── test_*.py
+│   ├── test_main.py
+│   ├── database/
+│   │   ├── test_database_setup.py
+│   │   └── test_user_management.py
+│   └── ui/
+│       └── test_registration_form.py
 ├── .github/
 │   └── workflows/
 │       └── python-tests.yml
@@ -36,6 +45,9 @@ Stojanovic-One/
 - SQLite for database
 - PySide6 for GUI
 - pytest for testing
+- pytest-qt for GUI testing
+- pytest-mock for mocking in tests
+- bcrypt for password hashing
 - GitHub Actions for CI/CD
 
 ## Collaboration Workflow
@@ -71,13 +83,17 @@ Stojanovic-One/
 
 6. **Error Handling**: Implement comprehensive error handling and logging throughout the application.
 
-7. **Security**: Follow security best practices, especially for user authentication and data storage.
+7. **Security**: Follow security best practices, especially for user authentication and data storage. Use bcrypt for password hashing.
 
 8. **Performance**: Regularly profile the application and optimize performance bottlenecks.
 
 9. **Dependency Management**: Regularly update dependencies and check for security vulnerabilities.
 
 10. **Documentation**: Maintain up-to-date documentation, including docstrings for all functions and classes.
+
+11. **GUI Testing**: Use pytest-qt for testing GUI components to ensure proper functionality and user interaction.
+
+12. **Mocking**: Utilize pytest-mock for creating mock objects in tests, especially for database connections and external services.
 
 ## AI Assistance
 
@@ -89,6 +105,7 @@ As your AI assistant, I can help with:
 - Reviewing code and suggesting improvements
 - Helping troubleshoot issues
 - Updating project documentation
+- Suggesting test cases and testing strategies
 
 Remember to provide clear context when asking for assistance, and don't hesitate to ask for clarification or additional information.
 
