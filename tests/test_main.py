@@ -1,21 +1,12 @@
-# tests/test_main.py
-
 import pytest
 import sys
-from unittest.mock import MagicMock
 from PySide6 import __version__ as PYSIDE_VERSION
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import QLibraryInfo
 from stojanovic_one.main import main
-from stojanovic_one.ui.registration_form import RegistrationForm  # Add this import
+from stojanovic_one.ui.registration_form import RegistrationForm
 
-@pytest.fixture
-def mock_qapp(monkeypatch):
-    mock_app = MagicMock(spec=QApplication)
-    mock_app.topLevelWidgets.return_value = []
-    monkeypatch.setattr(QApplication, 'instance', lambda: mock_app)
-    return mock_app
-
+@pytest.mark.gui
 def test_main(qtbot, capfd):
     """
     Test the main function of the application.
