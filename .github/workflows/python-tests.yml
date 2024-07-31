@@ -9,8 +9,6 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    env:
-      CI_ENVIRONMENT: "true"
     strategy:
       matrix:
         python-version: [3.11.3]
@@ -30,4 +28,4 @@ jobs:
           pip install -r requirements.txt
       - name: Run tests (excluding GUI tests)
         run: |
-          pytest -v -m "not gui" --import-mode=importlib tests
+          pytest -v -m "not gui" tests

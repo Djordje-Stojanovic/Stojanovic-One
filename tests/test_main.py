@@ -1,5 +1,3 @@
-# test
-
 import pytest
 import sys
 from PySide6 import __version__ as PYSIDE_VERSION
@@ -19,7 +17,7 @@ def test_main(qtbot, capfd):
     print(f"Qt version: {QLibraryInfo.version().toString()}")
     
     # Run the main function in test mode
-    result = main(test_mode=True, headless=False)
+    result = main(test_mode=True)
 
     # Check if the result is None (as expected in test mode)
     assert result is None, "main function should return None in test mode"
@@ -45,9 +43,10 @@ def test_main_function_exists():
     """
     assert callable(main), "main function should be callable"
 
-def test_main_returns_none_headless():
+@pytest.mark.gui
+def test_main_returns_none():
     """
-    Test that the main function returns None when run in headless mode.
+    Test that the main function returns None when run in test mode.
     """
-    result = main(test_mode=True, headless=True)
-    assert result is None, "main function should return None in headless mode"
+    result = main(test_mode=True)
+    assert result is None, "main function should return None in test mode"
