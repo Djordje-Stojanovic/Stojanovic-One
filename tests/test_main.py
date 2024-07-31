@@ -4,6 +4,7 @@ import pytest
 import sys
 from PySide6 import __version__ as PYSIDE_VERSION
 from PySide6.QtWidgets import QApplication
+from PySide6.QtCore import QLibraryInfo
 from stojanovic_one.main import main
 
 def test_main(qtbot, capfd):
@@ -21,14 +22,17 @@ def test_main(qtbot, capfd):
     print("Starting test_main")
     print(f"Python version: {sys.version}")
     print(f"PySide6 version: {PYSIDE_VERSION}")
-    print(f"Qt version: {QApplication.instance().applicationVersion()}")
+    print(f"Qt version: {QLibraryInfo.version().toString()}")
+    
+    # Ensure QApplication is created
+    app = QApplication.instance() or QApplication([])
     
     # Run the main function in test mode
     main(test_mode=True)
 
     # Check if the RegistrationForm is created and visible
     registration_form = None
-    for widget in QApplication.topLevelWidgets():
+    for widget in app.topLevelWidgets():
         if widget.__class__.__name__ == 'RegistrationForm':
             registration_form = widget
             break
