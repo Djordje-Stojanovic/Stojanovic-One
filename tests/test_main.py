@@ -1,3 +1,5 @@
+# test
+
 import pytest
 import sys
 from PySide6 import __version__ as PYSIDE_VERSION
@@ -9,15 +11,7 @@ from stojanovic_one.ui.registration_form import RegistrationForm
 @pytest.mark.gui
 def test_main(qtbot, capfd):
     """
-    Test the main function of the application.
-
-    This test ensures that:
-    1. The main function runs without errors in test mode.
-    2. The RegistrationForm is created and visible.
-
-    Args:
-        qtbot: A QtBot instance provided by pytest-qt for GUI testing.
-        capfd: A pytest fixture to capture stdout and stderr
+    Test the main function of the application with GUI.
     """
     print("Starting test_main")
     print(f"Python version: {sys.version}")
@@ -25,7 +19,7 @@ def test_main(qtbot, capfd):
     print(f"Qt version: {QLibraryInfo.version().toString()}")
     
     # Run the main function in test mode
-    result = main(test_mode=True)
+    result = main(test_mode=True, headless=False)
 
     # Check if the result is None (as expected in test mode)
     assert result is None, "main function should return None in test mode"
@@ -51,9 +45,9 @@ def test_main_function_exists():
     """
     assert callable(main), "main function should be callable"
 
-def test_main_returns_none():
+def test_main_returns_none_headless():
     """
-    Test that the main function returns None when run in test mode.
+    Test that the main function returns None when run in headless mode.
     """
-    result = main(test_mode=True)
-    assert result is None, "main function should return None in test mode"
+    result = main(test_mode=True, headless=True)
+    assert result is None, "main function should return None in headless mode"

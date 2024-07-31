@@ -118,13 +118,11 @@ Solo Developer Workflow Summary:
     Update version number (follow Semantic Versioning)
     Create a GitHub Release with release notes
 
-6.  Best Practices
-    Commit often with meaningful messages
-    Push changes daily or after significant progress
-    Always review your own code before merging
-    Keep the main branch stable and deployable
-    Update documentation alongside code changes
-    Run tests before every merge to main
+6.  Test Process
+    For all tests locally:
+    pytest -v --import-mode=importlib
+    For non-Gui tests:
+    pytest -v -m "not gui" --import-mode=importlib
 
 7.  Testing
     Write unit tests for all new functionality
