@@ -8,3 +8,4 @@ src/stojanovic_one.egg-info/dependency_links.txt
 src/stojanovic_one.egg-info/top_level.txt
 src/stojanovic_one/database/__init__.py
 src/stojanovic_one/database/setup.py
+src/stojanovic_one/database/user_management.py

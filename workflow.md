@@ -118,10 +118,45 @@ Solo Developer Workflow Summary:
     Update version number (follow Semantic Versioning)
     Create a GitHub Release with release notes
 
-6.  Best Practices
-    Commit often with meaningful messages
-    Push changes daily or after significant progress
-    Always review your own code before merging
-    Keep the main branch stable and deployable
-    Update documentation alongside code changes
-    Run tests before every merge to main
+6.  Test Process
+    For all tests locally:
+    pytest -v --import-mode=importlib
+    For non-Gui tests:
+    pytest -v -m "not gui" --import-mode=importlib
+
+7.  Testing
+    Write unit tests for all new functionality
+    Use pytest for running tests
+    Implement GUI tests using pytest-qt
+    Use pytest-mock for creating mock objects in tests
+    Aim for high test coverage (e.g., 80% or higher)
+    Run the full test suite before pushing changes
+
+8.  Documentation
+    Keep README.md up-to-date with project overview and setup instructions
+    Use docstrings for all functions, classes, and modules
+    Update AI.MD with any changes to the development process or best practices
+    Maintain a CHANGELOG.md to track significant changes between versions
+
+9.  Continuous Integration
+    Use GitHub Actions for automated testing
+    Set up workflows to run tests on every push and pull request
+    Include linting and type checking in the CI process
+
+10. Dependency Management
+    Regularly update dependencies in requirements.txt
+    Use a tool like pip-compile to generate pinned requirements
+    Check for security vulnerabilities in dependencies regularly
+
+11. Code Quality
+    Use Black for code formatting
+    Implement flake8 for linting
+    Use mypy for static type checking
+    Consider setting up pre-commit hooks for these tools
+
+12. Performance Monitoring
+    Regularly profile the application to identify bottlenecks
+    Optimize database queries and UI rendering as needed
+    Consider implementing logging for performance-critical operations
+
+Remember to adapt this workflow as needed based on the project's specific requirements and your personal preferences.
