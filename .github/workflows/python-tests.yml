@@ -33,7 +33,6 @@ jobs:
           python -c "from PySide6.QtCore import QLibraryInfo; print(f'Qt version: {QLibraryInfo.version().toString()}')"
           echo "DISPLAY: $DISPLAY"
           echo "QT_QPA_PLATFORM: $QT_QPA_PLATFORM"
-          xdpyinfo || echo "xdpyinfo not available"
       - name: Run non-GUI tests
         run: |
           pytest -v tests/database

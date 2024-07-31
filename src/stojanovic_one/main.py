@@ -22,8 +22,6 @@ def main(test_mode=False):
     if test_mode:
         # In test mode, we'll process events for a short time instead of entering the main event loop
         app.processEvents()
+        return None
     else:
         return app.exec()
-
-if __name__ == "__main__":
-    sys.exit(main())

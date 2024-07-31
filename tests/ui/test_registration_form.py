@@ -1,16 +1,19 @@
 # tests/ui/test_registration_form.py
 
 import pytest
+from unittest.mock import MagicMock
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import Qt
 from stojanovic_one.ui.registration_form import RegistrationForm
 
 @pytest.fixture
-def app(qapp):
-    return qapp
+def mock_qapp(monkeypatch):
+    mock_app = MagicMock(spec=QApplication)
+    monkeypatch.setattr(QApplication, 'instance', lambda: mock_app)
+    return mock_app
 
 @pytest.fixture
-def registration_form(app, qtbot, mocker):
+def registration_form(mock_qapp, qtbot, mocker):
     mock_register = mocker.Mock(return_value=True)
     widget = RegistrationForm(register_user_func=mock_register)
     qtbot.addWidget(widget)

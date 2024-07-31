@@ -2,10 +2,19 @@
 
 import pytest
 import sys
+from unittest.mock import MagicMock
 from PySide6 import __version__ as PYSIDE_VERSION
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import QLibraryInfo
 from stojanovic_one.main import main
+from stojanovic_one.ui.registration_form import RegistrationForm  # Add this import
+
+@pytest.fixture
+def mock_qapp(monkeypatch):
+    mock_app = MagicMock(spec=QApplication)
+    mock_app.topLevelWidgets.return_value = []
+    monkeypatch.setattr(QApplication, 'instance', lambda: mock_app)
+    return mock_app
 
 def test_main(qtbot, capfd):
     """
@@ -24,16 +33,16 @@ def test_main(qtbot, capfd):
     print(f"PySide6 version: {PYSIDE_VERSION}")
     print(f"Qt version: {QLibraryInfo.version().toString()}")
     
-    # Ensure QApplication is created
-    app = QApplication.instance() or QApplication([])
-    
     # Run the main function in test mode
-    main(test_mode=True)
+    result = main(test_mode=True)
+
+    # Check if the result is None (as expected in test mode)
+    assert result is None, "main function should return None in test mode"
 
     # Check if the RegistrationForm is created and visible
     registration_form = None
-    for widget in app.topLevelWidgets():
-        if widget.__class__.__name__ == 'RegistrationForm':
+    for widget in QApplication.topLevelWidgets():
+        if isinstance(widget, RegistrationForm):
             registration_form = widget
             break
 
