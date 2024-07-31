@@ -1,10 +1,11 @@
 # tests/test_main.py
 
 import pytest
-from stojanovic_one.main import main
+import sys
 from PySide6.QtWidgets import QApplication
+from stojanovic_one.main import main
 
-def test_main(qtbot):
+def test_main(qtbot, capfd):
     """
     Test the main function of the application.
 
@@ -14,7 +15,13 @@ def test_main(qtbot):
 
     Args:
         qtbot: A QtBot instance provided by pytest-qt for GUI testing.
+        capfd: A pytest fixture to capture stdout and stderr
     """
+    print("Starting test_main")
+    print(f"Python version: {sys.version}")
+    print(f"PySide6 version: {PySide6.__version__}")
+    print(f"Qt version: {PySide6.QtCore.qVersion()}")
+    
     # Run the main function in test mode
     main(test_mode=True)
 
@@ -27,6 +34,11 @@ def test_main(qtbot):
 
     assert registration_form is not None, "RegistrationForm was not created"
     assert registration_form.isVisible(), "RegistrationForm is not visible"
+
+    # Capture and print any output
+    out, err = capfd.readouterr()
+    print(f"Stdout: {out}")
+    print(f"Stderr: {err}")
 
 def test_main_function_exists():
     """
