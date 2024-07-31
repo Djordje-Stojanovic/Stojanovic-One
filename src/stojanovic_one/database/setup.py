@@ -4,10 +4,24 @@ import sqlite3
 from sqlite3 import Connection
 
 def initialize_database(db_path: str) -> Connection:
-    conn = sqlite3.connect(db_path)
-    return conn
+    """
+    Initialize a SQLite database connection.
+
+    Args:
+        db_path (str): Path to the SQLite database file or ':memory:' for in-memory database.
+
+    Returns:
+        Connection: A SQLite database connection object.
+    """
+    return sqlite3.connect(db_path)
 
 def create_user_table(conn: Connection) -> None:
+    """
+    Create the users table if it doesn't exist.
+
+    Args:
+        conn (Connection): An active SQLite database connection.
+    """
     cursor = conn.cursor()
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS users (
