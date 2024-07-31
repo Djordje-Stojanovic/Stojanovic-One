@@ -36,8 +36,20 @@ Stojanovic-One/
 ├── README.md
 ├── CHANGELOG.md
 ├── .gitignore
+├── pytest.ini
 └── AI.MD
 ```
+
+## Technology Stack
+
+- Python 3.11+
+- SQLite for database
+- PySide6 for GUI
+- pytest for testing
+- pytest-qt for GUI testing
+- pytest-mock for mocking in tests
+- bcrypt for password hashing
+- GitHub Actions for CI/CD
 
 ## Technology Stack
 
@@ -67,25 +79,24 @@ Stojanovic-One/
 
 6. **Continuous Integration**
 
-   Our project uses GitHub Actions for continuous integration. The workflow is set up to run all tests, including GUI tests, on every push and pull request. Here's how it works:
+   Our project uses GitHub Actions for continuous integration. The workflow is set up to run all tests, excluding GUI tests, on every push and pull request. Here's how it works:
 
    1. **Environment Setup**: The workflow runs on an Ubuntu environment and sets up Python 3.11.3.
 
-   2. **System Dependencies**: We install necessary system dependencies, including Xvfb (X Virtual Framebuffer) and required libraries for running GUI tests in a headless environment.
+   2. **System Dependencies**: We install necessary system dependencies, including libraries required for PySide6.
 
    3. **Python Dependencies**: All project dependencies listed in `requirements.txt` are installed.
 
-   4. **Running Tests**: We use Xvfb to create a virtual display, allowing GUI tests to run in the headless CI environment. All tests are executed using pytest.
+   4. **Running Tests**: All non-GUI tests are executed using pytest with the command `pytest -v -m "not gui" tests`.
 
    5. **Test Results**: The workflow will fail if any tests fail, preventing merging of branches with failing tests.
 
    ### Local vs CI Testing
 
-   While the CI environment runs all tests, including GUI tests, you may want to separate GUI and non-GUI tests during local development for faster feedback. You can use pytest markers to achieve this:
+   While the CI environment runs only non-GUI tests, you should run all tests locally, including GUI tests, for comprehensive testing:
 
    - To run all tests locally: `pytest`
    - To run only non-GUI tests: `pytest -m "not gui"`
-   - To run only GUI tests: `pytest -m gui`
 
    Remember to update the GitHub Actions workflow (`python-tests.yml`) if you make any changes to the testing process or environment requirements.
 
@@ -116,6 +127,10 @@ Stojanovic-One/
 11. **GUI Testing**: Use pytest-qt for testing GUI components to ensure proper functionality and user interaction.
 
 12. **Mocking**: Utilize pytest-mock for creating mock objects in tests, especially for database connections and external services.
+
+13. **File Paths**: Always include the full file path as a comment at the top of each file. This helps with navigation and understanding the project structure.
+
+14. **pytest Configuration**: Use `pytest.ini` for configuring pytest behavior, including custom markers like `@pytest.mark.gui` for GUI tests.
 
 ## AI Assistance
 
