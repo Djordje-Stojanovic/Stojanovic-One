@@ -1,5 +1,13 @@
 # tests/ui/test_registration_form.py
 
+"""
+This module contains test cases for the RegistrationForm GUI component.
+
+These tests cover the initial state of the form, input validation,
+and form submission functionality. They use pytest and pytest-qt
+for GUI testing.
+"""
+
 import pytest
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import Qt
@@ -7,7 +15,17 @@ from stojanovic_one.ui.registration_form import RegistrationForm
 
 @pytest.mark.gui
 def test_registration_form_initial_state(qtbot):
-    """Test the initial state of the registration form."""
+    """
+    Test the initial state of the registration form.
+
+    This test ensures that:
+    1. The form is created successfully.
+    2. All input fields are initially empty.
+    3. The register button is disabled at start.
+
+    Args:
+        qtbot: A QtBot instance provided by pytest-qt for GUI testing.
+    """
     widget = RegistrationForm()
     qtbot.addWidget(widget)
     assert widget.username_input.text() == ""
@@ -17,7 +35,16 @@ def test_registration_form_initial_state(qtbot):
 
 @pytest.mark.gui
 def test_registration_form_input_validation(qtbot):
-    """Test input validation for the registration form."""
+    """
+    Test input validation for the registration form.
+
+    This test verifies that:
+    1. The register button is enabled when all fields are filled.
+    2. The register button is disabled when any field is cleared.
+
+    Args:
+        qtbot: A QtBot instance provided by pytest-qt for GUI testing.
+    """
     widget = RegistrationForm()
     qtbot.addWidget(widget)
     # Fill in valid data
@@ -34,7 +61,18 @@ def test_registration_form_input_validation(qtbot):
 
 @pytest.mark.gui
 def test_registration_form_submission(qtbot, mocker):
-    """Test the submission of the registration form."""
+    """
+    Test the submission of the registration form.
+
+    This test ensures that:
+    1. The form can be submitted when all fields are filled.
+    2. The register_user function is called with correct arguments.
+    3. A success message is displayed after successful submission.
+
+    Args:
+        qtbot: A QtBot instance provided by pytest-qt for GUI testing.
+        mocker: A pytest-mock fixture for creating mock objects.
+    """
     mock_register = mocker.Mock(return_value=True)
     widget = RegistrationForm(register_user_func=mock_register)
     qtbot.addWidget(widget)
