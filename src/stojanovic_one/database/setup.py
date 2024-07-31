@@ -5,7 +5,7 @@ from sqlite3 import Connection
 
 def initialize_database(db_path: str) -> Connection:
     """
-    Initialize a SQLite database connection.
+    Initialize a SQLite database connection and create the users table if it doesn't exist.
 
     Args:
         db_path (str): Path to the SQLite database file or ':memory:' for in-memory database.
@@ -13,7 +13,9 @@ def initialize_database(db_path: str) -> Connection:
     Returns:
         Connection: A SQLite database connection object.
     """
-    return sqlite3.connect(db_path)
+    conn = sqlite3.connect(db_path)
+    create_user_table(conn)
+    return conn
 
 def create_user_table(conn: Connection) -> None:
     """

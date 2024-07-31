@@ -1,64 +1,70 @@
 # tests/ui/test_registration_form.py
 
-import sys
 import pytest
 from PySide6.QtWidgets import QApplication
-from PySide6.QtTest import QTest
 from PySide6.QtCore import Qt
 from stojanovic_one.ui.registration_form import RegistrationForm
 
 @pytest.fixture
-def app(qtbot):
-    test_app = QApplication.instance()
-    if not test_app:
-        test_app = QApplication(sys.argv)
-    yield test_app
-    test_app.quit()
+def app(qapp):
+    return qapp
 
 @pytest.fixture
-def registration_form(app, qtbot):
-    widget = RegistrationForm()
+def registration_form(app, qtbot, mocker):
+    mock_register = mocker.Mock(return_value=True)
+    widget = RegistrationForm(register_user_func=mock_register)
     qtbot.addWidget(widget)
-    return widget
+    return widget, mock_register
 
 def test_registration_form_initial_state(registration_form):
-    assert registration_form.username_input.text() == ""
-    assert registration_form.email_input.text() == ""
-    assert registration_form.password_input.text() == ""
-    assert not registration_form.register_button.isEnabled()
+    """Test the initial state of the registration form."""
+    widget, _ = registration_form
+    assert widget.username_input.text() == ""
+    assert widget.email_input.text() == ""
+    assert widget.password_input.text() == ""
+    assert not widget.register_button.isEnabled()
 
 def test_registration_form_input_validation(qtbot, registration_form):
+    """Test input validation for the registration form."""
+    widget, _ = registration_form
     # Fill in valid data
-    qtbot.keyClicks(registration_form.username_input, "testuser")
-    qtbot.keyClicks(registration_form.email_input, "test@example.com")
-    qtbot.keyClicks(registration_form.password_input, "password123")
+    qtbot.keyClicks(widget.username_input, "testuser")
+    qtbot.keyClicks(widget.email_input, "test@example.com")
+    qtbot.keyClicks(widget.password_input, "password123")
 
     # Check if register button is enabled
-    assert registration_form.register_button.isEnabled()
+    assert widget.register_button.isEnabled()
 
     # Clear email field (should disable register button)
-    registration_form.email_input.clear()
-    assert not registration_form.register_button.isEnabled()
+    widget.email_input.clear()
+    assert not widget.register_button.isEnabled()
 
-def test_registration_form_submission(qtbot, registration_form, mocker):
-    # Mock the register_user function
-    mock_register = mocker.patch('stojanovic_one.database.user_management.register_user', return_value=True)
+def test_registration_form_submission(qtbot, registration_form):
+    """Test the submission of the registration form."""
+    widget, mock_register = registration_form
 
     # Fill in valid data
-    qtbot.keyClicks(registration_form.username_input, "testuser")
-    qtbot.keyClicks(registration_form.email_input, "test@example.com")
-    qtbot.keyClicks(registration_form.password_input, "password123")
+    qtbot.keyClicks(widget.username_input, "testuser")
+    qtbot.keyClicks(widget.email_input, "test@example.com")
+    qtbot.keyClicks(widget.password_input, "password123")
+
+    # Check if the register button is enabled
+    assert widget.register_button.isEnabled(), "Register button is not enabled"
 
     # Click the register button
-    qtbot.mouseClick(registration_form.register_button, Qt.LeftButton)
+    qtbot.mouseClick(widget.register_button, Qt.LeftButton)
+
+    # Add a small delay to allow for event processing
+    qtbot.wait(100)
+
+    print(f"Message label text: {widget.message_label.text()}")  # Debug print
 
     # Check if register_user was called with correct arguments
     mock_register.assert_called_once_with(
-        mocker.ANY,
         "testuser",
         "test@example.com",
         "password123"
     )
 
-    # Check if success message is displayed (you'll need to implement this in the form)
-    assert registration_form.message_label.text() == "Registration successful!"
+    # Check if success message is displayed
+    assert widget.message_label.text() == "Registration successful!"
