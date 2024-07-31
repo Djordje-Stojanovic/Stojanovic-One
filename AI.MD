@@ -65,7 +65,29 @@ Stojanovic-One/
 
 5. **Code Review**: After implementing an issue, review the changes yourself and consider asking for AI assistance in reviewing complex parts.
 
-6. **Continuous Integration**: Ensure all tests pass in the GitHub Actions workflow before merging changes.
+6. **Continuous Integration**
+
+   Our project uses GitHub Actions for continuous integration. The workflow is set up to run all tests, including GUI tests, on every push and pull request. Here's how it works:
+
+   1. **Environment Setup**: The workflow runs on an Ubuntu environment and sets up Python 3.11.3.
+
+   2. **System Dependencies**: We install necessary system dependencies, including Xvfb (X Virtual Framebuffer) and required libraries for running GUI tests in a headless environment.
+
+   3. **Python Dependencies**: All project dependencies listed in `requirements.txt` are installed.
+
+   4. **Running Tests**: We use Xvfb to create a virtual display, allowing GUI tests to run in the headless CI environment. All tests are executed using pytest.
+
+   5. **Test Results**: The workflow will fail if any tests fail, preventing merging of branches with failing tests.
+
+   ### Local vs CI Testing
+
+   While the CI environment runs all tests, including GUI tests, you may want to separate GUI and non-GUI tests during local development for faster feedback. You can use pytest markers to achieve this:
+
+   - To run all tests locally: `pytest`
+   - To run only non-GUI tests: `pytest -m "not gui"`
+   - To run only GUI tests: `pytest -m gui`
+
+   Remember to update the GitHub Actions workflow (`python-tests.yml`) if you make any changes to the testing process or environment requirements.
 
 7. **Documentation**: Update relevant documentation (including this AI.MD if necessary) as the project evolves.
 
