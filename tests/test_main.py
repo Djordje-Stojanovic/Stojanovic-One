@@ -28,4 +28,15 @@ def test_main(qtbot):
     assert registration_form is not None, "RegistrationForm was not created"
     assert registration_form.isVisible(), "RegistrationForm is not visible"
 
-    # You can add more assertions here to check the initial state of the form if needed
+def test_main_function_exists():
+    """
+    Test that the main function exists.
+    """
+    assert callable(main), "main function should be callable"
+
+def test_main_returns_none():
+    """
+    Test that the main function returns None when run in test mode.
+    """
+    result = main(test_mode=True)
+    assert result is None, "main function should return None in test mode"

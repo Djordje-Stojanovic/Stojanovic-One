@@ -6,16 +6,6 @@ from stojanovic_one.ui.registration_form import RegistrationForm
 from stojanovic_one.database.setup import initialize_database, create_user_table
 
 def main(test_mode=False):
-    """
-    Main function to initialize and run the application.
-
-    Args:
-        test_mode (bool): If True, runs the application in test mode, which processes events
-                          without entering the main event loop.
-
-    Returns:
-        int: The exit code of the application (only when not in test mode).
-    """
     app = QApplication.instance()
     if app is None:
         app = QApplication(sys.argv)
