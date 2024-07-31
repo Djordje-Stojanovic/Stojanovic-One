@@ -1,3 +1,5 @@
+# tests/test_main.py
+
 import pytest
 import sys
 from PySide6 import __version__ as PYSIDE_VERSION
