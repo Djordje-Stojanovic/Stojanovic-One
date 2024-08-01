@@ -3,6 +3,8 @@
 import sqlite3
 from sqlite3 import Connection
 import bcrypt
+from stojanovic_one.auth.jwt_utils import generate_token
+from typing import Optional
 
 def register_user(conn: Connection, username: str, email: str, password: str) -> bool:
     """
@@ -44,3 +46,33 @@ def register_user(conn: Connection, username: str, email: str, password: str) ->
     except sqlite3.Error:
         conn.rollback()
         return False
+    
+
+def login_user(conn: Connection, username: str, password: str) -> Optional[str]:
+    """
+    Authenticate a user and generate a JWT token if successful.
+
+    Args:
+        conn (Connection): An active SQLite database connection.
+        username (str): The user's username.
+        password (str): The user's password.
+
+    Returns:
+        Optional[str]: JWT token if authentication was successful, None otherwise.
+    """
+    cursor = conn.cursor()
+
+    # Fetch the user's hashed password
+    cursor.execute("SELECT password_hash FROM users WHERE username = ?", (username,))
+    result = cursor.fetchone()
+
+    if result is None:
+        return None  # User not found
+
+    stored_password = result[0]
+
+    # Check if the provided password matches the stored hash
+    if bcrypt.checkpw(password.encode('utf-8'), stored_password):
+        return generate_token(username)
+    else:
+        return None
