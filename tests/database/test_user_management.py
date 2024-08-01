@@ -3,7 +3,7 @@
 import pytest
 import sqlite3
 from stojanovic_one.database.setup import initialize_database, create_user_table
-from stojanovic_one.database.user_management import register_user
+from stojanovic_one.database.user_management import register_user, login_user
 
 @pytest.fixture
 def db_connection():
@@ -66,3 +66,27 @@ def test_password_hashing(db_connection):
     hashed_password = cursor.fetchone()[0]
     assert hashed_password != "password123"
     assert hashed_password.startswith(b'$2b$')  # bcrypt hash prefix
+
+def test_login_user_success(db_connection):
+    """
+    Test successful user login.
+    """
+    register_user(db_connection, "testuser", "test@example.com", "password123")
+    token = login_user(db_connection, "testuser", "password123")
+    assert token is not None
+    assert isinstance(token, str)
+
+def test_login_user_wrong_password(db_connection):
+    """
+    Test login attempt with wrong password.
+    """
+    register_user(db_connection, "testuser", "test@example.com", "password123")
+    token = login_user(db_connection, "testuser", "wrongpassword")
+    assert token is None
+
+def test_login_user_nonexistent(db_connection):
+    """
+    Test login attempt with non-existent user.
+    """
+    token = login_user(db_connection, "nonexistent", "password123")
+    assert token is None

@@ -13,8 +13,8 @@ class LoginForm(QWidget):
 
     def __init__(self, login_user_func=None):
         super().__init__()
-
         self.login_user_func = login_user_func or self._default_login_user
+        self.token: Optional[str] = None  # Add this line to store the token
 
         self.setWindowTitle("User Login")
         self.setGeometry(100, 100, 300, 200)
@@ -62,9 +62,9 @@ class LoginForm(QWidget):
         username = self.username_input.text()
         password = self.password_input.text()
 
-        result = self.login_user_func(username, password)
+        self.token = self.login_user_func(username, password)  # Store the token
 
-        if result:
+        if self.token:
             self.message_label.setText("Login successful!")
         else:
             self.message_label.setText("Login failed. Please try again.")
