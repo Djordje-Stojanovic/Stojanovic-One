@@ -154,9 +154,15 @@ Solo Developer Workflow Summary:
     Use mypy for static type checking
     Consider setting up pre-commit hooks for these tools
 
-12. Performance Monitoring
-    Regularly profile the application to identify bottlenecks
-    Optimize database queries and UI rendering as needed
-    Consider implementing logging for performance-critical operations
+12. Local GUI Testing
+    After implementing or updating GUI components:
+    - Create or update a `run_app.py` script in the project root
+    - Ensure the script initializes necessary components (database, forms, etc.)
+    - Run the application locally using:
+      ```
+      python run_app.py
+      ```
+    - Test various user scenarios (registration, login, etc.)
+    - Document any issues or improvements in GitHub Issues
 
 Remember to adapt this workflow as needed based on the project's specific requirements and your personal preferences.
