@@ -2,7 +2,7 @@
 
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel
 from PySide6.QtCore import Slot
-from typing import Callable
+from typing import Callable, Optional
 
 class LogoutForm(QWidget):
     """
@@ -13,10 +13,16 @@ class LogoutForm(QWidget):
     Args:
         logout_user_func (Callable, optional): A function to handle user logout.
             If not provided, a default function will be used.
+        token (str, optional): The user's authentication token.
+
+    Attributes:
+        logout_user_func (Callable): The function to handle user logout.
         token (str): The user's authentication token.
+        logout_button (QPushButton): The button to trigger logout.
+        message_label (QLabel): A label to display feedback messages.
     """
 
-    def __init__(self, logout_user_func: Callable = None, token: str = None):
+    def __init__(self, logout_user_func: Callable = None, token: Optional[str] = None):
         super().__init__()
 
         self.logout_user_func = logout_user_func or self._default_logout_user
