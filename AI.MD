@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Stojanovic-One is a Python-based application utilizing SQLite for data storage and PySide6 for the graphical user interface. The project aims to implement best practices in software development, including Test-Driven Development (TDD) and continuous integration.
+Stojanovic-One is a Python-based application utilizing SQLite for data storage and PySide6 for the graphical user interface. The project aims to implement best practices in software development, including Test-Driven Development (TDD) and continuous integration. The application now includes JWT-based authentication middleware for protected routes.
 
 ## Important Development Practices
 
@@ -47,9 +47,15 @@ Stojanovic-One is a Python-based application utilizing SQLite for data storage a
     - Test the application on various display resolutions.
 
 11. Prioritize code readability and maintainability:
+
     - Use meaningful variable and function names.
     - Keep functions small and focused on a single responsibility.
     - Regularly refactor code to improve its structure and eliminate duplication.
+
+12. Implement and maintain authentication middleware:
+    - Use JWT tokens for user authentication.
+    - Protect sensitive routes and operations using the `@protect_route` decorator.
+    - Regularly review and update authentication mechanisms for security.
 
 ## Project Structure
 
@@ -71,7 +77,8 @@ Stojanovic-One/
 │       │   └── logout_form.py
 │       └── auth/
 │           ├── __init__.py
-│           └── jwt_utils.py
+│           ├── jwt_utils.py
+│           └── middleware.py
 ├── tests/
 │   ├── __init__.py
 │   ├── test_main.py
@@ -84,7 +91,8 @@ Stojanovic-One/
 │   │   ├── test_registration_form.py
 │   │   └── test_logout_form.py
 │   └── auth/
-│       └── test_jwt_utils.py
+│       ├── test_jwt_utils.py
+│       └── test_middleware.py
 ├── .github/
 │   └── workflows/
 │       └── python-tests.yml
@@ -170,6 +178,10 @@ Stojanovic-One/
 11. **pytest Configuration**: Use `pytest.ini` for configuring pytest behavior, including custom markers like `@pytest.mark.gui` for GUI tests.
 
 12. **Responsive Design**: Implement responsive design principles in GUI components to ensure proper display on various screen sizes.
+
+13. **Authentication**: Use JWT tokens for user authentication and protect sensitive routes with the `@protect_route` decorator.
+
+14. **Security**: Regularly review and update security measures, including password hashing, token management, and protected routes.
 
 ## Continuous Improvement
 
