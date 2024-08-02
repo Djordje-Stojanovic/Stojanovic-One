@@ -8,7 +8,7 @@ initializes the database, and runs the application's event loop.
 """
 
 import sys
-from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton
+from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QMessageBox
 from stojanovic_one.ui.login_form import LoginForm
 from stojanovic_one.ui.registration_form import RegistrationForm
 from stojanovic_one.ui.logout_form import LogoutForm
@@ -24,6 +24,7 @@ class MainWindow(QMainWindow):
 
     Attributes:
         conn (sqlite3.Connection): The database connection used for user management operations.
+        current_token (str): The current user's authentication token.
     """
 
     def __init__(self, conn):
@@ -35,6 +36,7 @@ class MainWindow(QMainWindow):
         """
         super().__init__()
         self.conn = conn
+        self.current_token = None
         self.setWindowTitle("Stojanovic-One")
         self.setGeometry(100, 100, 300, 200)
 
@@ -62,8 +64,18 @@ class MainWindow(QMainWindow):
 
     def show_login_form(self):
         """Create and display the login form."""
-        self.login_form = LoginForm(login_user_func=lambda username, password: login_user(self.conn, username, password))
+        self.login_form = LoginForm(login_user_func=self.login_user)
         self.login_form.show()
+
+    def login_user(self, username: str, password: str) -> bool:
+        """Log in the user and store the token."""
+        self.current_token = login_user(self.conn, username, password)
+        if self.current_token:
+            QMessageBox.information(self, "Login Successful", f"Welcome, {username}!")
+            return True
+        else:
+            QMessageBox.warning(self, "Login Failed", "Invalid username or password.")
+            return False
 
     def show_registration_form(self):
         """Create and display the registration form."""
@@ -72,8 +84,21 @@ class MainWindow(QMainWindow):
 
     def show_logout_form(self):
         """Create and display the logout form."""
-        self.logout_form = LogoutForm(logout_user_func=logout_user)
-        self.logout_form.show()
+        if self.current_token:
+            self.logout_form = LogoutForm(logout_user_func=self.logout_user, token=self.current_token)
+            self.logout_form.show()
+        else:
+            QMessageBox.information(self, "Logout", "No user is currently logged in.")
+
+    def logout_user(self, token: str) -> bool:
+        """Log out the user and clear the stored token."""
+        if logout_user(token):
+            self.current_token = None
+            QMessageBox.information(self, "Logout Successful", "You have been logged out.")
+            return True
+        else:
+            QMessageBox.warning(self, "Logout Failed", "An error occurred during logout.")
+            return False
 
 def main():
     """
