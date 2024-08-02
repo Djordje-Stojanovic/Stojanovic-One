@@ -16,17 +16,23 @@ Stojanovic-One/
 │       │   ├── __init__.py
 │       │   ├── setup.py
 │       │   └── user_management.py
-│       └── ui/
-│           ├── __init__.py
-│           └── registration_form.py
+│       ├── ui/
+│       │   ├── __init__.py
+│       │   ├── registration_form.py
+│       │   └── login_form.py
+│       └── auth/
+│           └── jwt_utils.py
 ├── tests/
 │   ├── __init__.py
 │   ├── test_main.py
 │   ├── database/
 │   │   ├── test_database_setup.py
 │   │   └── test_user_management.py
-│   └── ui/
-│       └── test_registration_form.py
+│   ├── ui/
+│   │   ├── test_registration_form.py
+│   │   └── test_login_form.py
+│   └── auth/
+│       └── test_jwt_utils.py
 ├── .github/
 │   └── workflows/
 │       └── python-tests.yml
@@ -37,7 +43,8 @@ Stojanovic-One/
 ├── CHANGELOG.md
 ├── .gitignore
 ├── pytest.ini
-└── AI.MD
+├── AI.MD
+└── WORKFLOW.md
 ```
 
 ## Technology Stack
