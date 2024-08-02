@@ -1,13 +1,15 @@
 # src/stojanovic_one/auth/jwt_utils.py
 
 import jwt
+import uuid
 from datetime import datetime, timedelta
 from typing import Dict, Optional
 
-# This should be a secure, randomly generated key in a real application
-# In production, this should be stored securely and not in the source code
 SECRET_KEY = "your-secret-key"
 ALGORITHM = "HS256"
+
+# We'll use this set to store invalidated tokens
+invalidated_tokens = set()
 
 def generate_token(username: str) -> str:
     """
@@ -23,6 +25,7 @@ def generate_token(username: str) -> str:
         "sub": username,
         "exp": datetime.utcnow() + timedelta(hours=1),  # Token expires in 1 hour
         "iat": datetime.utcnow(),
+        "jti": str(uuid.uuid4()),  # Unique identifier for the token
     }
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
@@ -38,6 +41,27 @@ def validate_token(token: str) -> Optional[Dict]:
     """
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        if token in invalidated_tokens:
+            return None  # Token has been invalidated (logged out)
         return payload
     except jwt.PyJWTError:
-        return None
+        return None  # Token is invalid or expired
+
+def invalidate_token(token: str) -> bool:
+    """
+    Invalidate a JWT token by adding it to the set of invalidated tokens.
+
+    Args:
+        token (str): The JWT token to invalidate.
+
+    Returns:
+        bool: True if the token was successfully invalidated, False otherwise.
+    """
+    try:
+        jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])  # Verify the token is valid
+        if token in invalidated_tokens:
+            return False  # Token is already invalidated
+        invalidated_tokens.add(token)
+        return True
+    except jwt.PyJWTError:
+        return False  # Token is already invalid or expired
