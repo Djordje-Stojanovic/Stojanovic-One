@@ -36,9 +36,9 @@ class LoginForm(QWidget):
         username = self.username_input.text()
         password = self.password_input.text()
         
-        success = self.login_user_func(username, password)
+        self.token = self.login_user_func(username, password)
         
-        if success:
+        if self.token:
             self.message_label.setText("Login successful!")
             self.login_successful.emit(username, password)
         else:

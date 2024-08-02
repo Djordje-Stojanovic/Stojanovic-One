@@ -1,13 +1,5 @@
 # tests/ui/test_logout_form.py
 
-"""
-This module contains test cases for the LogoutForm GUI component.
-
-These tests cover the initial state of the form, successful logout,
-failed logout, and logout attempt without an active session. They use
-pytest and pytest-qt for GUI testing.
-"""
-
 import pytest
 from PySide6.QtCore import Qt
 from stojanovic_one.ui.logout_form import LogoutForm

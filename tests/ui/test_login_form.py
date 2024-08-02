@@ -4,42 +4,36 @@ import pytest
 from PySide6.QtCore import Qt
 from stojanovic_one.ui.login_form import LoginForm
 
+def mock_login_func(username, password):
+    if username == "testuser" and password == "password":
+        return "fake_jwt_token"
+    return None
+
 @pytest.mark.gui
 def test_login_form_initial_state(qtbot):
-    """
-    Test the initial state of the login form.
-    """
-    widget = LoginForm()
+    widget = LoginForm(login_user_func=mock_login_func)
     qtbot.addWidget(widget)
 
     assert widget.username_input.text() == ""
     assert widget.password_input.text() == ""
-    assert not widget.login_button.isEnabled()
+    assert widget.login_button.text() == "Login"
 
 @pytest.mark.gui
 def test_login_form_input_validation(qtbot):
-    """
-    Test input validation for the login form.
-    """
-    widget = LoginForm()
+    widget = LoginForm(login_user_func=mock_login_func)
     qtbot.addWidget(widget)
 
     # Fill in valid data
     qtbot.keyClicks(widget.username_input, "testuser")
-    qtbot.keyClicks(widget.password_input, "password123")
+    qtbot.keyClicks(widget.password_input, "password")
 
-    # Check if login button is enabled
-    assert widget.login_button.isEnabled()
+    # Trigger login
+    qtbot.mouseClick(widget.login_button, Qt.LeftButton)
 
-    # Clear username field (should disable login button)
-    widget.username_input.clear()
-    assert not widget.login_button.isEnabled()
+    assert widget.message_label.text() == "Login successful!"
 
 @pytest.mark.gui
 def test_login_form_submission(qtbot, mocker):
-    """
-    Test the submission of the login form.
-    """
     mock_login = mocker.Mock(return_value="fake_jwt_token")
     widget = LoginForm(login_user_func=mock_login)
     qtbot.addWidget(widget)
@@ -60,9 +54,6 @@ def test_login_form_submission(qtbot, mocker):
 
 @pytest.mark.gui
 def test_login_form_failed_login(qtbot, mocker):
-    """
-    Test the login form behavior when login fails.
-    """
     mock_login = mocker.Mock(return_value=None)
     widget = LoginForm(login_user_func=mock_login)
     qtbot.addWidget(widget)

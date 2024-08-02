@@ -1,54 +1,131 @@
 # tests/test_main.py
 
 import pytest
-import sys
-from PySide6 import __version__ as PYSIDE_VERSION
 from PySide6.QtWidgets import QApplication
-from PySide6.QtCore import QLibraryInfo
-from stojanovic_one.main import main
-from stojanovic_one.ui.registration_form import RegistrationForm
+from PySide6.QtCore import Qt
+from stojanovic_one.main import main, MainWindow
+import sys
+import traceback
+
+@pytest.fixture
+def app(qtbot):
+    application = QApplication.instance()
+    if application is None:
+        application = QApplication([])
+    yield application
+    application.quit()
 
 @pytest.mark.gui
-def test_main(qtbot, capfd):
-    """
-    Test the main function of the application with GUI.
-    """
-    print("Starting test_main")
-    print(f"Python version: {sys.version}")
-    print(f"PySide6 version: {PYSIDE_VERSION}")
-    print(f"Qt version: {QLibraryInfo.version().toString()}")
-    
-    # Run the main function in test mode
-    result = main(test_mode=True)
-
-    # Check if the result is None (as expected in test mode)
-    assert result is None, "main function should return None in test mode"
-
-    # Check if the RegistrationForm is created and visible
-    registration_form = None
-    for widget in QApplication.topLevelWidgets():
-        if isinstance(widget, RegistrationForm):
-            registration_form = widget
-            break
-
-    assert registration_form is not None, "RegistrationForm was not created"
-    assert registration_form.isVisible(), "RegistrationForm is not visible"
-
-    # Capture and print any output
-    out, err = capfd.readouterr()
-    print(f"Stdout: {out}")
-    print(f"Stderr: {err}")
-
-def test_main_function_exists():
-    """
-    Test that the main function exists.
-    """
-    assert callable(main), "main function should be callable"
+def test_main(app, qtbot):
+    try:
+        main_window = main(test_mode=True)
+        assert isinstance(main_window, MainWindow)
+        assert main_window.isVisible()
+        assert main_window.stacked_widget.currentWidget() == main_window.welcome_page
+    except Exception as e:
+        print(f"Error in test_main: {str(e)}")
+        print("Traceback:")
+        traceback.print_exc()
+        pytest.fail(f"Test failed due to exception: {str(e)}")
 
 @pytest.mark.gui
-def test_main_returns_none():
-    """
-    Test that the main function returns None when run in test mode.
-    """
-    result = main(test_mode=True)
-    assert result is None, "main function should return None in test mode"
+def test_main_window_navigation(app, qtbot):
+    try:
+        main_window = main(test_mode=True)
+        qtbot.addWidget(main_window)
+
+        # Test navigation to login form
+        main_window.welcome_page.login_clicked.emit()
+        assert main_window.stacked_widget.currentWidget() == main_window.login_form
+
+        # Test navigation to registration form
+        main_window.welcome_page.register_clicked.emit()
+        assert main_window.stacked_widget.currentWidget() == main_window.registration_form
+
+        # Test navigation back to welcome page after successful registration
+        main_window.registration_form.registration_successful.emit()
+        assert main_window.stacked_widget.currentWidget() == main_window.welcome_page
+
+    except Exception as e:
+        print(f"Error in test_main_window_navigation: {str(e)}")
+        print("Traceback:")
+        traceback.print_exc()
+        pytest.fail(f"Test failed due to exception: {str(e)}")
+
+@pytest.mark.gui
+def test_login_logout_flow(app, qtbot, mocker):
+    try:
+        main_window = main(test_mode=True)
+        qtbot.addWidget(main_window)
+
+        # Mock the login_user function to return a fake token
+        mock_login = mocker.patch('stojanovic_one.database.user_management.login_user', return_value="fake_token")
+
+        # Test login
+        main_window.show_login_form()
+        main_window.login_form.username_input.setText("testuser")
+        main_window.login_form.password_input.setText("password123")
+        qtbot.mouseClick(main_window.login_form.login_button, Qt.LeftButton)
+
+        # Wait for the login process to complete
+        qtbot.wait(100)
+
+        # Check if the mocked function was called
+        mock_login.assert_called_once_with(main_window.conn, "testuser", "password123")
+
+        assert main_window.current_token == "fake_token"
+        assert main_window.stacked_widget.currentWidget() == main_window.welcome_page
+
+        # Test logout
+        main_window.show_logout_form()
+        assert main_window.stacked_widget.currentWidget() == main_window.logout_form
+
+        # Mock the logout_user function to return True
+        mock_logout = mocker.patch('stojanovic_one.database.user_management.logout_user', return_value=True)
+
+        qtbot.mouseClick(main_window.logout_form.logout_button, Qt.LeftButton)
+
+        # Wait for the logout process to complete
+        qtbot.wait(100)
+
+        # Check if the mocked function was called
+        mock_logout.assert_called_once_with("fake_token")
+
+        assert main_window.current_token is None
+        assert main_window.stacked_widget.currentWidget() == main_window.welcome_page
+
+    except Exception as e:
+        print(f"Error in test_login_logout_flow: {str(e)}")
+        print("Traceback:")
+        traceback.print_exc()
+        pytest.fail(f"Test failed due to exception: {str(e)}")
+
+@pytest.mark.gui
+def test_registration_flow(app, qtbot, mocker):
+    try:
+        main_window = main(test_mode=True)
+        qtbot.addWidget(main_window)
+
+        # Mock the register_user function to return True
+        mock_register = mocker.patch('stojanovic_one.database.user_management.register_user', return_value=True)
+
+        # Test registration
+        main_window.show_registration_form()
+        main_window.registration_form.username_input.setText("newuser")
+        main_window.registration_form.email_input.setText("newuser@example.com")
+        main_window.registration_form.password_input.setText("password123")
+        qtbot.mouseClick(main_window.registration_form.register_button, Qt.LeftButton)
+
+        # Wait for the registration process to complete
+        qtbot.wait(100)
+
+        # Check if the mocked function was called
+        mock_register.assert_called_once_with(main_window.conn, "newuser", "newuser@example.com", "password123")
+
+        assert main_window.stacked_widget.currentWidget() == main_window.welcome_page
+
+    except Exception as e:
+        print(f"Error in test_registration_flow: {str(e)}")
+        print("Traceback:")
+        traceback.print_exc()
+        pytest.fail(f"Test failed due to exception: {str(e)}")
