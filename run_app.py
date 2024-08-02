@@ -3,7 +3,7 @@
 """
 This script serves as the entry point for the Stojanovic-One application.
 
-It sets up the main window with options to access the login and registration forms,
+It sets up the main window with options to access the login, registration, and logout forms,
 initializes the database, and runs the application's event loop.
 """
 
@@ -11,14 +11,15 @@ import sys
 from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton
 from stojanovic_one.ui.login_form import LoginForm
 from stojanovic_one.ui.registration_form import RegistrationForm
+from stojanovic_one.ui.logout_form import LogoutForm
 from stojanovic_one.database.setup import initialize_database, create_user_table
-from stojanovic_one.database.user_management import login_user, register_user
+from stojanovic_one.database.user_management import login_user, register_user, logout_user
 
 class MainWindow(QMainWindow):
     """
     The main window of the application.
 
-    This window provides buttons to access the login and registration forms.
+    This window provides buttons to access the login, registration, and logout forms.
     It serves as the central hub of the application's user interface.
 
     Attributes:
@@ -51,6 +52,10 @@ class MainWindow(QMainWindow):
         self.register_button.clicked.connect(self.show_registration_form)
         layout.addWidget(self.register_button)
 
+        self.logout_button = QPushButton("Logout")
+        self.logout_button.clicked.connect(self.show_logout_form)
+        layout.addWidget(self.logout_button)
+
         container = QWidget()
         container.setLayout(layout)
         self.setCentralWidget(container)
@@ -64,6 +69,11 @@ class MainWindow(QMainWindow):
         """Create and display the registration form."""
         self.registration_form = RegistrationForm(register_user_func=lambda username, email, password: register_user(self.conn, username, email, password))
         self.registration_form.show()
+
+    def show_logout_form(self):
+        """Create and display the logout form."""
+        self.logout_form = LogoutForm(logout_user_func=logout_user)
+        self.logout_form.show()
 
 def main():
     """

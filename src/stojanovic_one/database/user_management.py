@@ -3,7 +3,7 @@
 import sqlite3
 from sqlite3 import Connection
 import bcrypt
-from stojanovic_one.auth.jwt_utils import generate_token
+from stojanovic_one.auth.jwt_utils import generate_token, invalidate_token
 from typing import Optional
 
 def register_user(conn: Connection, username: str, email: str, password: str) -> bool:
@@ -76,3 +76,16 @@ def login_user(conn: Connection, username: str, password: str) -> Optional[str]:
         return generate_token(username)
     else:
         return None
+
+
+def logout_user(token: str) -> bool:
+    """
+    Log out a user by invalidating their JWT token.
+
+    Args:
+        token (str): The JWT token to invalidate.
+
+    Returns:
+        bool: True if logout was successful, False otherwise.
+    """
+    return invalidate_token(token)

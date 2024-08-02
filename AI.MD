@@ -4,6 +4,32 @@
 
 Stojanovic-One is a Python-based application utilizing SQLite for data storage and PySide6 for the graphical user interface. The project aims to implement best practices in software development, including Test-Driven Development (TDD) and continuous integration.
 
+## Important Development Practices
+
+1. Always update the `run_app.py` file when adding new functionality or making significant changes to the application. This file serves as the entry point for the application and should reflect all major features and components.
+
+2. Maintain comprehensive documentation throughout the project:
+
+   - Provide detailed docstrings for all functions, classes, and modules.
+   - Include inline comments for complex logic or non-obvious code sections.
+   - Keep README.md and other documentation files up-to-date.
+   - Remember to update the GitHub Actions workflow (`python-tests.yml`) if you make any changes to the testing process or environment requirements.
+
+3. Include the full file path as a comment at the top of each Python script. This helps with navigation and understanding the project structure. For example:
+   ```python
+   # src/stojanovic_one/ui/login_form.py
+   ```
+4. Regularly update the requirements.txt file when adding new dependencies or updating existing ones. This ensures that all team members and deployment environments have the correct package versions.
+
+5. When writing tests, always consider whether they are GUI tests or non-GUI tests:
+
+   - Use the @pytest.mark.gui decorator for GUI tests.
+   - This distinction allows for proper testing both locally and in GitHub Actions, where GUI tests may be excluded.
+
+6. Maintain a clear separation between GUI and non-GUI components to facilitate testing and future maintenance.
+7. Always think about error handling and edge cases when implementing new features or modifying existing ones.
+8. Keep the project structure updated in this AI.MD file whenever new files or directories are added.
+
 ## Project Structure
 
 ```
@@ -58,17 +84,6 @@ Stojanovic-One/
 - bcrypt for password hashing
 - GitHub Actions for CI/CD
 
-## Technology Stack
-
-- Python 3.11+
-- SQLite for database
-- PySide6 for GUI
-- pytest for testing
-- pytest-qt for GUI testing
-- pytest-mock for mocking in tests
-- bcrypt for password hashing
-- GitHub Actions for CI/CD
-
 ## Collaboration Workflow
 
 1. **Feature Request**: You (the developer) will provide a high-level description of a feature or enhancement needed for the project.
@@ -105,53 +120,31 @@ Stojanovic-One/
    - To run all tests locally: `pytest`
    - To run only non-GUI tests: `pytest -m "not gui"`
 
-   Remember to update the GitHub Actions workflow (`python-tests.yml`) if you make any changes to the testing process or environment requirements.
-
 7. **Documentation**: Update relevant documentation (including this AI.MD if necessary) as the project evolves.
 
 ## Best Practices
 
 1. **Test-Driven Development (TDD)**: Always write tests before implementing features. Aim for high test coverage.
 
-2. **Code Quality**: Use tools like Black for formatting, flake8 for linting, and mypy for type checking. Consider setting up pre-commit hooks for these.
+2. **Database Management**: Use SQLAlchemy for database operations to ensure clean, maintainable database interactions.
 
-3. **Version Control**: Make small, frequent commits with clear, descriptive messages. Use feature branches for development.
+3. **UI Development**: Separate UI logic from business logic. Use Qt Designer for layout creation when possible.
 
-4. **Database Management**: Use SQLAlchemy for database operations to ensure clean, maintainable database interactions.
+4. **Error Handling**: Implement comprehensive error handling and logging throughout the application.
 
-5. **UI Development**: Separate UI logic from business logic. Use Qt Designer for layout creation when possible.
+5. **Performance**: Regularly profile the application and optimize performance bottlenecks.
 
-6. **Error Handling**: Implement comprehensive error handling and logging throughout the application.
+6. **Dependency Management**: Regularly update dependencies and check for security vulnerabilities.
 
-7. **Security**: Follow security best practices, especially for user authentication and data storage. Use bcrypt for password hashing.
+7. **Documentation**: Maintain up-to-date documentation, including docstrings for all functions and classes.
 
-8. **Performance**: Regularly profile the application and optimize performance bottlenecks.
+8. **GUI Testing**: Use pytest-qt for testing GUI components to ensure proper functionality and user interaction.
 
-9. **Dependency Management**: Regularly update dependencies and check for security vulnerabilities.
+9. **Mocking**: Utilize pytest-mock for creating mock objects in tests, especially for database connections and external services.
 
-10. **Documentation**: Maintain up-to-date documentation, including docstrings for all functions and classes.
+10. **File Paths**: Always include the full file path as a comment at the top of each file. This helps with navigation and understanding the project structure.
 
-11. **GUI Testing**: Use pytest-qt for testing GUI components to ensure proper functionality and user interaction.
-
-12. **Mocking**: Utilize pytest-mock for creating mock objects in tests, especially for database connections and external services.
-
-13. **File Paths**: Always include the full file path as a comment at the top of each file. This helps with navigation and understanding the project structure.
-
-14. **pytest Configuration**: Use `pytest.ini` for configuring pytest behavior, including custom markers like `@pytest.mark.gui` for GUI tests.
-
-## AI Assistance
-
-As your AI assistant, I can help with:
-
-- Breaking down features into manageable tasks
-- Providing code snippets and examples
-- Offering advice on best practices and design patterns
-- Reviewing code and suggesting improvements
-- Helping troubleshoot issues
-- Updating project documentation
-- Suggesting test cases and testing strategies
-
-Remember to provide clear context when asking for assistance, and don't hesitate to ask for clarification or additional information.
+11. **pytest Configuration**: Use `pytest.ini` for configuring pytest behavior, including custom markers like `@pytest.mark.gui` for GUI tests.
 
 ## Continuous Improvement
 

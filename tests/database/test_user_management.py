@@ -3,7 +3,7 @@
 import pytest
 import sqlite3
 from stojanovic_one.database.setup import initialize_database, create_user_table
-from stojanovic_one.database.user_management import register_user, login_user
+from stojanovic_one.database.user_management import register_user, login_user, logout_user
 
 @pytest.fixture
 def db_connection():
@@ -90,3 +90,28 @@ def test_login_user_nonexistent(db_connection):
     """
     token = login_user(db_connection, "nonexistent", "password123")
     assert token is None
+
+def test_logout_user_success(db_connection):
+    """
+    Test successful user logout.
+    """
+    register_user(db_connection, "testuser", "test@example.com", "password123")
+    token = login_user(db_connection, "testuser", "password123")
+    assert token is not None
+    assert logout_user(token)
+
+def test_logout_user_invalid_token():
+    """
+    Test logout attempt with an invalid token.
+    """
+    assert not logout_user("invalid_token")
+
+def test_logout_user_already_logged_out(db_connection):
+    """
+    Test logout attempt with an already invalidated token.
+    """
+    register_user(db_connection, "testuser", "test@example.com", "password123")
+    token = login_user(db_connection, "testuser", "password123")
+    assert token is not None
+    assert logout_user(token)
+    assert not logout_user(token)  # Second logout attempt should fail
