@@ -1,7 +1,7 @@
 # src/stojanovic_one/ui/logout_form.py
 
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel
-from PySide6.QtCore import Slot
+from PySide6.QtCore import Slot, Signal
 from typing import Callable, Optional
 
 class LogoutForm(QWidget):
@@ -21,6 +21,8 @@ class LogoutForm(QWidget):
         logout_button (QPushButton): The button to trigger logout.
         message_label (QLabel): A label to display feedback messages.
     """
+
+    logout_successful = Signal()  # Add this line to define the signal
 
     def __init__(self, logout_user_func: Callable = None, token: Optional[str] = None):
         super().__init__()
@@ -44,6 +46,10 @@ class LogoutForm(QWidget):
         # Connect signals
         self.logout_button.clicked.connect(self.logout_user)
 
+    def set_token(self, token: str):
+        """Set the token for the logout form."""
+        self.token = token
+
     @Slot()
     def logout_user(self):
         """
@@ -58,6 +64,7 @@ class LogoutForm(QWidget):
         if result:
             self.message_label.setText("Logout successful!")
             self.token = None
+            self.logout_successful.emit()  # Emit the signal when logout is successful
         else:
             self.message_label.setText("Logout failed. Please try again.")
 

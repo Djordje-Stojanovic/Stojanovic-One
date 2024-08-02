@@ -1,12 +1,13 @@
 # src/stojanovic_one/ui/welcome_page.py
 
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QApplication
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, QTimer
 from PySide6.QtGui import QFont, QColor, QPalette
 
 class WelcomePage(QWidget):
     login_clicked = Signal()
     register_clicked = Signal()
+    logout_clicked = Signal()
 
     def __init__(self):
         super().__init__()
@@ -31,8 +32,7 @@ class WelcomePage(QWidget):
         layout.addWidget(self.description_label)
 
         self.login_button = QPushButton("Login")
-        self.login_button.setFixedSize(200, 50)
-        self.login_button.clicked.connect(self.login_clicked.emit)
+        self.login_button.clicked.connect(self._on_login_clicked)
         self.login_button.setStyleSheet("""
             QPushButton {
                 background-color: #3498db;
@@ -47,8 +47,7 @@ class WelcomePage(QWidget):
         layout.addWidget(self.login_button, alignment=Qt.AlignCenter)
 
         self.register_button = QPushButton("Register")
-        self.register_button.setFixedSize(200, 50)
-        self.register_button.clicked.connect(self.register_clicked.emit)
+        self.register_button.clicked.connect(self._on_register_clicked)
         self.register_button.setStyleSheet("""
             QPushButton {
                 background-color: #2ecc71;
@@ -62,23 +61,74 @@ class WelcomePage(QWidget):
         """)
         layout.addWidget(self.register_button, alignment=Qt.AlignCenter)
 
+        self.logout_button = QPushButton("Logout")
+        self.logout_button.clicked.connect(self._on_logout_clicked)
+        self.logout_button.setStyleSheet("""
+            QPushButton {
+                background-color: #e74c3c;
+                color: white;
+                border-radius: 5px;
+                font-size: 16px;
+            }
+            QPushButton:hover {
+                background-color: #c0392b;
+            }
+        """)
+        self.logout_button.hide()  # Hide the logout button initially
+        layout.addWidget(self.logout_button, alignment=Qt.AlignCenter)
+
         self.setLayout(layout)
+
+        # Timer for delayed resize event
+        self.resize_timer = QTimer(self)
+        self.resize_timer.setSingleShot(True)
+        self.resize_timer.timeout.connect(self.delayed_resize)
+
+    def _on_login_clicked(self):
+        print("Login button clicked")
+        self.login_clicked.emit()
+
+    def _on_register_clicked(self):
+        print("Register button clicked")
+        self.register_clicked.emit()
+
+    def _on_logout_clicked(self):
+        print("Logout button clicked")
+        self.logout_clicked.emit()
+
+    def update_ui_after_login(self, is_logged_in: bool):
+        if is_logged_in:
+            self.logout_button.show()
+            self.login_button.hide()
+            self.register_button.hide()
+        else:
+            self.logout_button.hide()
+            self.login_button.show()
+            self.register_button.show()
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        
+        self.resize_timer.start(100)  # Delay the resize event by 100ms
+
+    def delayed_resize(self):
         window_width = self.width()
         if window_width < 600:
-            new_font = QFont("Arial", 20, QFont.Bold)  # Changed from 24 to 20
+            new_font = QFont("Arial", 20, QFont.Bold)
+            button_width = 320  # Set to exactly 320 for small screens
         else:
             new_font = QFont("Arial", 24, QFont.Bold)
+            button_width = 200
         
         self.welcome_label.setFont(new_font)
         self.description_label.setFont(QFont("Arial", 12 if window_width < 600 else 16))
         
-        button_width = min(200, int(window_width * 0.8))
         self.login_button.setFixedSize(button_width, 50)
         self.register_button.setFixedSize(button_width, 50)
+        self.logout_button.setFixedSize(button_width, 50)
 
         self.update()
         QApplication.processEvents()
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        self.delayed_resize()  # Force a resize event to update the UI

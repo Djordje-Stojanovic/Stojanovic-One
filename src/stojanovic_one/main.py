@@ -31,21 +31,32 @@ class MainWindow(QMainWindow):
         self.stacked_widget.addWidget(self.registration_form)
         self.stacked_widget.addWidget(self.logout_form)
 
-        # Make sure these connections are correct
         self.welcome_page.login_clicked.connect(self.show_login_form)
         self.welcome_page.register_clicked.connect(self.show_registration_form)
+        self.welcome_page.logout_clicked.connect(self.show_logout_form)
         self.registration_form.registration_successful.connect(self.on_registration_successful)
         self.login_form.login_successful.connect(self.on_login_successful)
+        self.logout_form.logout_successful.connect(self.perform_logout)
+        self.welcome_page.logout_clicked.connect(self.perform_logout)
 
+        print("MainWindow initialized")
         self.stacked_widget.setCurrentWidget(self.welcome_page)
 
     def show_login_form(self):
-        print("Showing login form")
+        print("show_login_form called")
         self.stacked_widget.setCurrentWidget(self.login_form)
 
     def show_registration_form(self):
-        print("Showing registration form")
+        print("show_registration_form called")
         self.stacked_widget.setCurrentWidget(self.registration_form)
+
+    def show_logout_form(self):
+        print("show_logout_form called")
+        if self.current_token:
+            self.logout_form.set_token(self.current_token)
+            self.stacked_widget.setCurrentWidget(self.logout_form)
+        else:
+            QMessageBox.information(self, "Logout", "No user is currently logged in.")
 
     def on_registration_successful(self):
         print("Registration successful")
@@ -53,14 +64,8 @@ class MainWindow(QMainWindow):
 
     def on_login_successful(self, username, password):
         print(f"Login successful for user: {username}")
+        self.welcome_page.update_ui_after_login(True)
         self.stacked_widget.setCurrentWidget(self.welcome_page)
-
-    def show_logout_form(self):
-        if self.current_token:
-            self.logout_form.set_token(self.current_token)
-            self.stacked_widget.setCurrentWidget(self.logout_form)
-        else:
-            QMessageBox.information(self, "Logout", "No user is currently logged in.")
 
     def login_user(self, username: str, password: str) -> bool:
         print(f"Attempting to log in user: {username}")
@@ -89,19 +94,27 @@ class MainWindow(QMainWindow):
             if not self.test_mode:
                 QMessageBox.warning(self, "Registration Failed", "An error occurred during registration.")
             return False
-
+    
+    def perform_logout(self):
+        if self.current_token:
+            self.logout_user(self.current_token)
+            
     def logout_user(self, token: str) -> bool:
         print(f"Attempting to log out user with token: {token}")
         if logout_user(token):
             self.current_token = None
             print("Logout successful")
-            QMessageBox.information(self, "Logout Successful", "You have been logged out.")
+            self.welcome_page.update_ui_after_login(False)
+            if not self.test_mode:
+                QMessageBox.information(self, "Logout Successful", "You have been logged out.")
             self.stacked_widget.setCurrentWidget(self.welcome_page)
             return True
         else:
             print("Logout failed")
-            QMessageBox.warning(self, "Logout Failed", "An error occurred during logout.")
+            if not self.test_mode:
+                QMessageBox.warning(self, "Logout Failed", "An error occurred during logout.")
             return False
+
 
 def main(test_mode=False):
     app = QApplication.instance()
@@ -120,4 +133,5 @@ def main(test_mode=False):
         return app.exec()
 
 if __name__ == "__main__":
+    print("Starting application")
     main()

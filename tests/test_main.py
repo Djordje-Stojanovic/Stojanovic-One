@@ -59,7 +59,7 @@ def test_login_logout_flow(app, qtbot, mocker):
         qtbot.addWidget(main_window)
 
         # Mock the login_user function to return a fake token
-        mock_login = mocker.patch('stojanovic_one.database.user_management.login_user', return_value="fake_token")
+        mock_login = mocker.patch('stojanovic_one.main.login_user', return_value="fake_token")
 
         # Test login
         main_window.show_login_form()
@@ -75,15 +75,13 @@ def test_login_logout_flow(app, qtbot, mocker):
 
         assert main_window.current_token == "fake_token"
         assert main_window.stacked_widget.currentWidget() == main_window.welcome_page
+        assert main_window.welcome_page.logout_button.isVisible()
+        assert not main_window.welcome_page.login_button.isVisible()
+        assert not main_window.welcome_page.register_button.isVisible()
 
         # Test logout
-        main_window.show_logout_form()
-        assert main_window.stacked_widget.currentWidget() == main_window.logout_form
-
-        # Mock the logout_user function to return True
-        mock_logout = mocker.patch('stojanovic_one.database.user_management.logout_user', return_value=True)
-
-        qtbot.mouseClick(main_window.logout_form.logout_button, Qt.LeftButton)
+        mock_logout = mocker.patch('stojanovic_one.main.logout_user', return_value=True)
+        main_window.welcome_page.logout_clicked.emit()
 
         # Wait for the logout process to complete
         qtbot.wait(100)
@@ -93,6 +91,9 @@ def test_login_logout_flow(app, qtbot, mocker):
 
         assert main_window.current_token is None
         assert main_window.stacked_widget.currentWidget() == main_window.welcome_page
+        assert not main_window.welcome_page.logout_button.isVisible()
+        assert main_window.welcome_page.login_button.isVisible()
+        assert main_window.welcome_page.register_button.isVisible()
 
     except Exception as e:
         print(f"Error in test_login_logout_flow: {str(e)}")
@@ -107,7 +108,7 @@ def test_registration_flow(app, qtbot, mocker):
         qtbot.addWidget(main_window)
 
         # Mock the register_user function to return True
-        mock_register = mocker.patch('stojanovic_one.database.user_management.register_user', return_value=True)
+        mock_register = mocker.patch('stojanovic_one.main.register_user', return_value=True)
 
         # Test registration
         main_window.show_registration_form()
