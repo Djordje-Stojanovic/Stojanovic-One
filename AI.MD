@@ -6,7 +6,7 @@ Stojanovic-One is a Python-based application utilizing SQLite for data storage a
 
 ## Important Development Practices
 
-1. Always update the `run_app.py` file when adding new functionality or making significant changes to the application. This file serves as the entry point for the application and should reflect all major features and components.
+1. Always update the `main.py` file when adding new functionality or making significant changes to the application. This file serves as the entry point for the application and should reflect all major features and components.
 
 2. Maintain comprehensive documentation throughout the project:
 
@@ -16,9 +16,11 @@ Stojanovic-One is a Python-based application utilizing SQLite for data storage a
    - Remember to update the GitHub Actions workflow (`python-tests.yml`) if you make any changes to the testing process or environment requirements.
 
 3. Include the full file path as a comment at the top of each Python script. This helps with navigation and understanding the project structure. For example:
+
    ```python
    # src/stojanovic_one/ui/login_form.py
    ```
+
 4. Regularly update the requirements.txt file when adding new dependencies or updating existing ones. This ensures that all team members and deployment environments have the correct package versions.
 
 5. When writing tests, always consider whether they are GUI tests or non-GUI tests:
@@ -27,8 +29,27 @@ Stojanovic-One is a Python-based application utilizing SQLite for data storage a
    - This distinction allows for proper testing both locally and in GitHub Actions, where GUI tests may be excluded.
 
 6. Maintain a clear separation between GUI and non-GUI components to facilitate testing and future maintenance.
+
 7. Always think about error handling and edge cases when implementing new features or modifying existing ones.
+
 8. Keep the project structure updated in this AI.MD file whenever new files or directories are added.
+
+9. Follow Test-Driven Development (TDD) principles rigorously:
+
+   - Write tests before implementing features.
+   - Run tests frequently during development.
+   - Refactor code after passing tests to improve design and maintainability.
+   - Aim for high test coverage, especially for critical functionality.
+
+10. Implement responsive design for GUI components:
+
+    - Ensure that UI elements adapt to different screen sizes.
+    - Test the application on various display resolutions.
+
+11. Prioritize code readability and maintainability:
+    - Use meaningful variable and function names.
+    - Keep functions small and focused on a single responsibility.
+    - Regularly refactor code to improve its structure and eliminate duplication.
 
 ## Project Structure
 
@@ -44,9 +65,12 @@ Stojanovic-One/
 │       │   └── user_management.py
 │       ├── ui/
 │       │   ├── __init__.py
+│       │   ├── welcome_page.py
+│       │   ├── login_form.py
 │       │   ├── registration_form.py
-│       │   └── login_form.py
+│       │   └── logout_form.py
 │       └── auth/
+│           ├── __init__.py
 │           └── jwt_utils.py
 ├── tests/
 │   ├── __init__.py
@@ -55,8 +79,10 @@ Stojanovic-One/
 │   │   ├── test_database_setup.py
 │   │   └── test_user_management.py
 │   ├── ui/
+│   │   ├── test_welcome_page.py
+│   │   ├── test_login_form.py
 │   │   ├── test_registration_form.py
-│   │   └── test_login_form.py
+│   │   └── test_logout_form.py
 │   └── auth/
 │       └── test_jwt_utils.py
 ├── .github/
@@ -82,6 +108,7 @@ Stojanovic-One/
 - pytest-qt for GUI testing
 - pytest-mock for mocking in tests
 - bcrypt for password hashing
+- PyJWT for JWT token handling
 - GitHub Actions for CI/CD
 
 ## Collaboration Workflow
@@ -104,13 +131,9 @@ Stojanovic-One/
    Our project uses GitHub Actions for continuous integration. The workflow is set up to run all tests, excluding GUI tests, on every push and pull request. Here's how it works:
 
    1. **Environment Setup**: The workflow runs on an Ubuntu environment and sets up Python 3.11.3.
-
    2. **System Dependencies**: We install necessary system dependencies, including libraries required for PySide6.
-
    3. **Python Dependencies**: All project dependencies listed in `requirements.txt` are installed.
-
    4. **Running Tests**: All non-GUI tests are executed using pytest with the command `pytest -v -m "not gui" tests`.
-
    5. **Test Results**: The workflow will fail if any tests fail, preventing merging of branches with failing tests.
 
    ### Local vs CI Testing
@@ -145,6 +168,12 @@ Stojanovic-One/
 10. **File Paths**: Always include the full file path as a comment at the top of each file. This helps with navigation and understanding the project structure.
 
 11. **pytest Configuration**: Use `pytest.ini` for configuring pytest behavior, including custom markers like `@pytest.mark.gui` for GUI tests.
+
+12. **Responsive Design**: Implement responsive design principles in GUI components to ensure proper display on various screen sizes.
+
+13. **Code Reviews**: Conduct thorough code reviews, focusing on code quality, adherence to project standards, and potential improvements.
+
+14. **Version Control**: Use meaningful commit messages and maintain a clean Git history. Consider using feature branches for significant changes.
 
 ## Continuous Improvement
 
