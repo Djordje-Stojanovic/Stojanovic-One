@@ -6,6 +6,7 @@ from PySide6.QtCore import Qt
 from stojanovic_one.main import main, MainWindow
 import sys
 import traceback
+from stojanovic_one.auth.jwt_utils import generate_token
 
 @pytest.fixture
 def app(qtbot):
@@ -81,7 +82,7 @@ def test_login_logout_flow(app, qtbot, mocker):
 
         # Test logout
         mock_logout = mocker.patch('stojanovic_one.main.logout_user', return_value=True)
-        main_window.welcome_page.logout_clicked.emit()
+        main_window.perform_logout()  # Call perform_logout directly
 
         # Wait for the logout process to complete
         qtbot.wait(100)
@@ -127,6 +128,41 @@ def test_registration_flow(app, qtbot, mocker):
 
     except Exception as e:
         print(f"Error in test_registration_flow: {str(e)}")
+        print("Traceback:")
+        traceback.print_exc()
+        pytest.fail(f"Test failed due to exception: {str(e)}")
+
+@pytest.mark.gui
+def test_protected_routes(app, qtbot, mocker):
+    try:
+        main_window = main(test_mode=True)
+        qtbot.addWidget(main_window)
+
+        # Test accessing protected route without token
+        main_window.show_logout_form()
+        assert main_window.stacked_widget.currentWidget() == main_window.welcome_page
+
+        # Mock login to set a valid token
+        main_window.current_token = generate_token("testuser")
+
+        # Test accessing protected route with valid token
+        main_window.show_logout_form()
+        assert main_window.stacked_widget.currentWidget() == main_window.logout_form
+
+        # Test authentication failure
+        mock_validate = mocker.patch('stojanovic_one.auth.jwt_utils.validate_token', return_value=None)
+        
+        # Simulate authentication failure by calling handle_auth_failure directly
+        main_window.handle_auth_failure()
+
+        # Wait for the UI to update
+        qtbot.wait(100)
+
+        assert main_window.stacked_widget.currentWidget() == main_window.welcome_page
+        assert main_window.current_token is None
+
+    except Exception as e:
+        print(f"Error in test_protected_routes: {str(e)}")
         print("Traceback:")
         traceback.print_exc()
         pytest.fail(f"Test failed due to exception: {str(e)}")

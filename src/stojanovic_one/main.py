@@ -8,6 +8,7 @@ from stojanovic_one.ui.registration_form import RegistrationForm
 from stojanovic_one.ui.logout_form import LogoutForm
 from stojanovic_one.database.setup import initialize_database, create_user_table
 from stojanovic_one.database.user_management import login_user, register_user, logout_user
+from stojanovic_one.auth.middleware import protect_route, JWTMiddleware
 
 class MainWindow(QMainWindow):
     def __init__(self, conn, test_mode=False):
@@ -38,6 +39,8 @@ class MainWindow(QMainWindow):
         self.login_form.login_successful.connect(self.on_login_successful)
         self.logout_form.logout_successful.connect(self.perform_logout)
         self.welcome_page.logout_clicked.connect(self.perform_logout)
+        self.jwt_middleware = JWTMiddleware()
+        self.jwt_middleware.authentication_failed.connect(self.handle_auth_failure)
 
         print("MainWindow initialized")
         self.stacked_widget.setCurrentWidget(self.welcome_page)
@@ -114,6 +117,33 @@ class MainWindow(QMainWindow):
             if not self.test_mode:
                 QMessageBox.warning(self, "Logout Failed", "An error occurred during logout.")
             return False
+    
+    @protect_route
+    def some_protected_method(self):
+        # This method can only be called by authenticated users
+        print("This is a protected method")
+
+    @protect_route
+    def show_logout_form(self):
+        print("show_logout_form called")
+        if self.current_token:
+            self.logout_form.set_token(self.current_token)
+            self.stacked_widget.setCurrentWidget(self.logout_form)
+        else:
+            print("No valid token, redirecting to welcome page")
+            self.stacked_widget.setCurrentWidget(self.welcome_page)
+
+    def perform_logout(self):
+        if self.current_token:
+            self.logout_user(self.current_token)
+    
+    def handle_auth_failure(self):
+        print("Authentication failed")
+        self.current_token = None
+        self.welcome_page.update_ui_after_login(False)
+        self.stacked_widget.setCurrentWidget(self.welcome_page)
+        if not self.test_mode:
+            QMessageBox.warning(self, "Authentication Failed", "Your session has expired. Please log in again.")
 
 
 def main(test_mode=False):
