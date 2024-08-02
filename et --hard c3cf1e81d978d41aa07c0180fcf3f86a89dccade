@@ -1,0 +1,389 @@
+[33mcommit 78aa54158e09d3db34f47b7b2663f0328f7236d4[m[33m ([m[1;36mHEAD -> [m[1;32mmain[m[33m)[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Sat Aug 3 01:06:36 2024 +0200
+
+    Updated the whole middleware with protected functions now by JWT Tokens
+
+[33mcommit c3cf1e81d978d41aa07c0180fcf3f86a89dccade[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Sat Aug 3 00:44:25 2024 +0200
+
+    Updated AI.MD
+
+[33mcommit ecfb5906af9f249c523e21d64e17808766223e9e[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Sat Aug 3 00:42:05 2024 +0200
+
+    Updated AI.MD
+
+[33mcommit 48231c6070d698862644c0f8845e0bfbaf2717bd[m
+Merge: 92f89fa d574e97
+Author: Djordje Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Fri Aug 2 20:38:08 2024 +0200
+
+    Merge pull request #18 from Djordje-Stojanovic/6-5-landing-page
+    
+    6 5 landing page
+
+[33mcommit d574e975ed196030e163633b33da014a45ec58f0[m[33m ([m[1;31morigin/6-5-landing-page[m[33m)[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Fri Aug 2 20:35:54 2024 +0200
+
+    Updating gitignore
+
+[33mcommit 21dee77d298b15cb39d177db70f714f8937ee512[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Fri Aug 2 20:35:41 2024 +0200
+
+    Remove users.db from Git tracking
+
+[33mcommit 65ae52df70479ca26f00ac64a94fcbccc5bd06ea[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Fri Aug 2 20:30:49 2024 +0200
+
+    Update finally fixed the login/logout logic and also deleted a ton of stuff that was unnecesary
+
+[33mcommit 31c9106ce9002c8dfe756ef6567fc57ec4830b31[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Fri Aug 2 19:36:59 2024 +0200
+
+    Still struggling with registration form and so on
+
+[33mcommit a1d30e931cd92d92081e2d6cf1a2b2958196a101[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Fri Aug 2 18:27:15 2024 +0200
+
+    Code still failing need to check before continuing, gui problems
+
+[33mcommit 92f89fa6147bc0a1222208d0cfd78669cb17686c[m
+Merge: 377af28 e05b446
+Author: Djordje Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Fri Aug 2 16:35:03 2024 +0200
+
+    Merge pull request #17 from Djordje-Stojanovic/5-4-user-logout
+    
+    5 4 user logout
+
+[33mcommit e05b446523e0233b95d7c84406322bdf80d603b9[m[33m ([m[1;31morigin/5-4-user-logout[m[33m)[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Fri Aug 2 15:04:18 2024 +0200
+
+    Updated now also the test and the logout_form.py and the test_logout_form.py and the run_app.py it works
+
+[33mcommit 0d181193b6e59adf100366811a11e89189477a81[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Fri Aug 2 14:58:38 2024 +0200
+
+    Updated Logout logic, updated AI.MD updated some other stuff but facing logical issue on Logout
+
+[33mcommit 377af28100f573b60dbfc0f81e11d9ec1de3fa1d[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Fri Aug 2 14:34:36 2024 +0200
+
+    Updated Project Strucutre in AI.MD
+
+[33mcommit d19bd4e0a6b796f5818bcdcef2d207187e7415e6[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Fri Aug 2 01:12:35 2024 +0200
+
+    Updating documentation
+
+[33mcommit 8e41f78d2743f1e757a3865af622607f5d039312[m
+Merge: 3435efe 7df9bd3
+Author: Djordje Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Fri Aug 2 01:08:24 2024 +0200
+
+    Merge pull request #16 from Djordje-Stojanovic/15-31-hotfix-to-test-locally
+    
+    Updated added new script in main directory run_app.py
+
+[33mcommit 7df9bd36fcb6cd80f715b8894e7660690becad32[m[33m ([m[1;31morigin/15-31-hotfix-to-test-locally[m[33m)[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Fri Aug 2 01:04:35 2024 +0200
+
+    Updated added new script in main directory run_app.py
+
+[33mcommit 3435efe309b26f5618a396960d3935b50fca0df1[m
+Merge: d8c1f66 47b0735
+Author: Djordje Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Fri Aug 2 00:57:05 2024 +0200
+
+    Merge pull request #14 from Djordje-Stojanovic/4-3-user-login
+    
+    4 3 user login
+
+[33mcommit 47b0735c0975eafa38c91677cb479f339b06390b[m[33m ([m[1;31morigin/4-3-user-login[m[33m)[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Fri Aug 2 00:51:13 2024 +0200
+
+    Updated new files test_jw utils, test_login_form, also updated test_user management
+
+[33mcommit eed282c095f05f3b0748abed46aced9d85bbafa5[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Fri Aug 2 00:42:20 2024 +0200
+
+    Updated some other JWT Token file in auth/ and user_management in db/ got also an upgrade also requirements/ updated
+
+[33mcommit 48d189308afc35141372580e9108f378a5ce1e47[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Fri Aug 2 00:37:29 2024 +0200
+
+    Updated login_form.py a new file for the login form
+
+[33mcommit d8c1f669a3f33706f42576dd9b2eec9ebd0ceb08[m
+Merge: 61240bf f30c272
+Author: Djordje Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Thu Aug 1 01:21:03 2024 +0200
+
+    Merge pull request #13 from Djordje-Stojanovic/3-2-user-registration
+    
+    3 2 user registration
+
+[33mcommit f30c27244ba04965e7349c24d8b6dc351824a761[m[33m ([m[1;31morigin/3-2-user-registration[m[33m)[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Thu Aug 1 01:16:12 2024 +0200
+
+    Update before pull request documentation of test_registration_form.py
+
+[33mcommit 21e2b935514182758101ec732bc0a44625872829[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Thu Aug 1 01:10:11 2024 +0200
+
+    Updated as last some file paths
+
+[33mcommit 2587362157e2fe2459ae34e2b6cda4e67788fa89[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Thu Aug 1 01:08:28 2024 +0200
+
+    As now all tests are running we can finally close this with the last few updates to AI.MD
+
+[33mcommit 4a4bd1f4159ba80dce46f8cf4391b993e1079fc0[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Thu Aug 1 01:02:38 2024 +0200
+
+    Trying to ignore gui one last time
+
+[33mcommit 7ae583e8a5f485f1944cb8822a44e4f087ff85eb[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Thu Aug 1 00:55:27 2024 +0200
+
+    Last update I believe
+
+[33mcommit 5c44ee4c34d81a16a25c968955675678fead2f2b[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Thu Aug 1 00:50:34 2024 +0200
+
+    Finally thinking I finished the test problems
+
+[33mcommit 86885cfdc7f2736276d2894e0dcc2aa4bfb30043[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Thu Aug 1 00:37:57 2024 +0200
+
+    Struggling with automated workflow for gui still
+
+[33mcommit 08075ed277525add41aaf7eb95ef4f2ced970728[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Thu Aug 1 00:30:04 2024 +0200
+
+    Once Again Updated python tests and test_main.py
+
+[33mcommit 6f35a9e629d5f5dbe2db14d5f6f292fb902af5b3[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Thu Aug 1 00:26:49 2024 +0200
+
+    Updated Main and YML to facilitate all changes
+
+[33mcommit 2f4166a1d6d2a27223f8c3bf0e4ce7e07647257d[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Wed Jul 31 22:12:04 2024 +0200
+
+    Updated yml file once again
+
+[33mcommit 53e715fd730e2fcc1583ef50295073b14dd5d151[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Wed Jul 31 22:11:36 2024 +0200
+
+    Updated yml file once again
+
+[33mcommit f4b4d9a11b2afa66c8b6b2b5ed436311a432bdde[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Wed Jul 31 18:59:16 2024 +0200
+
+    Updated python-tests.yml to add new libraries
+
+[33mcommit 508aae07e9de9a0fcbf0129ff18905f751a15452[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Wed Jul 31 18:56:29 2024 +0200
+
+    updated AI.MD
+
+[33mcommit 144252ee0b3bd608b18fe487df403c431aa37dc4[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Wed Jul 31 18:54:15 2024 +0200
+
+    Updated xvfb for gui tests online in gthub actions
+
+[33mcommit 5d7771a2e444aef1bea1c0b0d9bc599c44212a32[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Wed Jul 31 18:47:00 2024 +0200
+
+    Updated github actions workflow
+
+[33mcommit 37904f57551c9ff38ea37d800aa7a0c41779f3b0[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Wed Jul 31 18:44:10 2024 +0200
+
+    Updated AI.MD and workflow.md to reflect progress and new ways of collabration
+
+[33mcommit 7802beea85f77ce224c72fa21f466cfd16398ea1[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Wed Jul 31 18:37:58 2024 +0200
+
+    Updated to finish task 2 added new tests
+
+[33mcommit 9662cca9cd9960e0b2478cf31f6695fb929196d5[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Wed Jul 31 17:55:26 2024 +0200
+
+    Update now so that user management.py works and tests pass
+
+[33mcommit 61240bf0054082c9be54a30476025723b32f3f8c[m
+Merge: 5f5e5f3 16b5dd6
+Author: Djordje Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Wed Jul 31 15:26:05 2024 +0200
+
+    Merge pull request #12 from Djordje-Stojanovic/2-1-database-setup
+    
+    2 1 database setup
+
+[33mcommit 16b5dd6db85bace27b52d5a9317c276306c47abf[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Wed Jul 31 15:23:01 2024 +0200
+
+    Added Documentation to test_database_setup and setup.py for database sqlite
+
+[33mcommit 88d8f161dee72cd76795da2dd71a542f47daa1d5[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Wed Jul 31 15:15:33 2024 +0200
+
+    New Tests, new Database connection and creation and vaidation in SQLite
+
+[33mcommit 5f5e5f3fb8438a1f3b6e29651b71063a34d30213[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Wed Jul 31 00:44:08 2024 +0200
+
+    Updated Project Basics, Updated Project Work Structure, Github projects, issues, Milestones, etc.
+
+[33mcommit f10e580761b4cd2ad7d937c338f61322e0a2d974[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Wed Jul 31 00:19:42 2024 +0200
+
+    Updated Workflow.md
+
+[33mcommit 6adf65e5b1975e326e86cad308f8331e0c22ff08[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Tue Jul 30 23:55:43 2024 +0200
+
+    Updated Workflow.md
+
+[33mcommit 4c382da742fdffcac40b2dc10d87c93ee19c8fad[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Tue Jul 30 23:55:06 2024 +0200
+
+    Updated Workflow.md
+
+[33mcommit 0209d90cc5cd087e27fe56e22a47985168c53326[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Tue Jul 30 23:54:28 2024 +0200
+
+    Updated Workflow.md
+
+[33mcommit a9c1efde9f516992b952f9f9d401130bc2c54e4f[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Tue Jul 30 22:29:11 2024 +0200
+
+    Fix Python version specification and update GitHub Actions workflow
+
+[33mcommit 6673bdc7e5c00eca3278e12dfc02c2b053974774[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Tue Jul 30 22:25:16 2024 +0200
+
+    Add GitHub Actions workflow for Python testing
+
+[33mcommit 06bc0dca9859a6bec4ee373c77bf04298b2af3cc[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Tue Jul 30 18:13:20 2024 +0200
+
+    updated a new file workflow.md - this will feature the complete Workflow
+
+[33mcommit 1c0e28380be161fb6a3a43bf57955ebc0fa121a4[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Tue Jul 30 18:12:17 2024 +0200
+
+    updated a new file workflow.md - this will feature the complete Workflow
+
+[33mcommit eb4814b0090246dd709eec88ce3d152dd0169922[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Tue Jul 30 18:11:46 2024 +0200
+
+    updated a new file workflow.md - this will feature the complete Workflow
+
+[33mcommit f3b58e67fe73a44d6a7192f5a43b4678e47a2734[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Tue Jul 30 18:09:48 2024 +0200
+
+    updated a new file workflow.md - this will feature the complete Workflow
+
+[33mcommit 15e4deb1504a39b7cf14811b9e2e04b1f3f239d8[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Tue Jul 30 18:07:36 2024 +0200
+
+    updated a new file workflow.md - this will feature the complete Workflow
+
+[33mcommit fea0209104da12a7c1beba58f9343ee2cc363ceb[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Tue Jul 30 18:07:01 2024 +0200
+
+    updated a new file workflow.md - this will feature the complete Workflow
+
+[33mcommit 8fad43c7490c49f17439212c215d5232726564fb[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Tue Jul 30 18:04:52 2024 +0200
+
+    updated a new file workflow.md - this will feature the complete Workflow
+
+[33mcommit 9840372dc1a52446c41e426c1f852dbdaf04a8be[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Tue Jul 30 18:00:12 2024 +0200
+
+    updated a new file workflow.md - this will feature the complete Workflow
+
+[33mcommit b460571e9ebab4fe272b2cd68d8355179065ad2d[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Tue Jul 30 17:59:39 2024 +0200
+
+    updated a new file workflow.md - this will feature the complete Workflow
+
+[33mcommit 0b15d1223296ca48040ca11ad3d58c40369342c0[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Tue Jul 30 00:51:38 2024 +0200
+
+    Add main script and basic test
+
+[33mcommit 06adf300804bdbf0ca22730167c7f592d0517a68[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Tue Jul 30 00:37:58 2024 +0200
+
+    Updated readme.md
+
+[33mcommit da79236df07fc38f057786bb922c32de1b90dc1c[m
+Author: Djordje-Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Tue Jul 30 00:34:48 2024 +0200
+
+    Setting Up
+
+[33mcommit e66ecee41274792705a296294b4d7f653b03b344[m
+Author: Djordje Stojanovic <djordjestojanovic1992@gmail.com>
+Date:   Tue Jul 30 00:17:36 2024 +0200
+
+    Initial commit
