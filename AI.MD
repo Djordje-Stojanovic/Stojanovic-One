@@ -171,10 +171,6 @@ Stojanovic-One/
 
 12. **Responsive Design**: Implement responsive design principles in GUI components to ensure proper display on various screen sizes.
 
-13. **Code Reviews**: Conduct thorough code reviews, focusing on code quality, adherence to project standards, and potential improvements.
-
-14. **Version Control**: Use meaningful commit messages and maintain a clean Git history. Consider using feature branches for significant changes.
-
 ## Continuous Improvement
 
 This document and our workflow are not set in stone. As we work together and the project evolves, we may find areas for improvement in our process. Feel free to suggest changes or ask for adjustments to this workflow at any time.
