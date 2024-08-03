@@ -78,10 +78,12 @@ Stojanovic-One/
 │       └── auth/
 │           ├── __init__.py
 │           ├── jwt_utils.py
-│           └── middleware.py
+│           ├── middleware.py
+│           └── rate_limiting.py
 ├── tests/
 │   ├── __init__.py
 │   ├── test_main.py
+│   ├── test_main_security.py
 │   ├── database/
 │   │   ├── test_database_setup.py
 │   │   └── test_user_management.py
@@ -92,7 +94,8 @@ Stojanovic-One/
 │   │   └── test_logout_form.py
 │   └── auth/
 │       ├── test_jwt_utils.py
-│       └── test_middleware.py
+│       ├── test_middleware.py
+│       └── test_rate_limiting.py
 ├── .github/
 │   └── workflows/
 │       └── python-tests.yml
@@ -118,6 +121,7 @@ Stojanovic-One/
 - bcrypt for password hashing
 - PyJWT for JWT token handling
 - GitHub Actions for CI/CD
+- `pytest-qt` for GUI testing
 
 ## Collaboration Workflow
 
@@ -167,7 +171,8 @@ Stojanovic-One/
 
    - Implement comprehensive error handling throughout the application.
    - Use JWT tokens for authentication and protect sensitive routes with the `@protect_route` decorator.
-   - Regularly review and update security measures.
+   - Implement rate limiting for sensitive operations like login attempts.
+   - Regularly review and update security measures, including token expiration and rate limiting parameters.
 
 6. **Code Quality and Maintenance**:
 
