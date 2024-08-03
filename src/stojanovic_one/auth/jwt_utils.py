@@ -11,19 +11,20 @@ ALGORITHM = "HS256"
 # We'll use this set to store invalidated tokens
 invalidated_tokens = set()
 
-def generate_token(username: str) -> str:
+def generate_token(username: str, expiration: int = 3600) -> str:
     """
     Generate a JWT token for a user.
 
     Args:
         username (str): The username to include in the token payload.
+        expiration (int): Token expiration time in seconds. Default is 1 hour.
 
     Returns:
         str: The generated JWT token.
     """
     payload = {
         "sub": username,
-        "exp": datetime.utcnow() + timedelta(hours=1),  # Token expires in 1 hour
+        "exp": datetime.utcnow() + timedelta(seconds=expiration),
         "iat": datetime.utcnow(),
         "jti": str(uuid.uuid4()),  # Unique identifier for the token
     }

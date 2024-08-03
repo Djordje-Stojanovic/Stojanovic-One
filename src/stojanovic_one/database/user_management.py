@@ -46,7 +46,6 @@ def register_user(conn: Connection, username: str, email: str, password: str) ->
     except sqlite3.Error:
         conn.rollback()
         return False
-    
 
 def login_user(conn: Connection, username: str, password: str) -> Optional[str]:
     """
