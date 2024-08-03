@@ -155,33 +155,45 @@ Stojanovic-One/
 
 ## Best Practices
 
-1. **Test-Driven Development (TDD)**: Always write tests before implementing features. Aim for high test coverage.
+1. **Apply Elon Musk's Algorithm for Efficiency**:
+   a. Question every requirement: Identify who made each requirement and challenge it, regardless of the source.
+   b. Delete any unnecessary part or process: Be prepared to add back about 10% of deleted items.
+   c. Simplify and optimize: Only after unnecessary elements are removed.
+   d. Accelerate cycle time: Speed up necessary processes.
+   e. Automate: As the final step, after all other optimizations.
 
-2. **Database Management**: Use SQLAlchemy for database operations to ensure clean, maintainable database interactions.
+2. **Test-Driven Development (TDD)**: Write tests before implementing features. Aim for high test coverage.
 
-3. **UI Development**: Separate UI logic from business logic. Use Qt Designer for layout creation when possible.
+3. **Database Management**: Use SQLite for efficient data storage and retrieval.
 
-4. **Error Handling**: Implement comprehensive error handling and logging throughout the application.
+4. **UI Development**: Separate UI logic from business logic. Implement responsive design for various screen sizes.
 
-5. **Performance**: Regularly profile the application and optimize performance bottlenecks.
+5. **Error Handling and Security**:
 
-6. **Dependency Management**: Regularly update dependencies and check for security vulnerabilities.
+   - Implement comprehensive error handling throughout the application.
+   - Use JWT tokens for authentication and protect sensitive routes with the `@protect_route` decorator.
+   - Regularly review and update security measures.
 
-7. **Documentation**: Maintain up-to-date documentation, including docstrings for all functions and classes.
+6. **Code Quality and Maintenance**:
 
-8. **GUI Testing**: Use pytest-qt for testing GUI components to ensure proper functionality and user interaction.
+   - Use meaningful variable and function names.
+   - Keep functions small and focused on a single responsibility.
+   - Regularly refactor code to improve structure and eliminate duplication.
 
-9. **Mocking**: Utilize pytest-mock for creating mock objects in tests, especially for database connections and external services.
+7. **Testing and Mocking**:
 
-10. **File Paths**: Always include the full file path as a comment at the top of each file. This helps with navigation and understanding the project structure.
+   - Use pytest-qt for GUI component testing.
+   - Utilize pytest-mock for creating mock objects in tests.
 
-11. **pytest Configuration**: Use `pytest.ini` for configuring pytest behavior, including custom markers like `@pytest.mark.gui` for GUI tests.
+8. **Documentation and File Organization**:
 
-12. **Responsive Design**: Implement responsive design principles in GUI components to ensure proper display on various screen sizes.
+   - Maintain up-to-date documentation, including docstrings for all functions and classes.
+   - Include full file paths as comments at the top of each file.
 
-13. **Authentication**: Use JWT tokens for user authentication and protect sensitive routes with the `@protect_route` decorator.
-
-14. **Security**: Regularly review and update security measures, including password hashing, token management, and protected routes.
+9. **Continuous Improvement**:
+   - Regularly update dependencies and check for security vulnerabilities.
+   - Profile the application and optimize performance bottlenecks.
+   - Be open to process improvements and workflow adjustments.
 
 ## Continuous Improvement
 
