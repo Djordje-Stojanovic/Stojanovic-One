@@ -151,9 +151,9 @@ Stojanovic-One/
 ## Best Practices
 
 1. **Apply Elon Musk's Algorithm for Efficiency**:
-   a. Question every requirement: Identify who made each requirement and challenge it, regardless of the source.
-   b. Delete any unnecessary part or process: Be prepared to add back about 10% of deleted items.
-   c. Simplify and optimize: Only after unnecessary elements are removed.
+   a. Question every requirement: Identify who made each requirement and challenge it, regardless of the source, check carefully to see if it is a smart or dumb requirement.
+   b. Delete any unnecessary part or process: Be prepared to add back about 10% of deleted items later. Better to have smart than dumb requirements.
+   c. Simplify and optimize: Only after unnecessary dumb elements are removed optimize and simplyfiy your problem.
    d. Accelerate cycle time: Speed up necessary processes.
    e. Automate: As the final step, after all other optimizations.
 

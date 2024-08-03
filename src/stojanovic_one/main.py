@@ -1,6 +1,8 @@
 # src/stojanovic_one/main.py
 
 import sys
+import traceback
+import bcrypt
 from PySide6.QtWidgets import QApplication, QMainWindow, QStackedWidget, QMessageBox
 from stojanovic_one.ui.welcome_page import WelcomePage
 from stojanovic_one.ui.login_form import LoginForm
@@ -9,6 +11,7 @@ from stojanovic_one.ui.logout_form import LogoutForm
 from stojanovic_one.database.setup import initialize_database, create_user_table
 from stojanovic_one.database.user_management import login_user, register_user, logout_user
 from stojanovic_one.auth.middleware import protect_route, JWTMiddleware
+from stojanovic_one.auth.rate_limiting import RateLimiter
 
 class MainWindow(QMainWindow):
     def __init__(self, conn, test_mode=False):
@@ -41,8 +44,12 @@ class MainWindow(QMainWindow):
         self.welcome_page.logout_clicked.connect(self.perform_logout)
         self.jwt_middleware = JWTMiddleware()
         self.jwt_middleware.authentication_failed.connect(self.handle_auth_failure)
+        self.rate_limiter = RateLimiter()
 
         print("MainWindow initialized")
+        self.show_welcome_page()
+
+    def show_welcome_page(self):
         self.stacked_widget.setCurrentWidget(self.welcome_page)
 
     def show_login_form(self):
@@ -77,6 +84,12 @@ class MainWindow(QMainWindow):
         self.welcome_page.update_ui_after_login(is_authenticated)
 
     def login_user(self, username: str, password: str) -> bool:
+        if self.rate_limiter.is_rate_limited(username):
+            error_message = "Too many login attempts. Please try again later."
+            if not self.test_mode:
+                QMessageBox.warning(self, "Login Failed", error_message)
+            return False, error_message
+
         token = login_user(self.conn, username, password)
         if token:
             self.current_token = token
@@ -88,10 +101,12 @@ class MainWindow(QMainWindow):
             error_message = "Invalid username or password. Please try again."
             if not self.test_mode:
                 QMessageBox.warning(self, "Login Failed", error_message)
-            return False, error_message  # Return the error message for testing
+            return False, error_message
 
     def register_user(self, username: str, email: str, password: str) -> bool:
-        if register_user(self.conn, username, email, password):
+        # Hash the password before passing it to register_user
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+        if register_user(self.conn, username, email, hashed_password):
             if not self.test_mode:
                 QMessageBox.information(self, "Registration Successful", "You can now log in with your new account.")
             return True
@@ -148,20 +163,25 @@ class MainWindow(QMainWindow):
 
 
 def main(test_mode=False):
-    app = QApplication.instance()
-    if app is None:
-        app = QApplication(sys.argv)
+    try:
+        app = QApplication.instance()
+        if app is None:
+            app = QApplication(sys.argv)
 
-    conn = initialize_database('users.db')
-    create_user_table(conn)
+        conn = initialize_database('users.db')
+        create_user_table(conn)
 
-    main_window = MainWindow(conn, test_mode=test_mode)
-    main_window.show()
+        main_window = MainWindow(conn, test_mode=test_mode)
+        main_window.show()
 
-    if test_mode:
-        return main_window
-    else:
-        return app.exec()
+        if test_mode:
+            return main_window
+        else:
+            return app.exec()
+    except Exception as e:
+        print(f"An error occurred in main: {str(e)}")
+        traceback.print_exc()
+        return None
 
 if __name__ == "__main__":
     print("Starting application")
