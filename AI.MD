@@ -121,37 +121,32 @@ Stojanovic-One/
 
 ## Collaboration Workflow
 
-1. **Feature Request**: You (the developer) will provide a high-level description of a feature or enhancement needed for the project.
+1. **Feature Request**: Developer provides a high-level description of a needed feature or enhancement.
 
-2. **Milestone Creation**: I (the AI assistant) will create a milestone based on your feature request, outlining the overall goal and expected outcomes.
+2. **Milestone Creation**: AI assistant creates a milestone based on the feature request, outlining goals and expected outcomes.
 
-3. **Issue Breakdown**: You'll ask me to break down the milestone into manageable issues. I'll create a list of smaller, focused tasks that align with Test-Driven Development principles and best practices.
+3. **Issue Breakdown**: AI assistant breaks down the milestone into manageable, TDD-aligned tasks.
 
-4. **Issue Implementation**: For each issue, follow this TDD approach:
+4. **Issue Implementation**: For each issue:
    a. Write failing tests
-   b. Implement the minimum code to make tests pass
-   c. Refactor while keeping tests green
+   b. Implement minimum code to pass tests
+   c. Refactor while maintaining passing tests
 
-5. **Code Review**: After implementing an issue, review the changes yourself and consider asking for AI assistance in reviewing complex parts.
+5. **Code Review**: Self-review changes and consider AI assistance for complex parts.
 
-6. **Continuous Integration**
+6. **Continuous Integration**:
 
-   Our project uses GitHub Actions for continuous integration. The workflow is set up to run all tests, excluding GUI tests, on every push and pull request. Here's how it works:
+   - GitHub Actions runs on Ubuntu with Python 3.11.3
+   - Installs dependencies from `requirements.txt`
+   - Runs non-GUI tests: `pytest -v -m "not gui" tests`
+   - Fails if any tests fail, preventing merges
 
-   1. **Environment Setup**: The workflow runs on an Ubuntu environment and sets up Python 3.11.3.
-   2. **System Dependencies**: We install necessary system dependencies, including libraries required for PySide6.
-   3. **Python Dependencies**: All project dependencies listed in `requirements.txt` are installed.
-   4. **Running Tests**: All non-GUI tests are executed using pytest with the command `pytest -v -m "not gui" tests`.
-   5. **Test Results**: The workflow will fail if any tests fail, preventing merging of branches with failing tests.
+   Local Testing:
 
-   ### Local vs CI Testing
+   - All tests: `pytest`
+   - Non-GUI tests: `pytest -m "not gui"`
 
-   While the CI environment runs only non-GUI tests, you should run all tests locally, including GUI tests, for comprehensive testing:
-
-   - To run all tests locally: `pytest`
-   - To run only non-GUI tests: `pytest -m "not gui"`
-
-7. **Documentation**: Update relevant documentation (including this AI.MD if necessary) as the project evolves.
+7. **Documentation**: Update relevant documentation as the project evolves.
 
 ## Best Practices
 
