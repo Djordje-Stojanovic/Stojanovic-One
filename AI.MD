@@ -43,19 +43,26 @@ Stojanovic-One is a Python-based application utilizing SQLite for data storage a
 
 10. Implement responsive design for GUI components:
 
-    - Ensure that UI elements adapt to different screen sizes.
-    - Test the application on various display resolutions.
+- Ensure that UI elements adapt to different screen sizes.
+- Test the application on various display resolutions.
 
 11. Prioritize code readability and maintainability:
 
-    - Use meaningful variable and function names.
-    - Keep functions small and focused on a single responsibility.
-    - Regularly refactor code to improve its structure and eliminate duplication.
+- Use meaningful variable and function names.
+- Keep functions small and focused on a single responsibility.
+- Regularly refactor code to improve its structure and eliminate duplication.
 
 12. Implement and maintain authentication middleware:
-    - Use JWT tokens for user authentication.
-    - Protect sensitive routes and operations using the `@protect_route` decorator.
-    - Regularly review and update authentication mechanisms for security.
+
+- Use JWT tokens for user authentication.
+- Protect sensitive routes and operations using the `@protect_route` decorator.
+- Regularly review and update authentication mechanisms for security.
+
+13. Maintain and monitor test coverage:
+
+- Use pytest-cov to generate coverage reports.
+- Aim to maintain or improve coverage levels with each new feature or change.
+- Review coverage reports regularly to identify areas needing additional tests.
 
 ## Project Structure
 
@@ -99,7 +106,7 @@ Stojanovic-One/
 ├── .github/
 │   └── workflows/
 │       └── python-tests.yml
-├── docs/
+├── .coveragerc
 ├── setup.py
 ├── requirements.txt
 ├── README.md
@@ -118,10 +125,11 @@ Stojanovic-One/
 - pytest for testing
 - pytest-qt for GUI testing
 - pytest-mock for mocking in tests
+- pytest-cov for test coverage reporting
 - bcrypt for password hashing
 - PyJWT for JWT token handling
 - GitHub Actions for CI/CD
-- `pytest-qt` for GUI testing
+- Codecov for coverage reporting
 
 ## Collaboration Workflow
 
@@ -142,13 +150,15 @@ Stojanovic-One/
 
    - GitHub Actions runs on Ubuntu with Python 3.11.3
    - Installs dependencies from `requirements.txt`
-   - Runs non-GUI tests: `pytest -v -m "not gui" tests`
-   - Fails if any tests fail, preventing merges
+   - Runs all tests: `pytest -v --cov=stojanovic_one --cov-report=xml`
+   - Uploads coverage report to Codecov
+   - Fails if any tests fail or if coverage drops significantly
 
    Local Testing:
 
    - All tests: `pytest`
    - Non-GUI tests: `pytest -m "not gui"`
+   - With coverage: `pytest --cov=stojanovic_one`
 
 7. **Documentation**: Update relevant documentation as the project evolves.
 
@@ -157,7 +167,7 @@ Stojanovic-One/
 1. **Apply Elon Musk's Algorithm for Efficiency**:
    a. Question every requirement: Identify who made each requirement and challenge it, regardless of the source, check carefully to see if it is a smart or dumb requirement.
    b. Delete any unnecessary part or process: Be prepared to add back about 10% of deleted items later. Better to have smart than dumb requirements.
-   c. Simplify and optimize: Only after unnecessary dumb elements are removed optimize and simplyfiy your problem.
+   c. Simplify and optimize: Only after unnecessary dumb elements are removed optimize and simplify your problem.
    d. Accelerate cycle time: Speed up necessary processes.
    e. Automate: As the final step, after all other optimizations.
 
