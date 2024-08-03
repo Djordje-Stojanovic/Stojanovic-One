@@ -60,13 +60,15 @@ class MainWindow(QMainWindow):
         print("show_registration_form called")
         self.stacked_widget.setCurrentWidget(self.registration_form)
 
+    @protect_route
     def show_logout_form(self):
         print("show_logout_form called")
         if self.current_token:
             self.logout_form.set_token(self.current_token)
             self.stacked_widget.setCurrentWidget(self.logout_form)
         else:
-            QMessageBox.information(self, "Logout", "No user is currently logged in.")
+            print("No valid token, redirecting to welcome page")
+            self.handle_auth_failure()
 
     def on_registration_successful(self):
         print("Registration successful")
@@ -156,7 +158,7 @@ class MainWindow(QMainWindow):
     def handle_auth_failure(self):
         print("Authentication failed")
         self.current_token = None
-        self.welcome_page.update_ui_after_login(False)
+        self.update_auth_state(False)
         self.stacked_widget.setCurrentWidget(self.welcome_page)
         if not self.test_mode:
             QMessageBox.warning(self, "Authentication Failed", "Your session has expired. Please log in again.")
