@@ -85,9 +85,10 @@ class MainWindow(QMainWindow):
                 QMessageBox.information(self, "Login Successful", f"Welcome, {username}!")
             return True
         else:
+            error_message = "Invalid username or password. Please try again."
             if not self.test_mode:
-                QMessageBox.warning(self, "Login Failed", "Invalid username or password. Please try again.")
-            return False
+                QMessageBox.warning(self, "Login Failed", error_message)
+            return False, error_message  # Return the error message for testing
 
     def register_user(self, username: str, email: str, password: str) -> bool:
         if register_user(self.conn, username, email, password):
@@ -95,14 +96,11 @@ class MainWindow(QMainWindow):
                 QMessageBox.information(self, "Registration Successful", "You can now log in with your new account.")
             return True
         else:
+            error_message = "Registration failed. Username or email may already be in use."
             if not self.test_mode:
-                QMessageBox.warning(self, "Registration Failed", "Registration failed. Username or email may already be in use.")
-            return False
-    
-    def perform_logout(self):
-        if self.current_token:
-            self.logout_user(self.current_token)
-            
+                QMessageBox.warning(self, "Registration Failed", error_message)
+            return False, error_message  # Return the error message for testing
+
     def logout_user(self, token: str) -> bool:
         if logout_user(token):
             self.current_token = None
@@ -112,9 +110,14 @@ class MainWindow(QMainWindow):
             self.stacked_widget.setCurrentWidget(self.welcome_page)
             return True
         else:
+            error_message = "An error occurred during logout. Please try again."
             if not self.test_mode:
-                QMessageBox.warning(self, "Logout Failed", "An error occurred during logout. Please try again.")
-            return False
+                QMessageBox.warning(self, "Logout Failed", error_message)
+            return False, error_message  # Return the error message for testing
+    
+    def perform_logout(self):
+        if self.current_token:
+            self.logout_user(self.current_token)
     
     @protect_route
     def some_protected_method(self):

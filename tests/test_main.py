@@ -199,20 +199,20 @@ def test_error_messages(app, qtbot, mocker):
     main_window = main(test_mode=True)
     qtbot.addWidget(main_window)
 
-    # Mock QMessageBox.warning to avoid showing actual message boxes during tests
-    mock_warning = mocker.patch('PySide6.QtWidgets.QMessageBox.warning')
-
     # Test login failure
-    main_window.login_user("nonexistent", "wrongpassword")
-    mock_warning.assert_called_with(main_window, "Login Failed", "Invalid username or password. Please try again.")
+    result, error_message = main_window.login_user("nonexistent", "wrongpassword")
+    assert result == False
+    assert error_message == "Invalid username or password. Please try again."
 
     # Test registration failure
     mocker.patch('stojanovic_one.main.register_user', return_value=False)
-    main_window.register_user("existinguser", "test@example.com", "password123")
-    mock_warning.assert_called_with(main_window, "Registration Failed", "Registration failed. Username or email may already be in use.")
+    result, error_message = main_window.register_user("existinguser", "test@example.com", "password123")
+    assert result == False
+    assert error_message == "Registration failed. Username or email may already be in use."
 
     # Test logout failure
     main_window.current_token = "fake_token"
     mocker.patch('stojanovic_one.main.logout_user', return_value=False)
-    main_window.logout_user("fake_token")
-    mock_warning.assert_called_with(main_window, "Logout Failed", "An error occurred during logout. Please try again.")
+    result, error_message = main_window.logout_user("fake_token")
+    assert result == False
+    assert error_message == "An error occurred during logout. Please try again."
