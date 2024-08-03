@@ -173,7 +173,7 @@ def test_auth_state_management(app, qtbot):
     qtbot.addWidget(main_window)
 
     # Initially, user should not be authenticated
-    assert not main_window.is_authenticated()
+    assert not main_window.is_authenticated()   
 
     # Simulate login
     main_window.current_token = "fake_token"
@@ -193,3 +193,26 @@ def test_auth_state_management(app, qtbot):
     assert not main_window.welcome_page.logout_button.isVisible()
     assert main_window.welcome_page.login_button.isVisible()
     assert main_window.welcome_page.register_button.isVisible()
+
+@pytest.mark.gui
+def test_error_messages(app, qtbot, mocker):
+    main_window = main(test_mode=True)
+    qtbot.addWidget(main_window)
+
+    # Mock QMessageBox.warning to avoid showing actual message boxes during tests
+    mock_warning = mocker.patch('PySide6.QtWidgets.QMessageBox.warning')
+
+    # Test login failure
+    main_window.login_user("nonexistent", "wrongpassword")
+    mock_warning.assert_called_with(main_window, "Login Failed", "Invalid username or password. Please try again.")
+
+    # Test registration failure
+    mocker.patch('stojanovic_one.main.register_user', return_value=False)
+    main_window.register_user("existinguser", "test@example.com", "password123")
+    mock_warning.assert_called_with(main_window, "Registration Failed", "Registration failed. Username or email may already be in use.")
+
+    # Test logout failure
+    main_window.current_token = "fake_token"
+    mocker.patch('stojanovic_one.main.logout_user', return_value=False)
+    main_window.logout_user("fake_token")
+    mock_warning.assert_called_with(main_window, "Logout Failed", "An error occurred during logout. Please try again.")

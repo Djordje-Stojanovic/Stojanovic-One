@@ -77,32 +77,26 @@ class MainWindow(QMainWindow):
         self.welcome_page.update_ui_after_login(is_authenticated)
 
     def login_user(self, username: str, password: str) -> bool:
-        print(f"Attempting to log in user: {username}")
         token = login_user(self.conn, username, password)
         if token:
             self.current_token = token
             self.update_auth_state(True)
-            print(f"Login successful. Token: {token}")
             if not self.test_mode:
                 QMessageBox.information(self, "Login Successful", f"Welcome, {username}!")
             return True
         else:
-            print("Login failed")
             if not self.test_mode:
-                QMessageBox.warning(self, "Login Failed", "Invalid username or password.")
+                QMessageBox.warning(self, "Login Failed", "Invalid username or password. Please try again.")
             return False
 
     def register_user(self, username: str, email: str, password: str) -> bool:
-        print(f"Attempting to register user: {username}")
         if register_user(self.conn, username, email, password):
-            print("Registration successful")
             if not self.test_mode:
                 QMessageBox.information(self, "Registration Successful", "You can now log in with your new account.")
             return True
         else:
-            print("Registration failed")
             if not self.test_mode:
-                QMessageBox.warning(self, "Registration Failed", "An error occurred during registration.")
+                QMessageBox.warning(self, "Registration Failed", "Registration failed. Username or email may already be in use.")
             return False
     
     def perform_logout(self):
@@ -110,20 +104,16 @@ class MainWindow(QMainWindow):
             self.logout_user(self.current_token)
             
     def logout_user(self, token: str) -> bool:
-        print(f"Attempting to log out user with token: {token}")
         if logout_user(token):
             self.current_token = None
             self.update_auth_state(False)
-            print("Logout successful")
-            self.welcome_page.update_ui_after_login(False)
             if not self.test_mode:
                 QMessageBox.information(self, "Logout Successful", "You have been logged out.")
             self.stacked_widget.setCurrentWidget(self.welcome_page)
             return True
         else:
-            print("Logout failed")
             if not self.test_mode:
-                QMessageBox.warning(self, "Logout Failed", "An error occurred during logout.")
+                QMessageBox.warning(self, "Logout Failed", "An error occurred during logout. Please try again.")
             return False
     
     @protect_route
