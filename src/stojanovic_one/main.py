@@ -70,11 +70,18 @@ class MainWindow(QMainWindow):
         self.welcome_page.update_ui_after_login(True)
         self.stacked_widget.setCurrentWidget(self.welcome_page)
 
+    def is_authenticated(self):
+        return self.current_token is not None
+
+    def update_auth_state(self, is_authenticated):
+        self.welcome_page.update_ui_after_login(is_authenticated)
+
     def login_user(self, username: str, password: str) -> bool:
         print(f"Attempting to log in user: {username}")
         token = login_user(self.conn, username, password)
         if token:
             self.current_token = token
+            self.update_auth_state(True)
             print(f"Login successful. Token: {token}")
             if not self.test_mode:
                 QMessageBox.information(self, "Login Successful", f"Welcome, {username}!")
@@ -106,6 +113,7 @@ class MainWindow(QMainWindow):
         print(f"Attempting to log out user with token: {token}")
         if logout_user(token):
             self.current_token = None
+            self.update_auth_state(False)
             print("Logout successful")
             self.welcome_page.update_ui_after_login(False)
             if not self.test_mode:
