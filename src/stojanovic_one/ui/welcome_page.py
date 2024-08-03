@@ -97,14 +97,9 @@ class WelcomePage(QWidget):
         self.logout_clicked.emit()
 
     def update_ui_after_login(self, is_logged_in: bool):
-        if is_logged_in:
-            self.logout_button.show()
-            self.login_button.hide()
-            self.register_button.hide()
-        else:
-            self.logout_button.hide()
-            self.login_button.show()
-            self.register_button.show()
+        self.logout_button.setVisible(is_logged_in)
+        self.login_button.setVisible(not is_logged_in)
+        self.register_button.setVisible(not is_logged_in)
 
     def resizeEvent(self, event):
         super().resizeEvent(event)

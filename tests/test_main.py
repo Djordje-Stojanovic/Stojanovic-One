@@ -166,3 +166,30 @@ def test_protected_routes(app, qtbot, mocker):
         print("Traceback:")
         traceback.print_exc()
         pytest.fail(f"Test failed due to exception: {str(e)}")
+
+@pytest.mark.gui
+def test_auth_state_management(app, qtbot):
+    main_window = main(test_mode=True)
+    qtbot.addWidget(main_window)
+
+    # Initially, user should not be authenticated
+    assert not main_window.is_authenticated()
+
+    # Simulate login
+    main_window.current_token = "fake_token"
+    assert main_window.is_authenticated()
+
+    # Simulate logout
+    main_window.current_token = None
+    assert not main_window.is_authenticated()
+
+    # Test UI updates
+    main_window.update_auth_state(True)
+    assert main_window.welcome_page.logout_button.isVisible()
+    assert not main_window.welcome_page.login_button.isVisible()
+    assert not main_window.welcome_page.register_button.isVisible()
+
+    main_window.update_auth_state(False)
+    assert not main_window.welcome_page.logout_button.isVisible()
+    assert main_window.welcome_page.login_button.isVisible()
+    assert main_window.welcome_page.register_button.isVisible()
