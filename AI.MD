@@ -154,13 +154,36 @@ Stojanovic-One/
    - Uploads coverage report to Codecov
    - Fails if any tests fail or if coverage drops significantly
 
-   Local Testing:
+7. **Local Testing**:
 
-   - All tests: `pytest`
-   - Non-GUI tests: `pytest -m "not gui"`
-   - With coverage: `pytest --cov=stojanovic_one`
+To run tests locally:
 
-7. **Documentation**: Update relevant documentation as the project evolves.
+1. Run all non-GUI tests:
+
+   ```
+   pytest -v -m "not gui"
+   ```
+
+2. Run all tests including GUI tests (may require additional setup on some systems):
+
+   ```
+   pytest -v
+   ```
+
+3. Run tests with coverage:
+
+   ```
+   pytest -v --cov=stojanovic_one
+   ```
+
+4. Run non-GUI tests with coverage:
+   ```
+   pytest -v -m "not gui" --cov=stojanovic_one
+   ```
+
+Note: GUI tests may fail on systems without a proper display server. If you encounter issues with GUI tests, focus on the non-GUI tests for development and leave GUI testing to the CI pipeline.
+
+8. **Documentation**: Update relevant documentation as the project evolves.
 
 ## Best Practices
 

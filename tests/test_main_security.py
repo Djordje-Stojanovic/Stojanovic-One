@@ -1,3 +1,5 @@
+# tests/test_main_security.py
+
 import pytest
 from PySide6.QtWidgets import QApplication
 from PySide6.QtTest import QTest
@@ -56,10 +58,19 @@ def test_token_tampering(app, qtbot, mocker, setup_and_teardown):
     tampered_token = valid_token[:-1] + ('1' if valid_token[-1] == '0' else '0')
     main_window.current_token = tampered_token
 
+    # Mock the jwt_middleware to simulate the authentication check
+    mock_middleware = mocker.patch('stojanovic_one.auth.middleware.JWTMiddleware.check_auth', return_value=False)
+
     main_window.show_logout_form()
     
     QTest.qWait(500)
+    
+    # Check if the middleware was called with the tampered token
+    mock_middleware.assert_called_once_with(tampered_token)
+    
+    # Now check if we're redirected to the welcome page due to invalid token
     assert main_window.stacked_widget.currentWidget() == main_window.welcome_page
+    assert main_window.current_token is None
 
 @pytest.mark.gui
 def test_password_hashing(app, qtbot, mocker, setup_and_teardown):

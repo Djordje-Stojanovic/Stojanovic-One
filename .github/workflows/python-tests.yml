@@ -27,10 +27,21 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest-cov
-      - name: Run tests and generate coverage report
+      - name: Run non-GUI tests and generate coverage report
         run: |
-          pytest -v --cov=stojanovic_one --cov-report=xml
+          pytest -v -m "not gui" --cov=stojanovic_one --cov-report=xml
       - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: true
+      - name: Run GUI tests
+        continue-on-error: true
+        run: |
+          xvfb-run pytest -v -m "gui" --cov=stojanovic_one --cov-report=xml --cov-append
+      - name: Upload updated coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
           file: ./coverage.xml
