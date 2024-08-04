@@ -4,7 +4,7 @@ import pytest
 from PySide6.QtWidgets import QApplication
 from PySide6.QtTest import QTest
 from PySide6.QtCore import QTimer
-from stojanovic_one.main import main
+from stojanovic_one.main import MainWindow
 from stojanovic_one.auth.jwt_utils import generate_token, validate_token
 from stojanovic_one.database.user_management import register_user
 import bcrypt
@@ -12,50 +12,38 @@ import logging
 
 logging.basicConfig(level=logging.DEBUG)
 
-@pytest.fixture(scope="session")
-def app():
-    app = QApplication.instance()
-    if app is None:
-        app = QApplication([])
-    yield app
-    app.quit()
-
 @pytest.fixture(scope="function")
-def main_window(qtbot, mocker):
-    # Mock the database connection
+def main_window(qapp, qtbot, mocker):
+    logging.info("main_window fixture: setup started")
     mock_conn = mocker.Mock()
     mocker.patch('stojanovic_one.main.initialize_database', return_value=mock_conn)
     mocker.patch('stojanovic_one.main.create_user_table')
 
-    # Create the main window
-    window = main(test_mode=True)
+    window = MainWindow(mock_conn, test_mode=True)
+    window.show()
     qtbot.addWidget(window)
+    qtbot.waitForWindowShown(window)
     
+    logging.info("main_window fixture: setup completed")
     yield window
     
-    # Cleanup
+    logging.info("main_window fixture: teardown started")
+    window.cleanup()
     window.close()
-    QTest.qWait(100)  # Wait for any pending events to process
     window.deleteLater()
-    QTest.qWait(100)  # Wait for deletion to complete
+    qapp.processEvents()
+    logging.info("main_window fixture: teardown completed")
 
 @pytest.fixture
 def setup_and_teardown(qtbot):
     yield
     QTest.qWait(100)  # Wait for any pending events to process
 
-@pytest.fixture(autouse=True)
-def cleanup():
-    yield
-    for widget in QApplication.topLevelWidgets():
-        widget.close()
-        widget.deleteLater()
-    QTest.qWait(100)
-
 @pytest.mark.gui
 def test_rate_limiting(main_window, qtbot, mocker):
     try:
         for i in range(6):
+            mocker.patch('stojanovic_one.database.user_management.login_user', return_value=(None, "Invalid username or password"))
             result, message = main_window.login_user("testuser", "wrongpassword")
             if i < 5:
                 assert result == False
@@ -63,7 +51,7 @@ def test_rate_limiting(main_window, qtbot, mocker):
             else:
                 assert result == False
                 assert message == "Too many login attempts. Please try again later."
-            qtbot.wait(100)  # Add a small delay between attempts
+            QTest.qWait(100)  # Add a small delay between attempts
 
     except Exception as e:
         logging.error(f"Error in test_rate_limiting: {str(e)}")
@@ -79,8 +67,8 @@ def test_token_expiration(main_window, qtbot, mocker):
             main_window.show_logout_form()
             return main_window.stacked_widget.currentWidget() == main_window.welcome_page
 
-        qtbot.wait(2000)
-        qtbot.waitUntil(check_condition, timeout=1000)
+        QTest.qWait(2000)
+        assert check_condition()
 
     except Exception as e:
         logging.error(f"Error in test_token_expiration: {str(e)}")
@@ -97,7 +85,7 @@ def test_token_tampering(main_window, qtbot, mocker):
 
         main_window.show_logout_form()
         
-        qtbot.wait(500)
+        QTest.qWait(500)
         
         mock_middleware.assert_called_once_with(tampered_token)
         

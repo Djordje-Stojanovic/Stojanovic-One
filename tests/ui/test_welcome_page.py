@@ -56,7 +56,7 @@ def test_welcome_page_button_clicks(qtbot):
 def test_welcome_page_logout_button(qtbot):
     welcome_page = WelcomePage()
     qtbot.addWidget(welcome_page)
-
+    
     logout_spy = QSignalSpy(welcome_page.logout_clicked)
 
     # Initially, logout button should be hidden

@@ -20,23 +20,26 @@ def qapp():
     app.quit()
 
 @pytest.fixture(scope="function")
-def main_window(qtbot, mocker):
-    # Mock the database connection
+def main_window(qapp, qtbot, mocker):
+    logging.info("main_window fixture: setup started")
     mock_conn = mocker.Mock()
     mocker.patch('stojanovic_one.main.initialize_database', return_value=mock_conn)
     mocker.patch('stojanovic_one.main.create_user_table')
 
-    # Create the main window
-    window = main(test_mode=True)
+    window = MainWindow(mock_conn, test_mode=True)
+    window.show()
     qtbot.addWidget(window)
+    qtbot.waitForWindowShown(window)
     
+    logging.info("main_window fixture: setup completed")
     yield window
     
-    # Cleanup
+    logging.info("main_window fixture: teardown started")
+    window.cleanup()
     window.close()
-    QTest.qWait(100)  # Wait for any pending events to process
     window.deleteLater()
-    QTest.qWait(100)  # Wait for deletion to complete
+    qapp.processEvents()
+    logging.info("main_window fixture: teardown completed")
 
 @pytest.fixture
 def setup_and_teardown(qtbot):
@@ -58,27 +61,24 @@ def test_main(main_window, qtbot):
 def test_main_window_navigation(main_window, qtbot):
     # Test navigation to login form
     qtbot.mouseClick(main_window.welcome_page.login_button, Qt.LeftButton)
-    qtbot.wait(500)
-    assert main_window.stacked_widget.currentWidget() == main_window.login_form
+    qtbot.waitUntil(lambda: main_window.stacked_widget.currentWidget() == main_window.login_form, timeout=1000)
 
     # Test navigation to registration form
     main_window.show_welcome_page()
-    qtbot.wait(500)
+    qtbot.waitUntil(lambda: main_window.stacked_widget.currentWidget() == main_window.welcome_page, timeout=1000)
     qtbot.mouseClick(main_window.welcome_page.register_button, Qt.LeftButton)
-    qtbot.wait(500)
-    assert main_window.stacked_widget.currentWidget() == main_window.registration_form
+    qtbot.waitUntil(lambda: main_window.stacked_widget.currentWidget() == main_window.registration_form, timeout=1000)
 
     # Test navigation back to welcome page after successful registration
     main_window.on_registration_successful()
-    qtbot.wait(500)
-    assert main_window.stacked_widget.currentWidget() == main_window.welcome_page
+    qtbot.waitUntil(lambda: main_window.stacked_widget.currentWidget() == main_window.welcome_page, timeout=1000)
 
 @pytest.mark.gui
 def test_login_logout_flow(main_window, qtbot, mocker):
     try:
         logging.debug("Starting test_login_logout_flow")
 
-        mock_login = mocker.patch('stojanovic_one.database.user_management.login_user', return_value="fake_token")
+        mock_login = mocker.patch('stojanovic_one.database.user_management.login_user', return_value=("fake_token", None))
         logging.debug("Mock login created")
 
         result, _ = main_window.login_user("testuser", "password123")
@@ -106,18 +106,12 @@ def test_registration_flow(main_window, qtbot, mocker):
         mock_register = mocker.patch('stojanovic_one.database.user_management.register_user', return_value=True)
         logging.debug("Mock register created")
 
-        # Directly call register_user method instead of interacting with GUI
         result, error_message = main_window.register_user("newuser", "newuser@example.com", "password123")
         logging.debug(f"Registration result: {result}")
 
         assert result == True
         assert error_message is None
-        mock_register.assert_called_once()
-        args = mock_register.call_args[0]
-        assert args[0] == main_window.conn
-        assert args[1] == "newuser"
-        assert args[2] == "newuser@example.com"
-        assert args[3] == "password123"  # Password should not be hashed at this point
+        mock_register.assert_called_once_with(main_window.conn, "newuser", "newuser@example.com", "password123")
 
         logging.debug("Registration assertions passed")
 
@@ -130,22 +124,18 @@ def test_registration_flow(main_window, qtbot, mocker):
 def test_protected_routes(main_window, qtbot, mocker):
     try:
         main_window.show_logout_form()
-        QTest.qWait(500)
-        assert main_window.stacked_widget.currentWidget() == main_window.welcome_page
+        qtbot.waitUntil(lambda: main_window.stacked_widget.currentWidget() == main_window.welcome_page, timeout=1000)
 
         main_window.current_token = generate_token("testuser")
 
         main_window.show_logout_form()
-        QTest.qWait(500)
-        assert main_window.stacked_widget.currentWidget() == main_window.logout_form
+        qtbot.waitUntil(lambda: main_window.stacked_widget.currentWidget() == main_window.logout_form, timeout=1000)
 
         mock_validate = mocker.patch('stojanovic_one.auth.jwt_utils.validate_token', return_value=None)
         
         main_window.handle_auth_failure()
 
-        QTest.qWait(500)
-
-        assert main_window.stacked_widget.currentWidget() == main_window.welcome_page
+        qtbot.waitUntil(lambda: main_window.stacked_widget.currentWidget() == main_window.welcome_page, timeout=1000)
         assert main_window.current_token is None
 
     except Exception as e:
@@ -168,24 +158,20 @@ def test_auth_state_management(main_window, qtbot):
         logging.debug("Authentication state after removing token checked")
 
         def check_logged_in_state():
-            assert main_window.welcome_page.logout_button.isVisible()
-            assert not main_window.welcome_page.login_button.isVisible()
-            assert not main_window.welcome_page.register_button.isVisible()
-            logging.debug("Logged in state UI checked")
+            return (main_window.welcome_page.logout_button.isVisible() and
+                    not main_window.welcome_page.login_button.isVisible() and
+                    not main_window.welcome_page.register_button.isVisible())
 
         def check_logged_out_state():
-            assert not main_window.welcome_page.logout_button.isVisible()
-            assert main_window.welcome_page.login_button.isVisible()
-            assert main_window.welcome_page.register_button.isVisible()
-            logging.debug("Logged out state UI checked")
+            return (not main_window.welcome_page.logout_button.isVisible() and
+                    main_window.welcome_page.login_button.isVisible() and
+                    main_window.welcome_page.register_button.isVisible())
 
-        QTimer.singleShot(100, lambda: main_window.update_auth_state(True))
-        qtbot.wait(200)
-        check_logged_in_state()
+        main_window.update_auth_state(True)
+        qtbot.waitUntil(check_logged_in_state, timeout=1000)
 
-        QTimer.singleShot(100, lambda: main_window.update_auth_state(False))
-        qtbot.wait(200)
-        check_logged_out_state()
+        main_window.update_auth_state(False)
+        qtbot.waitUntil(check_logged_out_state, timeout=1000)
 
         logging.debug("test_auth_state_management completed successfully")
     except Exception as e:
@@ -195,42 +181,18 @@ def test_auth_state_management(main_window, qtbot):
 
 @pytest.mark.gui
 def test_error_messages(main_window, qtbot, mocker):
+    mocker.patch('stojanovic_one.database.user_management.login_user', return_value=(None, "Invalid username or password"))
     result, error_message = main_window.login_user("nonexistent", "wrongpassword")
     assert result == False
     assert error_message == "Invalid username or password. Please try again."
 
-    mocker.patch('stojanovic_one.main.register_user', return_value=False)
+    mocker.patch('stojanovic_one.database.user_management.register_user', return_value=False)
     result, error_message = main_window.register_user("existinguser", "test@example.com", "password123")
     assert result == False
     assert error_message == "Registration failed. Username or email may already be in use."
 
     main_window.current_token = "fake_token"
-    mocker.patch('stojanovic_one.main.logout_user', return_value=False)
+    mocker.patch('stojanovic_one.database.user_management.logout_user', return_value=False)
     result, error_message = main_window.logout_user("fake_token")
     assert result == False
     assert error_message == "An error occurred during logout. Please try again."
-
-@pytest.fixture(autouse=True)
-def cleanup():
-    yield
-    for widget in QApplication.topLevelWidgets():
-        widget.deleteLater()
-    QApplication.processEvents()
-    QTest.qWait(100)  # Wait for widget deletion to complete
-
-@pytest.fixture(autouse=True)
-def run_around_tests(qapp):
-    yield
-    QTest.qWait(100)
-
-
-
-
-
-
-
-
-
-
-
-

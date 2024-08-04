@@ -14,17 +14,19 @@ from stojanovic_one.database.user_management import login_user, register_user, l
 from stojanovic_one.auth.middleware import protect_route, JWTMiddleware
 from stojanovic_one.auth.rate_limiting import RateLimiter
 from typing import Tuple, Optional
+import logging
 
 class MainWindow(QMainWindow):
     def __init__(self, conn, test_mode=False):
         super().__init__()
+        logging.info("MainWindow __init__ started")
         self.conn = conn
         self.current_token = None
         self.test_mode = test_mode
         self.setWindowTitle("Stojanovic-One")
         self.setGeometry(100, 100, 800, 600)
 
-        self.stacked_widget = QStackedWidget()
+        self.stacked_widget = QStackedWidget(self)
         self.setCentralWidget(self.stacked_widget)
 
         self.welcome_page = WelcomePage()
@@ -49,6 +51,31 @@ class MainWindow(QMainWindow):
 
         print("MainWindow initialized")
         self.show_welcome_page()
+        logging.info("MainWindow __init__ completed")
+
+    def cleanup(self):
+        # Disconnect all signals
+        logging.info("MainWindow cleanup started")
+        try:
+            self.welcome_page.login_clicked.disconnect()
+            self.welcome_page.register_clicked.disconnect()
+            self.welcome_page.logout_clicked.disconnect()
+            self.registration_form.registration_successful.disconnect()
+            self.login_form.login_successful.disconnect()
+            self.logout_form.logout_successful.disconnect()
+            self.jwt_middleware.authentication_failed.disconnect()
+        except:
+            pass  # In case some signals were not connected
+        logging.info("MainWindow cleanup completed")
+
+    def closeEvent(self, event):
+        logging.info("MainWindow closeEvent called")
+        self.cleanup()
+        super().closeEvent(event)
+        logging.info("MainWindow closeEvent completed")
+
+    def __del__(self):
+        self.cleanup()
 
     def show_login_form(self):
         print("show_login_form called")
@@ -175,4 +202,7 @@ def main(test_mode=False):
 
 if __name__ == "__main__":
     print("Starting application")
-    main()
+    app = QApplication(sys.argv)
+    window = main()
+    if window:
+        sys.exit(app.exec())
