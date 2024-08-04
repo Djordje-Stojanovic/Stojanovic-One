@@ -107,9 +107,7 @@ class MainWindow(QMainWindow):
             return False, error_message
 
     def register_user(self, username: str, email: str, password: str) -> bool:
-        # Hash the password before passing it to register_user
-        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-        if register_user(self.conn, username, email, hashed_password):
+        if register_user(self.conn, username, email, password):
             if not self.test_mode:
                 QMessageBox.information(self, "Registration Successful", "You can now log in with your new account.")
             return True
