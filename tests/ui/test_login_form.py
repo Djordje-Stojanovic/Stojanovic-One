@@ -6,8 +6,8 @@ from stojanovic_one.ui.login_form import LoginForm
 
 def mock_login_func(username, password):
     if username == "testuser" and password == "password":
-        return "fake_jwt_token"
-    return None
+        return True, None
+    return False, "Invalid username or password. Please try again."
 
 @pytest.mark.gui
 def test_login_form_initial_state(qtbot):
@@ -34,7 +34,7 @@ def test_login_form_input_validation(qtbot):
 
 @pytest.mark.gui
 def test_login_form_submission(qtbot, mocker):
-    mock_login = mocker.Mock(return_value="fake_jwt_token")
+    mock_login = mocker.Mock(return_value=(True, None))
     widget = LoginForm(login_user_func=mock_login)
     qtbot.addWidget(widget)
 
@@ -48,13 +48,12 @@ def test_login_form_submission(qtbot, mocker):
     # Check if login_user was called with correct arguments
     mock_login.assert_called_once_with("testuser", "password123")
 
-    # Check if success message is displayed and token is stored
+    # Check if success message is displayed
     assert widget.message_label.text() == "Login successful!"
-    assert widget.token == "fake_jwt_token"
 
 @pytest.mark.gui
 def test_login_form_failed_login(qtbot, mocker):
-    mock_login = mocker.Mock(return_value=None)
+    mock_login = mocker.Mock(return_value=(False, "Invalid username or password. Please try again."))
     widget = LoginForm(login_user_func=mock_login)
     qtbot.addWidget(widget)
 
@@ -65,6 +64,5 @@ def test_login_form_failed_login(qtbot, mocker):
     # Click the login button
     qtbot.mouseClick(widget.login_button, Qt.LeftButton)
 
-    # Check if error message is displayed and token is None
-    assert widget.message_label.text() == "Login failed. Please try again."
-    assert widget.token is None
+    # Check if error message is displayed
+    assert widget.message_label.text() == "Invalid username or password. Please try again."
