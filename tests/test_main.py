@@ -27,16 +27,12 @@ def main_window(qtbot, mocker):
     mocker.patch('stojanovic_one.main.create_user_table')
 
     # Create the main window
-    window = main(test_mode=True)
-    qtbot.addWidget(window)
-    
-    yield window
-    
+    with qtbot.waitExposed(lambda: main(test_mode=True)) as main_window:
+        yield main_window
+
     # Cleanup
-    window.close()
+    main_window.close()
     QTest.qWait(100)  # Wait for any pending events to process
-    window.deleteLater()
-    QTest.qWait(100)  # Wait for deletion to complete
 
 @pytest.fixture
 def setup_and_teardown(qtbot):

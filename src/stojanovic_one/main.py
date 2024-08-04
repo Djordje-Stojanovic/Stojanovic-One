@@ -160,18 +160,18 @@ def main(test_mode=False):
     try:
         app = QApplication.instance()
         if app is None:
-            app = QApplication(sys.argv)
+            app = QApplication([])
 
-        conn = initialize_database('users.db')
-        create_user_table(conn)
+        if test_mode:
+            conn = None  # Use a mock connection for testing
+        else:
+            conn = initialize_database('users.db')
+            create_user_table(conn)
 
         main_window = MainWindow(conn, test_mode=test_mode)
         main_window.show()
 
-        if test_mode:
-            return main_window
-        else:
-            return app.exec()
+        return main_window
     except Exception as e:
         print(f"An error occurred in main: {str(e)}")
         traceback.print_exc()
