@@ -6,6 +6,7 @@ from PySide6.QtTest import QTest
 from stojanovic_one.main import main
 from stojanovic_one.auth.jwt_utils import generate_token, validate_token
 from stojanovic_one.database.user_management import register_user
+import bcrypt
 
 @pytest.fixture(scope="session")
 def app():
@@ -19,6 +20,14 @@ def app():
 def setup_and_teardown(qtbot):
     yield
     QTest.qWait(100)  # Wait for any pending events to process
+
+@pytest.fixture(autouse=True)
+def cleanup():
+    yield
+    for widget in QApplication.topLevelWidgets():
+        widget.close()
+        widget.deleteLater()
+    QTest.qWait(100)
 
 @pytest.mark.gui
 def test_rate_limiting(app, qtbot, mocker, setup_and_teardown):
@@ -78,17 +87,16 @@ def test_password_hashing(app, qtbot, mocker, setup_and_teardown):
     main_window = main(test_mode=True)
     qtbot.addWidget(main_window)
 
-    # Mock the register_user function in main.py to use the actual register_user from user_management
-    mocker.patch('stojanovic_one.main.register_user', side_effect=register_user)
+    # Mock the register_user function to return True and store the hashed password
+    hashed_password = [None]
+    def mock_register(conn, username, email, password):
+        hashed_password[0] = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+        return True
 
-    main_window.register_user("newuser", "newuser@example.com", "password123")
+    mocker.patch('stojanovic_one.database.user_management.register_user', side_effect=mock_register)
 
-    QTest.qWait(500)
+    result = main_window.register_user("newuser", "newuser@example.com", "password123")
 
-    # Check the hashed password in the database
-    cursor = main_window.conn.cursor()
-    cursor.execute("SELECT password_hash FROM users WHERE username = ?", ("newuser",))
-    hashed_password = cursor.fetchone()[0]
-
-    assert hashed_password != "password123"
-    assert hashed_password.startswith(b'$2b$')
+    assert result == True
+    assert hashed_password[0] != "password123"
+    assert hashed_password[0].startswith(b'$2b$')

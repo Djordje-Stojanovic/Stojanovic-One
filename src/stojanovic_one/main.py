@@ -4,7 +4,7 @@ import sys
 import traceback
 import bcrypt
 from PySide6.QtWidgets import QApplication, QMainWindow, QStackedWidget, QMessageBox
-from PySide6.QtCore import QMetaObject, Qt
+from PySide6.QtCore import QMetaObject, Qt, Q_ARG
 from stojanovic_one.ui.welcome_page import WelcomePage
 from stojanovic_one.ui.login_form import LoginForm
 from stojanovic_one.ui.registration_form import RegistrationForm
@@ -42,7 +42,6 @@ class MainWindow(QMainWindow):
         self.registration_form.registration_successful.connect(self.on_registration_successful)
         self.login_form.login_successful.connect(self.on_login_successful)
         self.logout_form.logout_successful.connect(self.perform_logout)
-        self.welcome_page.logout_clicked.connect(self.perform_logout)
         self.jwt_middleware = JWTMiddleware()
         self.jwt_middleware.authentication_failed.connect(self.handle_auth_failure)
         self.rate_limiter = RateLimiter()
@@ -88,7 +87,7 @@ class MainWindow(QMainWindow):
                                  Qt.QueuedConnection,
                                  Q_ARG(bool, is_authenticated))
 
-    def login_user(self, username: str, password: str) -> bool:
+    def login_user(self, username: str, password: str) -> tuple[bool, str]:
         if self.rate_limiter.is_rate_limited(username):
             error_message = "Too many login attempts. Please try again later."
             if not self.test_mode:
@@ -121,20 +120,21 @@ class MainWindow(QMainWindow):
                 QMessageBox.warning(self, "Registration Failed", error_message)
             return False
 
-    def logout_user(self, token: str) -> bool:
+    def logout_user(self, token: str) -> tuple[bool, str]:
         if logout_user(token):
             self.current_token = None
             self.update_auth_state(False)
             if not self.test_mode:
                 QMessageBox.information(self, "Logout Successful", "You have been logged out.")
             self.stacked_widget.setCurrentWidget(self.welcome_page)
-            return True
+            return True, None
         else:
             error_message = "An error occurred during logout. Please try again."
             if not self.test_mode:
                 QMessageBox.warning(self, "Logout Failed", error_message)
-            return False, error_message  # Return the error message for testing
+            return False, error_message
     
+    @protect_route
     def perform_logout(self):
         if self.current_token:
             self.logout_user(self.current_token)
@@ -144,20 +144,6 @@ class MainWindow(QMainWindow):
         # This method can only be called by authenticated users
         print("This is a protected method")
 
-    @protect_route
-    def show_logout_form(self):
-        print("show_logout_form called")
-        if self.current_token:
-            self.logout_form.set_token(self.current_token)
-            self.stacked_widget.setCurrentWidget(self.logout_form)
-        else:
-            print("No valid token, redirecting to welcome page")
-            self.stacked_widget.setCurrentWidget(self.welcome_page)
-
-    def perform_logout(self):
-        if self.current_token:
-            self.logout_user(self.current_token)
-    
     def handle_auth_failure(self):
         print("Authentication failed")
         self.current_token = None
