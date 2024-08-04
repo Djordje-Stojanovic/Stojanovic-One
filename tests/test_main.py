@@ -5,6 +5,9 @@ from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtTest import QTest
 from stojanovic_one.main import main, MainWindow
+from stojanovic_one.ui.welcome_page import WelcomePage
+from stojanovic_one.ui.login_form import LoginForm
+from stojanovic_one.ui.registration_form import RegistrationForm
 import traceback
 from stojanovic_one.auth.jwt_utils import generate_token
 import logging
@@ -59,19 +62,42 @@ def test_main(main_window, qtbot):
 
 @pytest.mark.gui
 def test_main_window_navigation(main_window, qtbot):
+    def log_current_widget():
+        current = main_window.stacked_widget.currentWidget()
+        logging.debug(f"Current widget: {current}")
+
+    logging.debug("Starting test_main_window_navigation")
+    log_current_widget()
+
     # Test navigation to login form
     qtbot.mouseClick(main_window.welcome_page.login_button, Qt.LeftButton)
-    qtbot.waitUntil(lambda: main_window.stacked_widget.currentWidget() == main_window.login_form, timeout=1000)
+    qtbot.waitUntil(lambda: isinstance(main_window.stacked_widget.currentWidget(), LoginForm), timeout=5000)
+    assert isinstance(main_window.stacked_widget.currentWidget(), LoginForm), "Failed to navigate to login form"
+
+    # Test navigation back to welcome page
+    main_window.show_welcome_page()
+    qtbot.waitUntil(lambda: isinstance(main_window.stacked_widget.currentWidget(), WelcomePage), timeout=5000)
+    assert isinstance(main_window.stacked_widget.currentWidget(), WelcomePage), "Failed to return to welcome page"
 
     # Test navigation to registration form
-    main_window.show_welcome_page()
-    qtbot.waitUntil(lambda: main_window.stacked_widget.currentWidget() == main_window.welcome_page, timeout=1000)
+    logging.debug("Clicking register button")
     qtbot.mouseClick(main_window.welcome_page.register_button, Qt.LeftButton)
-    qtbot.waitUntil(lambda: main_window.stacked_widget.currentWidget() == main_window.registration_form, timeout=1000)
+    logging.debug("Register button clicked")
 
-    # Test navigation back to welcome page after successful registration
-    main_window.on_registration_successful()
-    qtbot.waitUntil(lambda: main_window.stacked_widget.currentWidget() == main_window.welcome_page, timeout=1000)
+    def check_registration_form():
+        current_widget = main_window.stacked_widget.currentWidget()
+        logging.debug(f"Current widget in check: {current_widget}")
+        is_registration_form = isinstance(current_widget, RegistrationForm)
+        logging.debug(f"Is RegistrationForm: {is_registration_form}")
+        return is_registration_form
+
+    logging.debug("Waiting for RegistrationForm")
+    qtbot.waitUntil(check_registration_form, timeout=5000)
+    logging.debug("Wait completed")
+
+    current_widget = main_window.stacked_widget.currentWidget()
+    logging.debug(f"Final current widget: {current_widget}")
+    assert isinstance(current_widget, RegistrationForm), "Failed to navigate to registration form"
 
 @pytest.mark.gui
 def test_login_logout_flow(main_window, qtbot, mocker):

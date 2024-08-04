@@ -2,7 +2,7 @@
 
 import pytest
 from PySide6.QtCore import Qt, QTimer
-from PySide6.QtTest import QSignalSpy
+from PySide6.QtTest import QSignalSpy, QTest
 from stojanovic_one.ui.welcome_page import WelcomePage
 
 @pytest.mark.gui
@@ -41,23 +41,18 @@ def test_welcome_page_button_clicks(qtbot):
     welcome_page = WelcomePage()
     qtbot.addWidget(welcome_page)
 
-    login_spy = QSignalSpy(welcome_page.login_clicked)
-    register_spy = QSignalSpy(welcome_page.register_clicked)
+    with qtbot.waitSignal(welcome_page.login_clicked, timeout=1000) as blocker:
+        qtbot.mouseClick(welcome_page.login_button, Qt.LeftButton)
+    assert blocker.signal_triggered
 
-    qtbot.mouseClick(welcome_page.login_button, Qt.LeftButton)
-    qtbot.wait(100)  # Wait for signal to be emitted
-    assert login_spy.count() == 1
-
-    qtbot.mouseClick(welcome_page.register_button, Qt.LeftButton)
-    qtbot.wait(100)  # Wait for signal to be emitted
-    assert register_spy.count() == 1
+    with qtbot.waitSignal(welcome_page.register_clicked, timeout=1000) as blocker:
+        qtbot.mouseClick(welcome_page.register_button, Qt.LeftButton)
+    assert blocker.signal_triggered
 
 @pytest.mark.gui
 def test_welcome_page_logout_button(qtbot):
     welcome_page = WelcomePage()
     qtbot.addWidget(welcome_page)
-    
-    logout_spy = QSignalSpy(welcome_page.logout_clicked)
 
     # Initially, logout button should be hidden
     assert not welcome_page.logout_button.isVisible()
@@ -69,9 +64,9 @@ def test_welcome_page_logout_button(qtbot):
     assert not welcome_page.login_button.isVisible()
     assert not welcome_page.register_button.isVisible()
 
-    qtbot.mouseClick(welcome_page.logout_button, Qt.LeftButton)
-    qtbot.wait(100)  # Wait for signal to be emitted
-    assert logout_spy.count() == 1
+    with qtbot.waitSignal(welcome_page.logout_clicked, timeout=1000) as blocker:
+        qtbot.mouseClick(welcome_page.logout_button, Qt.LeftButton)
+    assert blocker.signal_triggered
 
     # Simulate logout
     welcome_page.update_ui_after_login(False)
@@ -90,3 +85,32 @@ def test_welcome_page_styling(qtbot):
     assert "color: #34495e;" in welcome_page.description_label.styleSheet()
     assert "background-color: #3498db;" in welcome_page.login_button.styleSheet()
     assert "background-color: #2ecc71;" in welcome_page.register_button.styleSheet()
+
+@pytest.mark.gui
+def test_welcome_page_delayed_resize(qtbot):
+    welcome_page = WelcomePage()
+    qtbot.addWidget(welcome_page)
+    welcome_page.show()
+
+    # Trigger a resize event
+    welcome_page.resize(800, 600)
+    
+    # Wait for the delayed resize to occur
+    def check_resize():
+        return welcome_page.login_button.width() == 200
+
+    qtbot.waitUntil(check_resize, timeout=1000)
+    
+    assert welcome_page.welcome_label.font().pointSize() == 24
+    assert welcome_page.description_label.font().pointSize() == 16
+
+    # Test small window size
+    welcome_page.resize(400, 300)
+    
+    def check_small_resize():
+        return welcome_page.login_button.width() == 320
+
+    qtbot.waitUntil(check_small_resize, timeout=1000)
+    
+    assert welcome_page.welcome_label.font().pointSize() == 20
+    assert welcome_page.description_label.font().pointSize() == 12

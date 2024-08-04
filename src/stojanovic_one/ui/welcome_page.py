@@ -3,6 +3,7 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QApplication
 from PySide6.QtCore import Qt, Signal, QTimer, QMetaObject, Q_ARG
 from PySide6.QtGui import QFont, QColor, QPalette
+import logging
 
 class WelcomePage(QWidget):
     login_clicked = Signal()
@@ -67,9 +68,21 @@ class WelcomePage(QWidget):
 
         self.setLayout(layout)
 
-        self.login_button.clicked.connect(self.login_clicked.emit)
-        self.register_button.clicked.connect(self.register_clicked.emit)
-        self.logout_button.clicked.connect(self.logout_clicked.emit)
+        self.login_button.clicked.connect(self._on_login_clicked)
+        self.register_button.clicked.connect(self._on_register_clicked)
+        self.logout_button.clicked.connect(self._on_logout_clicked)
+
+    def _on_login_clicked(self):
+        logging.debug("Login button clicked")
+        self.login_clicked.emit()
+
+    def _on_register_clicked(self):
+        logging.debug("Register button clicked")
+        self.register_clicked.emit()
+
+    def _on_logout_clicked(self):
+        logging.debug("Logout button clicked")
+        self.logout_clicked.emit()
 
     def update_ui_after_login(self, is_logged_in: bool):
         self._update_ui_after_login(is_logged_in)

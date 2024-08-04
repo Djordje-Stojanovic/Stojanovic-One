@@ -30,18 +30,22 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.stacked_widget)
 
         self.welcome_page = WelcomePage()
-        self.login_form = LoginForm(login_user_func=self.login_user)
+        self.login_form = LoginForm(login_user_func=self.login_user)        
         self.registration_form = RegistrationForm(register_user_func=self.register_user)
+        logging.debug(f"RegistrationForm initialized: {self.registration_form}")
         self.logout_form = LogoutForm(logout_user_func=self.logout_user)
 
         self.stacked_widget.addWidget(self.welcome_page)
         self.stacked_widget.addWidget(self.login_form)
         self.stacked_widget.addWidget(self.registration_form)
         self.stacked_widget.addWidget(self.logout_form)
+        logging.debug("All forms added to stacked widget")
 
+        logging.debug("Connecting signals")
         self.welcome_page.login_clicked.connect(self.show_login_form)
         self.welcome_page.register_clicked.connect(self.show_registration_form)
         self.welcome_page.logout_clicked.connect(self.show_logout_form)
+        logging.debug("Signals connected")
         self.registration_form.registration_successful.connect(self.on_registration_successful)
         self.login_form.login_successful.connect(self.on_login_successful)
         self.logout_form.logout_successful.connect(self.perform_logout)
@@ -49,7 +53,7 @@ class MainWindow(QMainWindow):
         self.jwt_middleware.authentication_failed.connect(self.handle_auth_failure)
         self.rate_limiter = RateLimiter()
 
-        print("MainWindow initialized")
+        logging.info("MainWindow initialized")
         self.show_welcome_page()
         logging.info("MainWindow __init__ completed")
 
@@ -78,19 +82,28 @@ class MainWindow(QMainWindow):
         self.cleanup()
 
     def show_login_form(self):
-        print("show_login_form called")
+        logging.debug("show_login_form called")
         self.stacked_widget.setCurrentWidget(self.login_form)
-        QApplication.processEvents()  # Force processing of events
+        logging.debug(f"Current widget after setCurrentWidget: {self.stacked_widget.currentWidget()}")
+        QApplication.processEvents()
 
     def show_registration_form(self):
-        print("show_registration_form called")
+        logging.debug("show_registration_form called")
+        current_widget = self.stacked_widget.currentWidget()
+        logging.debug(f"Current widget before change: {current_widget}")
         self.stacked_widget.setCurrentWidget(self.registration_form)
-        QApplication.processEvents()  # Force processing of events
+        current_widget = self.stacked_widget.currentWidget()
+        logging.debug(f"Current widget after change: {current_widget}")
+        QApplication.processEvents()
+        
+        # Add this line to ensure the registration form is visible
+        self.registration_form.show()
 
     def show_welcome_page(self):
-        print("show_welcome_page called")
+        logging.debug("show_welcome_page called")
         self.stacked_widget.setCurrentWidget(self.welcome_page)
-        QApplication.processEvents()  # Force processing of events
+        logging.debug(f"Current widget after setCurrentWidget: {self.stacked_widget.currentWidget()}")
+        QApplication.processEvents()
 
     @protect_route
     def show_logout_form(self):
