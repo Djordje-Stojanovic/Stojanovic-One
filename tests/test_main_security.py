@@ -8,7 +8,6 @@ from stojanovic_one.main import main
 from stojanovic_one.auth.jwt_utils import generate_token, validate_token
 from stojanovic_one.database.user_management import register_user
 import bcrypt
-import sip
 import logging
 
 logging.basicConfig(level=logging.DEBUG)
@@ -31,7 +30,7 @@ def cleanup():
     yield
     for widget in QApplication.topLevelWidgets():
         widget.close()
-        sip.delete(widget)
+        widget.deleteLater()
     QTest.qWait(100)
 
 @pytest.mark.gui
