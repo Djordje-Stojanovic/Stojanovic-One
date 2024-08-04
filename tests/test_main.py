@@ -27,12 +27,16 @@ def main_window(qtbot, mocker):
     mocker.patch('stojanovic_one.main.create_user_table')
 
     # Create the main window
-    with qtbot.waitExposed(lambda: main(test_mode=True)) as main_window:
-        yield main_window
-
+    window = main(test_mode=True)
+    qtbot.addWidget(window)
+    
+    yield window
+    
     # Cleanup
-    main_window.close()
+    window.close()
     QTest.qWait(100)  # Wait for any pending events to process
+    window.deleteLater()
+    QTest.qWait(100)  # Wait for deletion to complete
 
 @pytest.fixture
 def setup_and_teardown(qtbot):
@@ -95,12 +99,9 @@ def test_login_logout_flow(main_window, qtbot, mocker):
         pytest.fail(f"Test failed due to exception: {str(e)}")
 
 @pytest.mark.gui
-def test_registration_flow(qtbot, mocker):
+def test_registration_flow(main_window, qtbot, mocker):
     try:
         logging.debug("Starting test_registration_flow")
-        main_window = main(test_mode=True)
-        logging.debug("Main window created")
-        qtbot.addWidget(main_window)
 
         mock_register = mocker.patch('stojanovic_one.database.user_management.register_user', return_value=True)
         logging.debug("Mock register created")
@@ -124,18 +125,10 @@ def test_registration_flow(qtbot, mocker):
         logging.error(f"Test failed: {str(e)}")
         logging.error(traceback.format_exc())
         pytest.fail(f"Test failed due to exception: {str(e)}")
-    finally:
-        # Ensure proper cleanup
-        main_window.close()
-        main_window.deleteLater()
-        QTest.qWait(100)  # Give some time for cleanup
 
 @pytest.mark.gui
-def test_protected_routes(app, qtbot, mocker, setup_and_teardown):
+def test_protected_routes(main_window, qtbot, mocker):
     try:
-        main_window = main(test_mode=True)
-        qtbot.addWidget(main_window)
-
         main_window.show_logout_form()
         QTest.qWait(500)
         assert main_window.stacked_widget.currentWidget() == main_window.welcome_page
@@ -159,12 +152,9 @@ def test_protected_routes(app, qtbot, mocker, setup_and_teardown):
         pytest.fail(f"Test failed due to exception: {str(e)}\n{traceback.format_exc()}")
 
 @pytest.mark.gui
-def test_auth_state_management(app, qtbot, setup_and_teardown):
+def test_auth_state_management(main_window, qtbot):
     try:
         logging.debug("Starting test_auth_state_management")
-        main_window = main(test_mode=True)
-        logging.debug("Main window created")
-        qtbot.addWidget(main_window)
 
         assert not main_window.is_authenticated()
         logging.debug("Initial authentication state checked")
@@ -202,17 +192,9 @@ def test_auth_state_management(app, qtbot, setup_and_teardown):
         logging.error(f"Test failed: {str(e)}")
         logging.error(traceback.format_exc())
         pytest.fail(f"Test failed due to exception: {str(e)}")
-    finally:
-        # Ensure proper cleanup
-        main_window.close()
-        main_window.deleteLater()
-        QTest.qWait(100)  # Give some time for cleanup
 
 @pytest.mark.gui
-def test_error_messages(app, qtbot, mocker, setup_and_teardown):
-    main_window = main(test_mode=True)
-    qtbot.addWidget(main_window)
-
+def test_error_messages(main_window, qtbot, mocker):
     result, error_message = main_window.login_user("nonexistent", "wrongpassword")
     assert result == False
     assert error_message == "Invalid username or password. Please try again."

@@ -45,9 +45,11 @@ def test_welcome_page_button_clicks(qtbot):
     register_spy = QSignalSpy(welcome_page.register_clicked)
 
     qtbot.mouseClick(welcome_page.login_button, Qt.LeftButton)
+    qtbot.wait(100)  # Wait for signal to be emitted
     assert login_spy.count() == 1
 
     qtbot.mouseClick(welcome_page.register_button, Qt.LeftButton)
+    qtbot.wait(100)  # Wait for signal to be emitted
     assert register_spy.count() == 1
 
 @pytest.mark.gui
@@ -62,17 +64,18 @@ def test_welcome_page_logout_button(qtbot):
 
     # Simulate login
     welcome_page.update_ui_after_login(True)
-    qtbot.wait(100)  # Wait for UI update
+    qtbot.wait(200)  # Increase wait time for UI update
     assert welcome_page.logout_button.isVisible()
     assert not welcome_page.login_button.isVisible()
     assert not welcome_page.register_button.isVisible()
 
     qtbot.mouseClick(welcome_page.logout_button, Qt.LeftButton)
+    qtbot.wait(100)  # Wait for signal to be emitted
     assert logout_spy.count() == 1
 
     # Simulate logout
     welcome_page.update_ui_after_login(False)
-    qtbot.wait(100)  # Wait for UI update
+    qtbot.wait(200)  # Increase wait time for UI update
     assert not welcome_page.logout_button.isVisible()
     assert welcome_page.login_button.isVisible()
     assert welcome_page.register_button.isVisible()

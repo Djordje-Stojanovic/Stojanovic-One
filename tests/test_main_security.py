@@ -20,6 +20,25 @@ def app():
     yield app
     app.quit()
 
+@pytest.fixture(scope="function")
+def main_window(qtbot, mocker):
+    # Mock the database connection
+    mock_conn = mocker.Mock()
+    mocker.patch('stojanovic_one.main.initialize_database', return_value=mock_conn)
+    mocker.patch('stojanovic_one.main.create_user_table')
+
+    # Create the main window
+    window = main(test_mode=True)
+    qtbot.addWidget(window)
+    
+    yield window
+    
+    # Cleanup
+    window.close()
+    QTest.qWait(100)  # Wait for any pending events to process
+    window.deleteLater()
+    QTest.qWait(100)  # Wait for deletion to complete
+
 @pytest.fixture
 def setup_and_teardown(qtbot):
     yield
@@ -34,11 +53,8 @@ def cleanup():
     QTest.qWait(100)
 
 @pytest.mark.gui
-def test_rate_limiting(app, qtbot, mocker, setup_and_teardown):
+def test_rate_limiting(main_window, qtbot, mocker):
     try:
-        main_window = main(test_mode=True)
-        qtbot.addWidget(main_window)
-
         for i in range(6):
             result, message = main_window.login_user("testuser", "wrongpassword")
             if i < 5:
@@ -54,11 +70,8 @@ def test_rate_limiting(app, qtbot, mocker, setup_and_teardown):
         pytest.fail(f"Test failed: {str(e)}")
 
 @pytest.mark.gui
-def test_token_expiration(app, qtbot, mocker, setup_and_teardown):
+def test_token_expiration(main_window, qtbot, mocker):
     try:
-        main_window = main(test_mode=True)
-        qtbot.addWidget(main_window)
-
         expired_token = generate_token("testuser", expiration=1)
         main_window.current_token = expired_token
 
@@ -74,11 +87,8 @@ def test_token_expiration(app, qtbot, mocker, setup_and_teardown):
         pytest.fail(f"Test failed: {str(e)}")
 
 @pytest.mark.gui
-def test_token_tampering(app, qtbot, mocker, setup_and_teardown):
+def test_token_tampering(main_window, qtbot, mocker):
     try:
-        main_window = main(test_mode=True)
-        qtbot.addWidget(main_window)
-
         valid_token = generate_token("testuser")
         tampered_token = valid_token[:-1] + ('1' if valid_token[-1] == '0' else '0')
         main_window.current_token = tampered_token
@@ -99,11 +109,8 @@ def test_token_tampering(app, qtbot, mocker, setup_and_teardown):
         pytest.fail(f"Test failed: {str(e)}")
 
 @pytest.mark.gui
-def test_password_hashing(app, qtbot, mocker, setup_and_teardown):
+def test_password_hashing(main_window, qtbot, mocker):
     try:
-        main_window = main(test_mode=True)
-        qtbot.addWidget(main_window)
-
         hashed_password = [None]
         def mock_register(conn, username, email, password):
             hashed_password[0] = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())

@@ -72,9 +72,7 @@ class WelcomePage(QWidget):
         self.logout_button.clicked.connect(self.logout_clicked.emit)
 
     def update_ui_after_login(self, is_logged_in: bool):
-        QMetaObject.invokeMethod(self, "_update_ui_after_login",
-                                 Qt.QueuedConnection,
-                                 Q_ARG(bool, is_logged_in))
+        self._update_ui_after_login(is_logged_in)
 
     def _update_ui_after_login(self, is_logged_in: bool):
         self.logout_button.setVisible(is_logged_in)

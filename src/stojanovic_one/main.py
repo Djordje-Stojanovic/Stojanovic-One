@@ -158,10 +158,6 @@ class MainWindow(QMainWindow):
 
 def main(test_mode=False):
     try:
-        app = QApplication.instance()
-        if app is None:
-            app = QApplication([])
-
         if test_mode:
             conn = None  # Use a mock connection for testing
         else:
