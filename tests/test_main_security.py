@@ -77,14 +77,17 @@ def test_password_hashing(app, qtbot, mocker, setup_and_teardown):
     main_window = main(test_mode=True)
     qtbot.addWidget(main_window)
 
-    hashed_password = []
-    def mock_register(conn, username, email, password):
-        hashed_password.append(password)
-        return True
-    mocker.patch('stojanovic_one.main.register_user', side_effect=mock_register)
+    # Use the actual register_user function
+    mocker.patch('stojanovic_one.main.register_user', side_effect=register_user)
 
     main_window.register_user("newuser", "newuser@example.com", "password123")
 
     QTest.qWait(500)
-    assert hashed_password[0] != "password123"
-    assert hashed_password[0].startswith(b'$2b$')
+
+    # Check the hashed password in the database
+    cursor = main_window.conn.cursor()
+    cursor.execute("SELECT password_hash FROM users WHERE username = ?", ("newuser",))
+    hashed_password = cursor.fetchone()[0]
+
+    assert hashed_password != "password123"
+    assert hashed_password.startswith(b'$2b$')

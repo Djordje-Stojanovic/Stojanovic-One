@@ -125,7 +125,7 @@ def test_registration_flow(app, qtbot, mocker, setup_and_teardown):
         assert args[0] == main_window.conn
         assert args[1] == "newuser"
         assert args[2] == "newuser@example.com"
-        assert args[3].startswith(b'$2b$')  # Check if the password is hashed
+        assert args[3] == "password123"  # Password should not be hashed at this point
 
         assert main_window.stacked_widget.currentWidget() == main_window.welcome_page
 

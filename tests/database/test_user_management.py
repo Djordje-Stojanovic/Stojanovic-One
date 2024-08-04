@@ -33,7 +33,7 @@ def test_register_user_invalid_input(db_connection):
         register_user(db_connection, "", "test@example.com", "password123")
     with pytest.raises(sqlite3.IntegrityError):
         register_user(db_connection, "testuser", "", "password123")
-        
+
 def test_login_user_success(db_connection):
     register_user(db_connection, "testuser", "test@example.com", "password123")
     token = login_user(db_connection, "testuser", "password123")
