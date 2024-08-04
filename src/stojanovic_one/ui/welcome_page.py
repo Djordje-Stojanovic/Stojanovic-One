@@ -1,7 +1,7 @@
 # src/stojanovic_one/ui/welcome_page.py
 
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QApplication
-from PySide6.QtCore import Qt, Signal, QTimer
+from PySide6.QtCore import Qt, Signal, QTimer, QMetaObject, Q_ARG
 from PySide6.QtGui import QFont, QColor, QPalette
 
 class WelcomePage(QWidget):
@@ -72,6 +72,11 @@ class WelcomePage(QWidget):
         self.logout_button.clicked.connect(self.logout_clicked.emit)
 
     def update_ui_after_login(self, is_logged_in: bool):
+        QMetaObject.invokeMethod(self, "_update_ui_after_login",
+                                 Qt.QueuedConnection,
+                                 Q_ARG(bool, is_logged_in))
+
+    def _update_ui_after_login(self, is_logged_in: bool):
         self.logout_button.setVisible(is_logged_in)
         self.login_button.setVisible(not is_logged_in)
         self.register_button.setVisible(not is_logged_in)

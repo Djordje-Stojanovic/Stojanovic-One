@@ -111,9 +111,10 @@ def test_password_hashing(app, qtbot, mocker, setup_and_teardown):
 
         mocker.patch('stojanovic_one.database.user_management.register_user', side_effect=mock_register)
 
-        result = main_window.register_user("newuser", "newuser@example.com", "password123")
+        result, error_message = main_window.register_user("newuser", "newuser@example.com", "password123")
 
         assert result == True
+        assert error_message is None
         assert hashed_password[0] != "password123"
         assert hashed_password[0].startswith(b'$2b$')
 

@@ -113,17 +113,17 @@ class MainWindow(QMainWindow):
             self.update_auth_state(False)
             return False, error_message
 
-    def register_user(self, username: str, email: str, password: str) -> bool:
+    def register_user(self, username: str, email: str, password: str) -> Tuple[bool, Optional[str]]:
         success = register_user(self.conn, username, email, password)
         if success:
             if not self.test_mode:
                 QMessageBox.information(self, "Registration Successful", "You can now log in with your new account.")
-            return True
+            return True, None
         else:
             error_message = "Registration failed. Username or email may already be in use."
             if not self.test_mode:
                 QMessageBox.warning(self, "Registration Failed", error_message)
-            return False
+            return False, error_message
 
     def logout_user(self, token: str) -> Tuple[bool, Optional[str]]:
         if logout_user(token):

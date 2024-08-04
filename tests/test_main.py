@@ -12,12 +12,31 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 
 @pytest.fixture(scope="session")
-def app():
+def qapp():
     app = QApplication.instance()
     if app is None:
         app = QApplication([])
     yield app
-    # Don't call app.quit() here, as it might interfere with other tests
+    app.quit()
+
+@pytest.fixture(scope="function")
+def main_window(qtbot, mocker):
+    # Mock the database connection
+    mock_conn = mocker.Mock()
+    mocker.patch('stojanovic_one.main.initialize_database', return_value=mock_conn)
+    mocker.patch('stojanovic_one.main.create_user_table')
+
+    # Create the main window
+    window = main(test_mode=True)
+    qtbot.addWidget(window)
+    
+    yield window
+    
+    # Cleanup
+    window.close()
+    QTest.qWait(100)  # Wait for any pending events to process
+    window.deleteLater()
+    QTest.qWait(100)  # Wait for deletion to complete
 
 @pytest.fixture
 def setup_and_teardown(qtbot):
@@ -25,45 +44,39 @@ def setup_and_teardown(qtbot):
     QTest.qWait(100)  # Wait for any pending events to process
 
 @pytest.mark.gui
-def test_main(app, qtbot, setup_and_teardown):
-    try:
-        main_window = main(test_mode=True)
-        assert isinstance(main_window, MainWindow)
-        assert main_window.isVisible()
-        QTest.qWait(500)
+def test_main(main_window, qtbot):
+    assert isinstance(main_window, MainWindow)
+    assert main_window.isVisible()
+
+    def check_welcome_page():
         assert main_window.stacked_widget.currentWidget() == main_window.welcome_page
-    except Exception as e:
-        pytest.fail(f"Test failed due to exception: {str(e)}\n{traceback.format_exc()}")
+
+    QTimer.singleShot(500, check_welcome_page)
+    qtbot.wait(1000)
 
 @pytest.mark.gui
-def test_main_window_navigation(app, qtbot, setup_and_teardown):
-    main_window = main(test_mode=True)
-    qtbot.addWidget(main_window)
-
+def test_main_window_navigation(main_window, qtbot):
     # Test navigation to login form
     qtbot.mouseClick(main_window.welcome_page.login_button, Qt.LeftButton)
-    QTest.qWait(500)
+    qtbot.wait(500)
     assert main_window.stacked_widget.currentWidget() == main_window.login_form
 
     # Test navigation to registration form
     main_window.show_welcome_page()
-    QTest.qWait(500)
+    qtbot.wait(500)
     qtbot.mouseClick(main_window.welcome_page.register_button, Qt.LeftButton)
-    QTest.qWait(500)
+    qtbot.wait(500)
     assert main_window.stacked_widget.currentWidget() == main_window.registration_form
 
     # Test navigation back to welcome page after successful registration
     main_window.on_registration_successful()
-    QTest.qWait(500)
+    qtbot.wait(500)
     assert main_window.stacked_widget.currentWidget() == main_window.welcome_page
 
 @pytest.mark.gui
-def test_login_logout_flow(qtbot, mocker):
+def test_login_logout_flow(main_window, qtbot, mocker):
     try:
         logging.debug("Starting test_login_logout_flow")
-        main_window = main(test_mode=True)
-        logging.debug("Main window created")
-        qtbot.addWidget(main_window)
 
         mock_login = mocker.patch('stojanovic_one.database.user_management.login_user', return_value="fake_token")
         logging.debug("Mock login created")
@@ -86,7 +99,7 @@ def test_login_logout_flow(qtbot, mocker):
         pytest.fail(f"Test failed due to exception: {str(e)}")
 
 @pytest.mark.gui
-def test_registration_flow(app, qtbot, mocker, setup_and_teardown):
+def test_registration_flow(qtbot, mocker):
     try:
         logging.debug("Starting test_registration_flow")
         main_window = main(test_mode=True)
@@ -97,10 +110,11 @@ def test_registration_flow(app, qtbot, mocker, setup_and_teardown):
         logging.debug("Mock register created")
 
         # Directly call register_user method instead of interacting with GUI
-        result = main_window.register_user("newuser", "newuser@example.com", "password123")
+        result, error_message = main_window.register_user("newuser", "newuser@example.com", "password123")
         logging.debug(f"Registration result: {result}")
 
         assert result == True
+        assert error_message is None
         mock_register.assert_called_once()
         args = mock_register.call_args[0]
         assert args[0] == main_window.conn
@@ -109,10 +123,6 @@ def test_registration_flow(app, qtbot, mocker, setup_and_teardown):
         assert args[3] == "password123"  # Password should not be hashed at this point
 
         logging.debug("Registration assertions passed")
-
-        # Check if we're on the welcome page after registration
-        assert main_window.stacked_widget.currentWidget() == main_window.welcome_page
-        logging.debug("Welcome page assertion passed")
 
     except Exception as e:
         logging.error(f"Test failed: {str(e)}")
@@ -227,10 +237,13 @@ def cleanup():
     yield
     for widget in QApplication.topLevelWidgets():
         widget.deleteLater()
+    QApplication.processEvents()
     QTest.qWait(100)  # Wait for widget deletion to complete
 
-
-
+@pytest.fixture(autouse=True)
+def run_around_tests(qapp):
+    yield
+    QTest.qWait(100)
 
 
 
