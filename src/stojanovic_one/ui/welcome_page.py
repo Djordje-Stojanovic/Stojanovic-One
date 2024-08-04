@@ -11,74 +11,40 @@ class WelcomePage(QWidget):
 
     def __init__(self):
         super().__init__()
-        self.setup_ui()
+        self.setup_ui()  # This sets up the basic structure
 
         self.setWindowTitle("Welcome to Stojanovic-One")
         self.setStyleSheet("background-color: #f0f0f0;")
 
-        layout = QVBoxLayout()
-        layout.setSpacing(20)
-        layout.setContentsMargins(40, 40, 40, 40)
-
+        # Add the welcome and description labels
         self.welcome_label = QLabel("Welcome to Stojanovic-One")
         self.welcome_label.setAlignment(Qt.AlignCenter)
         self.welcome_label.setFont(QFont("Arial", 24, QFont.Bold))
         self.welcome_label.setStyleSheet("color: #2c3e50;")
-        layout.addWidget(self.welcome_label)
+        self.layout().insertWidget(0, self.welcome_label)
 
         self.description_label = QLabel("A powerful Python application for managing your tasks and projects.")
         self.description_label.setAlignment(Qt.AlignCenter)
         self.description_label.setWordWrap(True)
         self.description_label.setStyleSheet("color: #34495e; font-size: 16px;")
-        layout.addWidget(self.description_label)
+        self.layout().insertWidget(1, self.description_label)
 
-        self.login_button = QPushButton("Login")
-        self.login_button.clicked.connect(self._on_login_clicked)
-        self.login_button.setStyleSheet("""
-            QPushButton {
-                background-color: #3498db;
-                color: white;
-                border-radius: 5px;
-                font-size: 16px;
-            }
-            QPushButton:hover {
-                background-color: #2980b9;
-            }
-        """)
-        layout.addWidget(self.login_button, alignment=Qt.AlignCenter)
-
-        self.register_button = QPushButton("Register")
-        self.register_button.clicked.connect(self._on_register_clicked)
-        self.register_button.setStyleSheet("""
-            QPushButton {
-                background-color: #2ecc71;
-                color: white;
-                border-radius: 5px;
-                font-size: 16px;
-            }
-            QPushButton:hover {
-                background-color: #27ae60;
-            }
-        """)
-        layout.addWidget(self.register_button, alignment=Qt.AlignCenter)
-
-        self.logout_button = QPushButton("Logout")
-        self.logout_button.clicked.connect(self._on_logout_clicked)
-        self.logout_button.setStyleSheet("""
-            QPushButton {
-                background-color: #e74c3c;
-                color: white;
-                border-radius: 5px;
-                font-size: 16px;
-            }
-            QPushButton:hover {
-                background-color: #c0392b;
-            }
-        """)
-        self.logout_button.hide()  # Hide the logout button initially
-        layout.addWidget(self.logout_button, alignment=Qt.AlignCenter)
-
-        self.setLayout(layout)
+        # Style the buttons
+        for button in [self.login_button, self.register_button, self.logout_button]:
+            button.setStyleSheet("""
+                QPushButton {
+                    color: white;
+                    border-radius: 5px;
+                    font-size: 16px;
+                }
+                QPushButton:hover {
+                    background-color: darker;
+                }
+            """)
+        
+        self.login_button.setStyleSheet(self.login_button.styleSheet() + "background-color: #3498db;")
+        self.register_button.setStyleSheet(self.register_button.styleSheet() + "background-color: #2ecc71;")
+        self.logout_button.setStyleSheet(self.logout_button.styleSheet() + "background-color: #e74c3c;")
 
         # Timer for delayed resize event
         self.resize_timer = QTimer(self)
