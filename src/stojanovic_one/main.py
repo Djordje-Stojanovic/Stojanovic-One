@@ -4,6 +4,7 @@ import sys
 import traceback
 import bcrypt
 from PySide6.QtWidgets import QApplication, QMainWindow, QStackedWidget, QMessageBox
+from PySide6.QtCore import QMetaObject, Qt
 from stojanovic_one.ui.welcome_page import WelcomePage
 from stojanovic_one.ui.login_form import LoginForm
 from stojanovic_one.ui.registration_form import RegistrationForm
@@ -83,7 +84,9 @@ class MainWindow(QMainWindow):
         return self.current_token is not None
 
     def update_auth_state(self, is_authenticated):
-        self.welcome_page.update_ui_after_login(is_authenticated)
+        QMetaObject.invokeMethod(self.welcome_page, "update_ui_after_login",
+                                 Qt.QueuedConnection,
+                                 Q_ARG(bool, is_authenticated))
 
     def login_user(self, username: str, password: str) -> bool:
         if self.rate_limiter.is_rate_limited(username):
@@ -107,7 +110,8 @@ class MainWindow(QMainWindow):
             return False, error_message
 
     def register_user(self, username: str, email: str, password: str) -> bool:
-        if register_user(self.conn, username, email, password):
+        success = register_user(self.conn, username, email, password)
+        if success:
             if not self.test_mode:
                 QMessageBox.information(self, "Registration Successful", "You can now log in with your new account.")
             return True
@@ -115,7 +119,7 @@ class MainWindow(QMainWindow):
             error_message = "Registration failed. Username or email may already be in use."
             if not self.test_mode:
                 QMessageBox.warning(self, "Registration Failed", error_message)
-            return False, error_message  # Return the error message for testing
+            return False
 
     def logout_user(self, token: str) -> bool:
         if logout_user(token):

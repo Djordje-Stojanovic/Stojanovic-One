@@ -2,7 +2,7 @@
 
 import pytest
 from PySide6.QtWidgets import QApplication
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtTest import QTest
 from stojanovic_one.main import main, MainWindow
 import traceback
@@ -173,28 +173,53 @@ def test_protected_routes(app, qtbot, mocker, setup_and_teardown):
 
 @pytest.mark.gui
 def test_auth_state_management(app, qtbot, setup_and_teardown):
-    main_window = main(test_mode=True)
-    qtbot.addWidget(main_window)
+    try:
+        logging.debug("Starting test_auth_state_management")
+        main_window = main(test_mode=True)
+        logging.debug("Main window created")
+        qtbot.addWidget(main_window)
 
-    assert not main_window.is_authenticated()   
+        assert not main_window.is_authenticated()
+        logging.debug("Initial authentication state checked")
 
-    main_window.current_token = "fake_token"
-    assert main_window.is_authenticated()
+        main_window.current_token = "fake_token"
+        assert main_window.is_authenticated()
+        logging.debug("Authentication state after setting token checked")
 
-    main_window.current_token = None
-    assert not main_window.is_authenticated()
+        main_window.current_token = None
+        assert not main_window.is_authenticated()
+        logging.debug("Authentication state after removing token checked")
 
-    main_window.update_auth_state(True)
-    QTest.qWait(500)
-    assert main_window.welcome_page.logout_button.isVisible()
-    assert not main_window.welcome_page.login_button.isVisible()
-    assert not main_window.welcome_page.register_button.isVisible()
+        def check_logged_in_state():
+            assert main_window.welcome_page.logout_button.isVisible()
+            assert not main_window.welcome_page.login_button.isVisible()
+            assert not main_window.welcome_page.register_button.isVisible()
+            logging.debug("Logged in state UI checked")
 
-    main_window.update_auth_state(False)
-    QTest.qWait(500)
-    assert not main_window.welcome_page.logout_button.isVisible()
-    assert main_window.welcome_page.login_button.isVisible()
-    assert main_window.welcome_page.register_button.isVisible()
+        def check_logged_out_state():
+            assert not main_window.welcome_page.logout_button.isVisible()
+            assert main_window.welcome_page.login_button.isVisible()
+            assert main_window.welcome_page.register_button.isVisible()
+            logging.debug("Logged out state UI checked")
+
+        QTimer.singleShot(100, lambda: main_window.update_auth_state(True))
+        qtbot.wait(200)
+        check_logged_in_state()
+
+        QTimer.singleShot(100, lambda: main_window.update_auth_state(False))
+        qtbot.wait(200)
+        check_logged_out_state()
+
+        logging.debug("test_auth_state_management completed successfully")
+    except Exception as e:
+        logging.error(f"Test failed: {str(e)}")
+        logging.error(traceback.format_exc())
+        pytest.fail(f"Test failed due to exception: {str(e)}")
+    finally:
+        # Ensure proper cleanup
+        main_window.close()
+        main_window.deleteLater()
+        QTest.qWait(100)  # Give some time for cleanup
 
 @pytest.mark.gui
 def test_error_messages(app, qtbot, mocker, setup_and_teardown):
