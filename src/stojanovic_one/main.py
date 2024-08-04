@@ -98,11 +98,12 @@ class MainWindow(QMainWindow):
             self.update_auth_state(True)
             if not self.test_mode:
                 QMessageBox.information(self, "Login Successful", f"Welcome, {username}!")
-            return True
+            return True, None
         else:
             error_message = "Invalid username or password. Please try again."
             if not self.test_mode:
                 QMessageBox.warning(self, "Login Failed", error_message)
+            self.update_auth_state(False)
             return False, error_message
 
     def register_user(self, username: str, email: str, password: str) -> bool:
