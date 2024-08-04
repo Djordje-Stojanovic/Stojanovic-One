@@ -221,3 +221,25 @@ def test_error_messages(app, qtbot, mocker, setup_and_teardown):
     result, error_message = main_window.logout_user("fake_token")
     assert result == False
     assert error_message == "An error occurred during logout. Please try again."
+
+@pytest.fixture(autouse=True)
+def cleanup():
+    yield
+    for widget in QApplication.topLevelWidgets():
+        widget.deleteLater()
+    QTest.qWait(100)  # Wait for widget deletion to complete
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -11,7 +11,7 @@ class WelcomePage(QWidget):
 
     def __init__(self):
         super().__init__()
-        self.setup_ui()  # This sets up the basic structure
+        self.setup_ui()
 
         self.setWindowTitle("Welcome to Stojanovic-One")
         self.setStyleSheet("background-color: #f0f0f0;")
@@ -53,14 +53,17 @@ class WelcomePage(QWidget):
 
     def setup_ui(self):
         layout = QVBoxLayout()
+        layout.setSpacing(20)
+        layout.setContentsMargins(40, 40, 40, 40)
+
         self.login_button = QPushButton("Login")
         self.register_button = QPushButton("Register")
         self.logout_button = QPushButton("Logout")
         self.logout_button.hide()  # Initially hidden
 
-        layout.addWidget(self.login_button)
-        layout.addWidget(self.register_button)
-        layout.addWidget(self.logout_button)
+        layout.addWidget(self.login_button, alignment=Qt.AlignCenter)
+        layout.addWidget(self.register_button, alignment=Qt.AlignCenter)
+        layout.addWidget(self.logout_button, alignment=Qt.AlignCenter)
 
         self.setLayout(layout)
 
@@ -68,27 +71,11 @@ class WelcomePage(QWidget):
         self.register_button.clicked.connect(self.register_clicked.emit)
         self.logout_button.clicked.connect(self.logout_clicked.emit)
 
-    def _on_login_clicked(self):
-        print("Login button clicked")
-        self.login_clicked.emit()
-
-    def _on_register_clicked(self):
-        print("Register button clicked")
-        self.register_clicked.emit()
-
-    def _on_logout_clicked(self):
-        print("Logout button clicked")
-        self.logout_clicked.emit()
-
     def update_ui_after_login(self, is_logged_in: bool):
-        if is_logged_in:
-            self.login_button.hide()
-            self.register_button.hide()
-            self.logout_button.show()
-        else:
-            self.login_button.show()
-            self.register_button.show()
-            self.logout_button.hide()
+        self.logout_button.setVisible(is_logged_in)
+        self.login_button.setVisible(not is_logged_in)
+        self.register_button.setVisible(not is_logged_in)
+        QApplication.processEvents()  # Force processing of events
 
     def resizeEvent(self, event):
         super().resizeEvent(event)

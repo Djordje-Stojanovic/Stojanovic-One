@@ -51,6 +51,31 @@ def test_welcome_page_button_clicks(qtbot):
     assert register_spy.count() == 1
 
 @pytest.mark.gui
+def test_welcome_page_logout_button(qtbot):
+    welcome_page = WelcomePage()
+    qtbot.addWidget(welcome_page)
+
+    logout_spy = QSignalSpy(welcome_page.logout_clicked)
+
+    # Initially, logout button should be hidden
+    assert not welcome_page.logout_button.isVisible()
+
+    # Simulate login
+    welcome_page.update_ui_after_login(True)
+    assert welcome_page.logout_button.isVisible()
+    assert not welcome_page.login_button.isVisible()
+    assert not welcome_page.register_button.isVisible()
+
+    qtbot.mouseClick(welcome_page.logout_button, Qt.LeftButton)
+    assert logout_spy.count() == 1
+
+    # Simulate logout
+    welcome_page.update_ui_after_login(False)
+    assert not welcome_page.logout_button.isVisible()
+    assert welcome_page.login_button.isVisible()
+    assert welcome_page.register_button.isVisible()
+
+@pytest.mark.gui
 def test_welcome_page_styling(qtbot):
     welcome_page = WelcomePage()
     qtbot.addWidget(welcome_page)

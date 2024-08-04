@@ -13,6 +13,7 @@ from stojanovic_one.database.setup import initialize_database, create_user_table
 from stojanovic_one.database.user_management import login_user, register_user, logout_user
 from stojanovic_one.auth.middleware import protect_route, JWTMiddleware
 from stojanovic_one.auth.rate_limiting import RateLimiter
+from typing import Tuple, Optional
 
 class MainWindow(QMainWindow):
     def __init__(self, conn, test_mode=False):
@@ -49,16 +50,20 @@ class MainWindow(QMainWindow):
         print("MainWindow initialized")
         self.show_welcome_page()
 
-    def show_welcome_page(self):
-        self.stacked_widget.setCurrentWidget(self.welcome_page)
-
     def show_login_form(self):
         print("show_login_form called")
         self.stacked_widget.setCurrentWidget(self.login_form)
+        QApplication.processEvents()  # Force processing of events
 
     def show_registration_form(self):
         print("show_registration_form called")
         self.stacked_widget.setCurrentWidget(self.registration_form)
+        QApplication.processEvents()  # Force processing of events
+
+    def show_welcome_page(self):
+        print("show_welcome_page called")
+        self.stacked_widget.setCurrentWidget(self.welcome_page)
+        QApplication.processEvents()  # Force processing of events
 
     @protect_route
     def show_logout_form(self):
@@ -87,7 +92,7 @@ class MainWindow(QMainWindow):
                                  Qt.QueuedConnection,
                                  Q_ARG(bool, is_authenticated))
 
-    def login_user(self, username: str, password: str) -> tuple[bool, str]:
+    def login_user(self, username: str, password: str) -> Tuple[bool, Optional[str]]:
         if self.rate_limiter.is_rate_limited(username):
             error_message = "Too many login attempts. Please try again later."
             if not self.test_mode:
@@ -120,7 +125,7 @@ class MainWindow(QMainWindow):
                 QMessageBox.warning(self, "Registration Failed", error_message)
             return False
 
-    def logout_user(self, token: str) -> tuple[bool, str]:
+    def logout_user(self, token: str) -> Tuple[bool, Optional[str]]:
         if logout_user(token):
             if not self.test_mode:
                 QMessageBox.information(self, "Logout Successful", "You have been logged out.")
@@ -132,7 +137,7 @@ class MainWindow(QMainWindow):
             return False, error_message
     
     @protect_route
-    def perform_logout(self):
+    def perform_logout(self) -> Tuple[bool, Optional[str]]:
         if self.current_token:
             success, message = self.logout_user(self.current_token)
             if success:
@@ -140,6 +145,7 @@ class MainWindow(QMainWindow):
                 self.update_auth_state(False)
                 self.stacked_widget.setCurrentWidget(self.welcome_page)
             return success, message
+        return False, "No active session to logout"
 
     def handle_auth_failure(self):
         print("Authentication failed")
