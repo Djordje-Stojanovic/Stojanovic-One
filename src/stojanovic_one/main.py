@@ -122,11 +122,8 @@ class MainWindow(QMainWindow):
 
     def logout_user(self, token: str) -> tuple[bool, str]:
         if logout_user(token):
-            self.current_token = None
-            self.update_auth_state(False)
             if not self.test_mode:
                 QMessageBox.information(self, "Logout Successful", "You have been logged out.")
-            self.stacked_widget.setCurrentWidget(self.welcome_page)
             return True, None
         else:
             error_message = "An error occurred during logout. Please try again."
@@ -137,12 +134,12 @@ class MainWindow(QMainWindow):
     @protect_route
     def perform_logout(self):
         if self.current_token:
-            self.logout_user(self.current_token)
-    
-    @protect_route
-    def some_protected_method(self):
-        # This method can only be called by authenticated users
-        print("This is a protected method")
+            success, message = self.logout_user(self.current_token)
+            if success:
+                self.current_token = None
+                self.update_auth_state(False)
+                self.stacked_widget.setCurrentWidget(self.welcome_page)
+            return success, message
 
     def handle_auth_failure(self):
         print("Authentication failed")

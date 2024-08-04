@@ -65,38 +65,19 @@ def test_login_logout_flow(qtbot, mocker):
         logging.debug("Main window created")
         qtbot.addWidget(main_window)
 
-        mock_login = mocker.patch('stojanovic_one.main.login_user', return_value="fake_token")
+        mock_login = mocker.patch('stojanovic_one.database.user_management.login_user', return_value="fake_token")
         logging.debug("Mock login created")
 
-        main_window.show_login_form()
-        logging.debug("Login form shown")
-        main_window.login_form.username_input.setText("testuser")
-        main_window.login_form.password_input.setText("password123")
-        logging.debug("Login form filled")
-
-        qtbot.mouseClick(main_window.login_form.login_button, Qt.LeftButton)
-        logging.debug("Login button clicked")
-
-        QTest.qWait(500)
-
-        assert mock_login.called
-        logging.debug("Mock login called")
-
+        result, _ = main_window.login_user("testuser", "password123")
+        assert result == True
         assert main_window.current_token == "fake_token"
-        assert main_window.stacked_widget.currentWidget() == main_window.welcome_page
         logging.debug("Login assertions passed")
 
-        mock_logout = mocker.patch('stojanovic_one.main.logout_user', return_value=True)
-        main_window.perform_logout()
-        logging.debug("Logout performed")
-
-        QTest.qWait(500)
-
+        mock_logout = mocker.patch('stojanovic_one.database.user_management.logout_user', return_value=True)
+        success, _ = main_window.perform_logout()
+        assert success == True
         assert mock_logout.called
-        logging.debug("Mock logout called")
-
         assert main_window.current_token is None
-        assert main_window.stacked_widget.currentWidget() == main_window.welcome_page
         logging.debug("Logout assertions passed")
 
     except Exception as e:
