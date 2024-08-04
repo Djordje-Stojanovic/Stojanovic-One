@@ -5,6 +5,7 @@ from PySide6.QtWidgets import QApplication
 from PySide6.QtTest import QTest
 from stojanovic_one.main import main
 from stojanovic_one.auth.jwt_utils import generate_token, validate_token
+from stojanovic_one.database.user_management import register_user
 
 @pytest.fixture(scope="session")
 def app():
@@ -77,7 +78,7 @@ def test_password_hashing(app, qtbot, mocker, setup_and_teardown):
     main_window = main(test_mode=True)
     qtbot.addWidget(main_window)
 
-    # Use the actual register_user function
+    # Mock the register_user function in main.py to use the actual register_user from user_management
     mocker.patch('stojanovic_one.main.register_user', side_effect=register_user)
 
     main_window.register_user("newuser", "newuser@example.com", "password123")

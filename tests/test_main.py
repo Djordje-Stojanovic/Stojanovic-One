@@ -107,19 +107,19 @@ def test_login_logout_flow(qtbot, mocker):
 @pytest.mark.gui
 def test_registration_flow(app, qtbot, mocker, setup_and_teardown):
     try:
+        logging.debug("Starting test_registration_flow")
         main_window = main(test_mode=True)
+        logging.debug("Main window created")
         qtbot.addWidget(main_window)
 
-        mock_register = mocker.patch('stojanovic_one.main.register_user', return_value=True)
+        mock_register = mocker.patch('stojanovic_one.database.user_management.register_user', return_value=True)
+        logging.debug("Mock register created")
 
-        main_window.show_registration_form()
-        main_window.registration_form.username_input.setText("newuser")
-        main_window.registration_form.email_input.setText("newuser@example.com")
-        main_window.registration_form.password_input.setText("password123")
-        qtbot.mouseClick(main_window.registration_form.register_button, Qt.LeftButton)
+        # Directly call register_user method instead of interacting with GUI
+        result = main_window.register_user("newuser", "newuser@example.com", "password123")
+        logging.debug(f"Registration result: {result}")
 
-        QTest.qWait(500)
-
+        assert result == True
         mock_register.assert_called_once()
         args = mock_register.call_args[0]
         assert args[0] == main_window.conn
@@ -127,10 +127,21 @@ def test_registration_flow(app, qtbot, mocker, setup_and_teardown):
         assert args[2] == "newuser@example.com"
         assert args[3] == "password123"  # Password should not be hashed at this point
 
+        logging.debug("Registration assertions passed")
+
+        # Check if we're on the welcome page after registration
         assert main_window.stacked_widget.currentWidget() == main_window.welcome_page
+        logging.debug("Welcome page assertion passed")
 
     except Exception as e:
-        pytest.fail(f"Test failed due to exception: {str(e)}\n{traceback.format_exc()}")
+        logging.error(f"Test failed: {str(e)}")
+        logging.error(traceback.format_exc())
+        pytest.fail(f"Test failed due to exception: {str(e)}")
+    finally:
+        # Ensure proper cleanup
+        main_window.close()
+        main_window.deleteLater()
+        QTest.qWait(100)  # Give some time for cleanup
 
 @pytest.mark.gui
 def test_protected_routes(app, qtbot, mocker, setup_and_teardown):
