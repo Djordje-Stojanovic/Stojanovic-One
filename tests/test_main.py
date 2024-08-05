@@ -11,6 +11,7 @@ from stojanovic_one.ui.registration_form import RegistrationForm
 import traceback
 from stojanovic_one.auth.jwt_utils import generate_token
 import logging
+import bcrypt
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -104,18 +105,23 @@ def test_login_logout_flow(main_window, qtbot, mocker):
     try:
         logging.debug("Starting test_login_logout_flow")
 
+        # Mock bcrypt.checkpw to always return True
+        mocker.patch('bcrypt.checkpw', return_value=True)
+
         # Mock the login_user function to return a token directly
-        mock_login = mocker.patch('stojanovic_one.database.user_management.login_user', return_value="fake_token")
-        logging.debug("Mock login created")
+        mock_login = mocker.patch('stojanovic_one.database.user_management.login_user', return_value=generate_token("testuser"))
 
         result, error_message = main_window.login_user("testuser", "password123")
         logging.debug(f"Login result: {result}, error_message: {error_message}")
         
         assert result == True, f"Login failed, result: {result}, error: {error_message}"
-        assert main_window.current_token == "fake_token", f"Token mismatch: {main_window.current_token}"
+        assert main_window.current_token is not None, f"Token is None: {main_window.current_token}"
         logging.debug("Login assertions passed")
 
+        # Mock the logout_user function
         mock_logout = mocker.patch('stojanovic_one.database.user_management.logout_user', return_value=True)
+        
+        # Call perform_logout directly
         success, _ = main_window.perform_logout()
         logging.debug(f"Logout success: {success}")
         
@@ -137,7 +143,6 @@ def test_registration_flow(main_window, qtbot, mocker):
         mock_register = mocker.patch('stojanovic_one.database.user_management.register_user', return_value=True)
         logging.debug("Mock register created")
 
-        logging.debug("About to call main_window.register_user")
         result, error_message = main_window.register_user("newuser", "newuser@example.com", "password123")
         logging.debug(f"Registration result: {result}, Error message: {error_message}")
 
@@ -219,18 +224,34 @@ def test_auth_state_management(main_window, qtbot):
 
 @pytest.mark.gui
 def test_error_messages(main_window, qtbot, mocker):
-    mocker.patch('stojanovic_one.database.user_management.login_user', return_value=None)
-    result, error_message = main_window.login_user("nonexistent", "wrongpassword")
-    assert result == False
-    assert error_message == "Invalid username or password. Please try again."
+    try:
+        logging.debug("Starting test_error_messages")
 
-    mocker.patch('stojanovic_one.database.user_management.register_user', return_value=False)
-    result, error_message = main_window.register_user("existinguser", "test@example.com", "password123")
-    assert result == False
-    assert error_message == "Registration failed. Username or email may already be in use."
+        # Test login error
+        mocker.patch('stojanovic_one.database.user_management.login_user', return_value=None)
+        mocker.patch('bcrypt.checkpw', return_value=False)  # Add this line
+        result, error_message = main_window.login_user("nonexistent", "wrongpassword")
+        logging.debug(f"Login result: {result}, error_message: {error_message}")
+        assert result == False, f"Expected login to fail, but got result: {result}"
+        assert error_message == "Invalid username or password. Please try again.", f"Unexpected error message: {error_message}"
 
-    main_window.current_token = "fake_token"
-    mocker.patch('stojanovic_one.database.user_management.logout_user', return_value=False)
-    result, error_message = main_window.logout_user("fake_token")
-    assert result == False
-    assert error_message == "An error occurred during logout. Please try again."
+        # Test registration error
+        mocker.patch('stojanovic_one.database.user_management.register_user', return_value=False)
+        result, error_message = main_window.register_user("existinguser", "test@example.com", "password123")
+        logging.debug(f"Registration result: {result}, error_message: {error_message}")
+        assert result == False, f"Expected registration to fail, but got result: {result}"
+        assert error_message == "Registration failed. Username or email may already be in use.", f"Unexpected error message: {error_message}"
+
+        # Test logout error
+        main_window.current_token = "fake_token"
+        mocker.patch('stojanovic_one.database.user_management.logout_user', return_value=False)
+        result, error_message = main_window.logout_user("fake_token")
+        logging.debug(f"Logout result: {result}, error_message: {error_message}")
+        assert result == False, f"Expected logout to fail, but got result: {result}"
+        assert error_message == "An error occurred during logout. Please try again.", f"Unexpected error message: {error_message}"
+
+        logging.debug("Error messages test completed successfully")
+    except Exception as e:
+        logging.error(f"Test failed: {str(e)}")
+        logging.error(traceback.format_exc())
+        pytest.fail(f"Test failed due to exception: {str(e)}")

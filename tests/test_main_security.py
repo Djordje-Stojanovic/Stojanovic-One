@@ -42,8 +42,10 @@ def setup_and_teardown(qtbot):
 @pytest.mark.gui
 def test_rate_limiting(main_window, qtbot, mocker):
     try:
+        mocker.patch('bcrypt.checkpw', return_value=False)
+        mock_login = mocker.patch('stojanovic_one.database.user_management.login_user', return_value=None)
+
         for i in range(6):
-            mocker.patch('stojanovic_one.database.user_management.login_user', return_value=(None, "Invalid username or password"))
             result, message = main_window.login_user("testuser", "wrongpassword")
             if i < 5:
                 assert result == False
@@ -108,8 +110,8 @@ def test_password_hashing(main_window, qtbot, mocker):
 
         result, error_message = main_window.register_user("newuser", "newuser@example.com", "password123")
 
-        assert result == True
-        assert error_message is None
+        assert result == True, f"Registration failed, result: {result}, error: {error_message}"
+        assert error_message is None, f"Unexpected error message: {error_message}"
         assert hashed_password[0] != "password123"
         assert hashed_password[0].startswith(b'$2b$')
 

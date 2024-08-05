@@ -180,12 +180,12 @@ class MainWindow(QMainWindow):
     @protect_route
     def perform_logout(self) -> Tuple[bool, Optional[str]]:
         if self.current_token:
-            success, message = self.logout_user(self.current_token)
+            success = logout_user(self.current_token)  # Call logout_user directly
             if success:
                 self.current_token = None
                 self.update_auth_state(False)
                 self.stacked_widget.setCurrentWidget(self.welcome_page)
-            return success, message
+            return success, None if success else "Logout failed"
         return False, "No active session to logout"
 
     def handle_auth_failure(self):
