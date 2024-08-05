@@ -19,44 +19,49 @@ import logging
 
 class MainWindow(QMainWindow):
     def __init__(self, conn, test_mode=False):
-        super().__init__()
-        logging.info("MainWindow __init__ started")
-        self.conn = conn
-        self.current_token = None
-        self.test_mode = test_mode
-        self.setWindowTitle("Stojanovic-One")
-        self.setGeometry(100, 100, 800, 600)
+        try:
+            super().__init__()
+            logging.info("MainWindow __init__ started")
+            self.conn = conn
+            self.current_token = None
+            self.test_mode = test_mode
+            self.setWindowTitle("Stojanovic-One")
+            self.setGeometry(100, 100, 800, 600)
 
-        self.stacked_widget = QStackedWidget(self)
-        self.setCentralWidget(self.stacked_widget)
+            self.stacked_widget = QStackedWidget(self)
+            self.setCentralWidget(self.stacked_widget)
 
-        self.welcome_page = WelcomePage()
-        self.login_form = LoginForm(login_user_func=self.login_user)        
-        self.registration_form = RegistrationForm(register_user_func=self.register_user)
-        logging.debug(f"RegistrationForm initialized: {self.registration_form}")
-        self.logout_form = LogoutForm(logout_user_func=self.logout_user)
+            self.welcome_page = WelcomePage()
+            self.login_form = LoginForm(login_user_func=self.login_user)        
+            self.registration_form = RegistrationForm(register_user_func=self.register_user)
+            logging.debug(f"RegistrationForm initialized: {self.registration_form}")
+            self.logout_form = LogoutForm(logout_user_func=self.logout_user)
 
-        self.stacked_widget.addWidget(self.welcome_page)
-        self.stacked_widget.addWidget(self.login_form)
-        self.stacked_widget.addWidget(self.registration_form)
-        self.stacked_widget.addWidget(self.logout_form)
-        logging.debug("All forms added to stacked widget")
+            self.stacked_widget.addWidget(self.welcome_page)
+            self.stacked_widget.addWidget(self.login_form)
+            self.stacked_widget.addWidget(self.registration_form)
+            self.stacked_widget.addWidget(self.logout_form)
+            logging.debug("All forms added to stacked widget")
 
-        logging.debug("Connecting signals")
-        self.welcome_page.login_clicked.connect(self.show_login_form)
-        self.welcome_page.register_clicked.connect(self.show_registration_form)
-        self.welcome_page.logout_clicked.connect(self.show_logout_form)
-        logging.debug("Signals connected")
-        self.registration_form.registration_successful.connect(self.on_registration_successful)
-        self.login_form.login_successful.connect(self.on_login_successful)
-        self.logout_form.logout_successful.connect(self.perform_logout)
-        self.jwt_middleware = JWTMiddleware()
-        self.jwt_middleware.authentication_failed.connect(self.handle_auth_failure)
-        self.rate_limiter = RateLimiter()
+            logging.debug("Connecting signals")
+            self.welcome_page.login_clicked.connect(self.show_login_form)
+            self.welcome_page.register_clicked.connect(self.show_registration_form)
+            self.welcome_page.logout_clicked.connect(self.show_logout_form)
+            logging.debug("Signals connected")
+            self.registration_form.registration_successful.connect(self.on_registration_successful)
+            self.login_form.login_successful.connect(self.on_login_successful)
+            self.logout_form.logout_successful.connect(self.perform_logout)
+            self.jwt_middleware = JWTMiddleware()
+            self.jwt_middleware.authentication_failed.connect(self.handle_auth_failure)
+            self.rate_limiter = RateLimiter()
 
-        logging.info("MainWindow initialized")
-        self.show_welcome_page()
-        logging.info("MainWindow __init__ completed")
+            logging.info("MainWindow initialized")
+            self.show_welcome_page()
+            logging.info("MainWindow __init__ completed")
+        except Exception as e:
+            logging.error(f"Error in MainWindow.__init__: {str(e)}")
+            logging.error(traceback.format_exc())
+            raise
 
     def cleanup(self):
         # Disconnect all signals
@@ -134,25 +139,29 @@ class MainWindow(QMainWindow):
                                 Q_ARG(bool, is_authenticated))
 
     def login_user(self, username: str, password: str) -> Tuple[bool, Optional[str]]:
-        if self.rate_limiter.is_rate_limited(username):
-            error_message = "Too many login attempts. Please try again later."
-            if not self.test_mode:
-                QMessageBox.warning(self, "Login Failed", error_message)
-            return False, error_message
+        try:
+            if self.rate_limiter.is_rate_limited(username):
+                error_message = "Too many login attempts. Please try again later."
+                if not self.test_mode:
+                    QMessageBox.warning(self, "Login Failed", error_message)
+                return False, error_message
 
-        token = login_user(self.conn, username, password)
-        if token:
-            self.current_token = token
-            self.update_auth_state(True)
-            if not self.test_mode:
-                QMessageBox.information(self, "Login Successful", f"Welcome, {username}!")
-            return True, None
-        else:
-            error_message = "Invalid username or password. Please try again."
-            if not self.test_mode:
-                QMessageBox.warning(self, "Login Failed", error_message)
-            self.update_auth_state(False)
-            return False, error_message
+            token = login_user(self.conn, username, password)
+            if token:
+                self.current_token = token
+                self.update_auth_state(True)
+                if not self.test_mode:
+                    QMessageBox.information(self, "Login Successful", f"Welcome, {username}!")
+                return True, None
+            else:
+                error_message = "Invalid username or password. Please try again."
+                if not self.test_mode:
+                    QMessageBox.warning(self, "Login Failed", error_message)
+                self.update_auth_state(False)
+                return False, error_message
+        except Exception as e:
+            logging.error(f"Login error: {str(e)}")
+            return False, str(e)
 
     def register_user(self, username: str, email: str, password: str) -> Tuple[bool, Optional[str]]:
         success = register_user(self.conn, username, email, password)
@@ -179,14 +188,18 @@ class MainWindow(QMainWindow):
     
     @protect_route
     def perform_logout(self) -> Tuple[bool, Optional[str]]:
-        if self.current_token:
-            success = logout_user(self.current_token)  # Call logout_user directly
-            if success:
-                self.current_token = None
-                self.update_auth_state(False)
-                self.stacked_widget.setCurrentWidget(self.welcome_page)
-            return success, None if success else "Logout failed"
-        return False, "No active session to logout"
+        try:
+            if self.current_token:
+                success = logout_user(self.current_token)
+                if success:
+                    self.current_token = None
+                    self.update_auth_state(False)
+                    self.stacked_widget.setCurrentWidget(self.welcome_page)
+                return success, None if success else "Logout failed"
+            return False, "No active session to logout"
+        except Exception as e:
+            logging.error(f"Logout error: {str(e)}")
+            return False, str(e)
 
     def handle_auth_failure(self):
         print("Authentication failed")
