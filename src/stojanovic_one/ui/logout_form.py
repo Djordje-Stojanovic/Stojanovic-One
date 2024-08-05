@@ -3,6 +3,7 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel
 from PySide6.QtCore import Slot, Signal
 from typing import Callable, Optional
+import logging
 
 class LogoutForm(QWidget):
     logout_successful = Signal()
@@ -34,18 +35,23 @@ class LogoutForm(QWidget):
 
     @Slot()
     def logout_user(self):
+        logging.debug("LogoutForm.logout_user called")
         if self.token is None:
             self.message_label.setText("No active session. Please log in first.")
+            logging.debug("No active session for logout")
             return
 
         result = self.logout_user_func(self.token)
+        logging.debug(f"Logout result: {result}")
 
         if result:
             self.message_label.setText("Logout successful!")
             self.token = None
+            logging.debug("Emitting logout_successful signal")
             self.logout_successful.emit()
         else:
             self.message_label.setText("Logout failed. Please try again.")
+            logging.debug("Logout failed")
 
     def _default_logout_user(self, token: str) -> bool:
         """

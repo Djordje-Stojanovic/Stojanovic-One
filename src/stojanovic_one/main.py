@@ -140,22 +140,27 @@ class MainWindow(QMainWindow):
 
     def login_user(self, username: str, password: str) -> Tuple[bool, Optional[str]]:
         try:
+            logging.debug(f"Attempting login for user: {username}")
             if self.rate_limiter.is_rate_limited(username):
                 error_message = "Too many login attempts. Please try again later."
+                logging.debug(f"Rate limited: {error_message}")
                 if not self.test_mode:
                     QMessageBox.warning(self, "Login Failed", error_message)
                 return False, error_message
 
             token = login_user(self.conn, username, password)
             if token:
+                logging.debug("Login successful, setting token and updating auth state")
                 self.current_token = token
                 self.update_auth_state(True)
                 if not self.test_mode:
                     QMessageBox.information(self, "Login Successful", f"Welcome, {username}!")
-                self.login_form.login_successful.emit(username, password)  # Emit the signal
+                logging.debug("Emitting login_successful signal")
+                self.login_form.login_successful.emit(username, password)
                 return True, None
             else:
                 error_message = "Invalid username or password. Please try again."
+                logging.debug(f"Login failed: {error_message}")
                 if not self.test_mode:
                     QMessageBox.warning(self, "Login Failed", error_message)
                 self.update_auth_state(False)
@@ -192,13 +197,17 @@ class MainWindow(QMainWindow):
     def perform_logout(self) -> Tuple[bool, Optional[str]]:
         try:
             if self.current_token:
+                logging.debug(f"Performing logout with token: {self.current_token}")
                 success = self.logout_user(self.current_token)
+                logging.debug(f"Logout result: {success}")
                 if success:
                     self.current_token = None
                     self.update_auth_state(False)
                     self.stacked_widget.setCurrentWidget(self.welcome_page)
                     self.logout_form.logout_successful.emit()
+                    logging.debug("Logout successful, emitted logout_successful signal")
                 return success, None if success else "Logout failed"
+            logging.debug("No active session to logout")
             return False, "No active session to logout"
         except Exception as e:
             logging.error(f"Logout error: {str(e)}")
