@@ -44,10 +44,10 @@ class RegistrationForm(QWidget):
         email = self.email_input.text()
         password = self.password_input.text()
 
-        success = self.register_user_func(username, email, password)
+        success, error_message = self.register_user_func(username, email, password)
 
         if success:
             self.message_label.setText("Registration successful!")
             self.registration_successful.emit()
         else:
-            self.message_label.setText("Registration failed. Please try again.")
+            self.message_label.setText(error_message or "Registration failed. Please try again.")

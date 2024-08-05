@@ -152,6 +152,7 @@ class MainWindow(QMainWindow):
                 self.update_auth_state(True)
                 if not self.test_mode:
                     QMessageBox.information(self, "Login Successful", f"Welcome, {username}!")
+                self.login_form.login_successful.emit(username, password)  # Emit the signal
                 return True, None
             else:
                 error_message = "Invalid username or password. Please try again."
@@ -168,6 +169,7 @@ class MainWindow(QMainWindow):
         if success:
             if not self.test_mode:
                 QMessageBox.information(self, "Registration Successful", "You can now log in with your new account.")
+            self.registration_form.registration_successful.emit()  # Emit the signal
             return True, None
         else:
             error_message = "Registration failed. Username or email may already be in use."
@@ -195,6 +197,7 @@ class MainWindow(QMainWindow):
                     self.current_token = None
                     self.update_auth_state(False)
                     self.stacked_widget.setCurrentWidget(self.welcome_page)
+                    self.logout_form.logout_successful.emit()
                 return success, None if success else "Logout failed"
             return False, "No active session to logout"
         except Exception as e:
