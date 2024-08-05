@@ -169,7 +169,7 @@ class MainWindow(QMainWindow):
         if success:
             if not self.test_mode:
                 QMessageBox.information(self, "Registration Successful", "You can now log in with your new account.")
-            self.registration_form.registration_successful.emit()  # Emit the signal
+            self.registration_form.registration_successful.emit()
             return True, None
         else:
             error_message = "Registration failed. Username or email may already be in use."
@@ -192,7 +192,7 @@ class MainWindow(QMainWindow):
     def perform_logout(self) -> Tuple[bool, Optional[str]]:
         try:
             if self.current_token:
-                success = logout_user(self.current_token)
+                success = self.logout_user(self.current_token)
                 if success:
                     self.current_token = None
                     self.update_auth_state(False)
