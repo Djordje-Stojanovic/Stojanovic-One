@@ -130,18 +130,24 @@ def test_login_logout_flow(main_window, qtbot, mocker):
         mock_login = mocker.patch('stojanovic_one.database.user_management.login_user', return_value=generate_token("testuser"))
         mock_logout = mocker.patch('stojanovic_one.database.user_management.logout_user', return_value=True)
 
+        logging.debug("Attempting login")
         with qtbot.waitSignal(main_window.login_form.login_successful, timeout=5000):
             result, error_message = main_window.login_user("testuser", "password123")
         
+        logging.debug(f"Login result: {result}, error_message: {error_message}")
         assert result == True, f"Login failed, result: {result}, error: {error_message}"
-        assert main_window.current_token is not None
+        assert main_window.current_token is not None, f"Token is None: {main_window.current_token}"
+        logging.debug("Login assertions passed")
 
+        logging.debug("Attempting logout")
         with qtbot.waitSignal(main_window.logout_form.logout_successful, timeout=5000):
             success, _ = main_window.perform_logout()
         
+        logging.debug(f"Logout success: {success}")
         assert success == True, f"Logout failed, success: {success}"
         assert mock_logout.called, "Logout function was not called"
-        assert main_window.current_token is None
+        assert main_window.current_token is None, f"Token not cleared: {main_window.current_token}"
+        logging.debug("Logout assertions passed")
 
     except Exception as e:
         logging.error(f"Test failed: {str(e)}")
