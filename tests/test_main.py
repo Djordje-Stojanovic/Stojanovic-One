@@ -143,13 +143,18 @@ def test_registration_flow(main_window, qtbot, mocker):
         mock_register = mocker.patch('stojanovic_one.database.user_management.register_user', return_value=True)
         logging.debug("Mock register created")
 
-        result, error_message = main_window.register_user("newuser", "newuser@example.com", "password123")
-        logging.debug(f"Registration result: {result}, Error message: {error_message}")
+        def perform_registration():
+            result, error_message = main_window.register_user("newuser", "newuser@example.com", "password123")
+            logging.debug(f"Registration result: {result}, Error message: {error_message}")
+            return result
 
+        qtbot.waitUntil(perform_registration, timeout=5000)
+
+        result, error_message = main_window.register_user("newuser", "newuser@example.com", "password123")
         assert result == True, f"Registration failed, result: {result}, error: {error_message}"
         assert error_message is None, f"Unexpected error message: {error_message}"
         mock_register.assert_called_once_with(main_window.conn, "newuser", "newuser@example.com", "password123")
-
+        
         logging.debug("Registration assertions passed")
 
     except Exception as e:
