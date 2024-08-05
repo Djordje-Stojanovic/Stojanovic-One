@@ -19,7 +19,7 @@ cd Stojanovic-One
 # Add any additional steps (e.g., installing dependencies)
 
 Usage
-Provide instructions and examples for use. Include screenshots as needed.
+Provide instructions and examples for use. Include screenshots as needed and tutorials.
 bashCopy# Add code examples for how to use your project
 Features
 List the key features of your project:
