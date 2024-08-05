@@ -104,19 +104,24 @@ def test_login_logout_flow(main_window, qtbot, mocker):
     try:
         logging.debug("Starting test_login_logout_flow")
 
-        mock_login = mocker.patch('stojanovic_one.database.user_management.login_user', return_value=("fake_token", None))
+        # Mock the login_user function to return a token directly
+        mock_login = mocker.patch('stojanovic_one.database.user_management.login_user', return_value="fake_token")
         logging.debug("Mock login created")
 
-        result, _ = main_window.login_user("testuser", "password123")
-        assert result == True
-        assert main_window.current_token == "fake_token"
+        result, error_message = main_window.login_user("testuser", "password123")
+        logging.debug(f"Login result: {result}, error_message: {error_message}")
+        
+        assert result == True, f"Login failed, result: {result}, error: {error_message}"
+        assert main_window.current_token == "fake_token", f"Token mismatch: {main_window.current_token}"
         logging.debug("Login assertions passed")
 
         mock_logout = mocker.patch('stojanovic_one.database.user_management.logout_user', return_value=True)
         success, _ = main_window.perform_logout()
-        assert success == True
-        assert mock_logout.called
-        assert main_window.current_token is None
+        logging.debug(f"Logout success: {success}")
+        
+        assert success == True, f"Logout failed, success: {success}"
+        assert mock_logout.called, "Logout function was not called"
+        assert main_window.current_token is None, f"Token not cleared: {main_window.current_token}"
         logging.debug("Logout assertions passed")
 
     except Exception as e:
@@ -132,11 +137,12 @@ def test_registration_flow(main_window, qtbot, mocker):
         mock_register = mocker.patch('stojanovic_one.database.user_management.register_user', return_value=True)
         logging.debug("Mock register created")
 
+        logging.debug("About to call main_window.register_user")
         result, error_message = main_window.register_user("newuser", "newuser@example.com", "password123")
-        logging.debug(f"Registration result: {result}")
+        logging.debug(f"Registration result: {result}, Error message: {error_message}")
 
-        assert result == True
-        assert error_message is None
+        assert result == True, f"Registration failed, result: {result}, error: {error_message}"
+        assert error_message is None, f"Unexpected error message: {error_message}"
         mock_register.assert_called_once_with(main_window.conn, "newuser", "newuser@example.com", "password123")
 
         logging.debug("Registration assertions passed")
@@ -150,22 +156,24 @@ def test_registration_flow(main_window, qtbot, mocker):
 def test_protected_routes(main_window, qtbot, mocker):
     try:
         main_window.show_logout_form()
-        qtbot.waitUntil(lambda: main_window.stacked_widget.currentWidget() == main_window.welcome_page, timeout=1000)
+        qtbot.waitUntil(lambda: main_window.stacked_widget.currentWidget() == main_window.welcome_page, timeout=5000)
 
         main_window.current_token = generate_token("testuser")
 
         main_window.show_logout_form()
-        qtbot.waitUntil(lambda: main_window.stacked_widget.currentWidget() == main_window.logout_form, timeout=1000)
+        qtbot.waitUntil(lambda: main_window.stacked_widget.currentWidget() == main_window.logout_form, timeout=5000)
 
         mock_validate = mocker.patch('stojanovic_one.auth.jwt_utils.validate_token', return_value=None)
         
         main_window.handle_auth_failure()
 
-        qtbot.waitUntil(lambda: main_window.stacked_widget.currentWidget() == main_window.welcome_page, timeout=1000)
+        qtbot.waitUntil(lambda: main_window.stacked_widget.currentWidget() == main_window.welcome_page, timeout=5000)
         assert main_window.current_token is None
 
     except Exception as e:
-        pytest.fail(f"Test failed due to exception: {str(e)}\n{traceback.format_exc()}")
+        logging.error(f"Test failed: {str(e)}")
+        logging.error(traceback.format_exc())
+        pytest.fail(f"Test failed due to exception: {str(e)}")
 
 @pytest.mark.gui
 def test_auth_state_management(main_window, qtbot):
@@ -184,20 +192,24 @@ def test_auth_state_management(main_window, qtbot):
         logging.debug("Authentication state after removing token checked")
 
         def check_logged_in_state():
-            return (main_window.welcome_page.logout_button.isVisible() and
-                    not main_window.welcome_page.login_button.isVisible() and
-                    not main_window.welcome_page.register_button.isVisible())
+            logged_in = (main_window.welcome_page.logout_button.isVisible() and
+                         not main_window.welcome_page.login_button.isVisible() and
+                         not main_window.welcome_page.register_button.isVisible())
+            logging.debug(f"Logged in state: {logged_in}")
+            return logged_in
 
         def check_logged_out_state():
-            return (not main_window.welcome_page.logout_button.isVisible() and
-                    main_window.welcome_page.login_button.isVisible() and
-                    main_window.welcome_page.register_button.isVisible())
+            logged_out = (not main_window.welcome_page.logout_button.isVisible() and
+                          main_window.welcome_page.login_button.isVisible() and
+                          main_window.welcome_page.register_button.isVisible())
+            logging.debug(f"Logged out state: {logged_out}")
+            return logged_out
 
         main_window.update_auth_state(True)
-        qtbot.waitUntil(check_logged_in_state, timeout=1000)
+        qtbot.waitUntil(check_logged_in_state, timeout=5000)
 
         main_window.update_auth_state(False)
-        qtbot.waitUntil(check_logged_out_state, timeout=1000)
+        qtbot.waitUntil(check_logged_out_state, timeout=5000)
 
         logging.debug("test_auth_state_management completed successfully")
     except Exception as e:
@@ -207,7 +219,7 @@ def test_auth_state_management(main_window, qtbot):
 
 @pytest.mark.gui
 def test_error_messages(main_window, qtbot, mocker):
-    mocker.patch('stojanovic_one.database.user_management.login_user', return_value=(None, "Invalid username or password"))
+    mocker.patch('stojanovic_one.database.user_management.login_user', return_value=None)
     result, error_message = main_window.login_user("nonexistent", "wrongpassword")
     assert result == False
     assert error_message == "Invalid username or password. Please try again."

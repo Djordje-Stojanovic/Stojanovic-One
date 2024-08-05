@@ -16,6 +16,7 @@ from stojanovic_one.auth.rate_limiting import RateLimiter
 from typing import Tuple, Optional
 import logging
 
+
 class MainWindow(QMainWindow):
     def __init__(self, conn, test_mode=False):
         super().__init__()
@@ -129,8 +130,8 @@ class MainWindow(QMainWindow):
 
     def update_auth_state(self, is_authenticated):
         QMetaObject.invokeMethod(self.welcome_page, "update_ui_after_login",
-                                 Qt.QueuedConnection,
-                                 Q_ARG(bool, is_authenticated))
+                                Qt.QueuedConnection,
+                                Q_ARG(bool, is_authenticated))
 
     def login_user(self, username: str, password: str) -> Tuple[bool, Optional[str]]:
         if self.rate_limiter.is_rate_limited(username):

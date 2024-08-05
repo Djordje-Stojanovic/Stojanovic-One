@@ -56,13 +56,12 @@ def login_user(conn: Connection, username: str, password: str) -> Optional[str]:
     if result is None:
         return None  # User not found
 
-    stored_password = result[0]
+    stored_password = result[0] if isinstance(result, tuple) else result
 
     if bcrypt.checkpw(password.encode('utf-8'), stored_password):
         return generate_token(username)
     else:
         return None
-
 
 def logout_user(token: str) -> bool:
     """

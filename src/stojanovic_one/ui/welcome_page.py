@@ -1,7 +1,7 @@
 # src/stojanovic_one/ui/welcome_page.py
 
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QApplication
-from PySide6.QtCore import Qt, Signal, QTimer, QMetaObject, Q_ARG
+from PySide6.QtCore import Qt, Signal, QTimer, QMetaObject, Q_ARG, Slot
 from PySide6.QtGui import QFont, QColor, QPalette
 import logging
 
@@ -84,6 +84,7 @@ class WelcomePage(QWidget):
         logging.debug("Logout button clicked")
         self.logout_clicked.emit()
 
+    @Slot(bool)
     def update_ui_after_login(self, is_logged_in: bool):
         self._update_ui_after_login(is_logged_in)
 
