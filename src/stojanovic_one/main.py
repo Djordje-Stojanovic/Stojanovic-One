@@ -198,15 +198,15 @@ class MainWindow(QMainWindow):
         try:
             if self.current_token:
                 logging.debug(f"Performing logout with token: {self.current_token}")
-                success = self.logout_user(self.current_token)
-                logging.debug(f"Logout result: {success}")
+                success, error_message = self.logout_user(self.current_token)
+                logging.debug(f"Logout result: {success}, error_message: {error_message}")
                 if success:
                     self.current_token = None
                     self.update_auth_state(False)
                     self.stacked_widget.setCurrentWidget(self.welcome_page)
                     self.logout_form.logout_successful.emit()
                     logging.debug("Logout successful, emitted logout_successful signal")
-                return success, None if success else "Logout failed"
+                return success, error_message
             logging.debug("No active session to logout")
             return False, "No active session to logout"
         except Exception as e:

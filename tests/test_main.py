@@ -104,10 +104,10 @@ def test_login_logout_flow(main_window, qtbot, mocker):
 
         logging.debug("Attempting logout")
         with qtbot.waitSignal(main_window.logout_form.logout_successful, timeout=5000):
-            success, _ = main_window.perform_logout()
+            success, error_message = main_window.perform_logout()
         
-        logging.debug(f"Logout success: {success}")
-        assert success == True, f"Logout failed, success: {success}"
+        logging.debug(f"Logout success: {success}, error_message: {error_message}")
+        assert success == True, f"Logout failed, success: {success}, error: {error_message}"
         assert mock_logout.called, "Logout function was not called"
         assert main_window.current_token is None, f"Token not cleared: {main_window.current_token}"
         logging.debug("Logout assertions passed")
