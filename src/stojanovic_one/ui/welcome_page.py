@@ -86,7 +86,12 @@ class WelcomePage(QWidget):
 
     @Slot(bool)
     def update_ui_after_login(self, is_logged_in: bool):
-        self._update_ui_after_login(is_logged_in)
+        print(f"Updating UI after login. Is logged in: {is_logged_in}")  # Debug print
+        self.logout_button.setVisible(is_logged_in)
+        self.login_button.setVisible(not is_logged_in)
+        self.register_button.setVisible(not is_logged_in)
+        print(f"Logout button visibility: {self.logout_button.isVisible()}")  # Debug print
+        QApplication.processEvents()  # Force processing of events
 
     def _update_ui_after_login(self, is_logged_in: bool):
         self.logout_button.setVisible(is_logged_in)

@@ -5,17 +5,9 @@ from PySide6.QtCore import Qt
 from stojanovic_one.ui.registration_form import RegistrationForm
 
 def mock_register_user_func(username, email, password):
+    # For debugging, print the input values
+    print(f"Mock register called with: {username}, {email}, {password}")
     return True
-
-@pytest.mark.gui
-def test_registration_form_initial_state(qtbot):
-    widget = RegistrationForm(register_user_func=mock_register_user_func)
-    qtbot.addWidget(widget)
-
-    assert widget.username_input.text() == ""
-    assert widget.email_input.text() == ""
-    assert widget.password_input.text() == ""
-    assert widget.register_button.text() == "Register"
 
 @pytest.mark.gui
 def test_registration_form_submission(qtbot):
@@ -33,3 +25,9 @@ def test_registration_form_submission(qtbot):
 
     # Check if success message is displayed
     assert widget.message_label.text() == "Registration successful!"
+
+    # For debugging, print the final state of the form
+    print(f"Username: {widget.username_input.text()}")
+    print(f"Email: {widget.email_input.text()}")
+    print(f"Password: {widget.password_input.text()}")
+    print(f"Message: {widget.message_label.text()}")

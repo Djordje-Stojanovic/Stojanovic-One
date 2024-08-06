@@ -106,7 +106,7 @@ def test_password_hashing(main_window, qtbot, mocker):
             hashed_password[0] = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
             return True
 
-        mocker.patch('stojanovic_one.database.user_management.register_user', side_effect=mock_register)
+        mocker.patch.object(main_window, '_register_user_func', side_effect=mock_register)
 
         result, error_message = main_window.register_user("newuser", "newuser@example.com", "password123")
 

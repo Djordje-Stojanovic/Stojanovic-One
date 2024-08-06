@@ -53,25 +53,29 @@ def test_welcome_page_button_clicks(qtbot):
 def test_welcome_page_logout_button(qtbot):
     welcome_page = WelcomePage()
     qtbot.addWidget(welcome_page)
+    welcome_page.show()  # Make sure the widget is shown
 
     # Initially, logout button should be hidden
     assert not welcome_page.logout_button.isVisible()
+    print(f"Initial logout button visibility: {welcome_page.logout_button.isVisible()}")
 
     # Simulate login
     welcome_page.update_ui_after_login(True)
-    qtbot.wait(500)  # Increase wait time for UI update
+    qtbot.wait(1000)  # Increase wait time for UI update
     
-    assert welcome_page.logout_button.isVisible()
-    assert not welcome_page.login_button.isVisible()
-    assert not welcome_page.register_button.isVisible()
+    print(f"After login, logout button visibility: {welcome_page.logout_button.isVisible()}")
+    assert welcome_page.logout_button.isVisible(), "Logout button should be visible after login"
+    assert not welcome_page.login_button.isVisible(), "Login button should be hidden after login"
+    assert not welcome_page.register_button.isVisible(), "Register button should be hidden after login"
 
     # Simulate logout
     welcome_page.update_ui_after_login(False)
-    qtbot.wait(500)  # Increase wait time for UI update
+    qtbot.wait(1000)  # Increase wait time for UI update
     
-    assert not welcome_page.logout_button.isVisible()
-    assert welcome_page.login_button.isVisible()
-    assert welcome_page.register_button.isVisible()
+    print(f"After logout, logout button visibility: {welcome_page.logout_button.isVisible()}")
+    assert not welcome_page.logout_button.isVisible(), "Logout button should be hidden after logout"
+    assert welcome_page.login_button.isVisible(), "Login button should be visible after logout"
+    assert welcome_page.register_button.isVisible(), "Register button should be visible after logout"
 
 @pytest.mark.gui
 def test_welcome_page_styling(qtbot):

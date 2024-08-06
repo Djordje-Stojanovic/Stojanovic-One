@@ -25,6 +25,7 @@ class MainWindow(QMainWindow):
             self.conn = conn
             self.current_token = None
             self.test_mode = test_mode
+            self._register_user_func = register_user  # Add this line
             self.setWindowTitle("Stojanovic-One")
             self.setGeometry(100, 100, 800, 600)
 
@@ -170,7 +171,7 @@ class MainWindow(QMainWindow):
             return False, str(e)
 
     def register_user(self, username: str, email: str, password: str) -> Tuple[bool, Optional[str]]:
-        success = register_user(self.conn, username, email, password)
+        success = self._register_user_func(self.conn, username, email, password)
         if success:
             if not self.test_mode:
                 QMessageBox.information(self, "Registration Successful", "You can now log in with your new account.")
