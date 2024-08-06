@@ -15,46 +15,27 @@ import bcrypt
 
 logging.basicConfig(level=logging.DEBUG)
 
-@pytest.fixture(scope="session")
-def qapp():
-    app = QApplication.instance()
-    if app is None:
-        app = QApplication([])
-    yield app
-    app.quit()
-
 @pytest.fixture(scope="function")
 def main_window(qapp, qtbot, mocker):
-    window = None
-    try:
-        logging.info("main_window fixture: setup started")
-        mock_conn = mocker.Mock()
-        mocker.patch('stojanovic_one.main.initialize_database', return_value=mock_conn)
-        mocker.patch('stojanovic_one.main.create_user_table')
+    logging.info("main_window fixture: setup started")
+    mock_conn = mocker.Mock()
+    mocker.patch('stojanovic_one.main.initialize_database', return_value=mock_conn)
+    mocker.patch('stojanovic_one.main.create_user_table')
 
-        window = MainWindow(mock_conn, test_mode=True)
-        window.show()
-        qtbot.addWidget(window)
-        qtbot.waitForWindowShown(window)
-        
-        logging.info("main_window fixture: setup completed")
-        yield window
-    except Exception as e:
-        logging.error(f"Error in main_window fixture: {str(e)}")
-        logging.error(traceback.format_exc())
-        pytest.fail(f"main_window fixture failed: {str(e)}")
-    finally:
-        if window:
-            try:
-                logging.info("main_window fixture: teardown started")
-                QApplication.processEvents()
-                window.hide()
-                window.deleteLater()
-                QApplication.processEvents()
-                logging.info("main_window fixture: teardown completed")
-            except Exception as e:
-                logging.error(f"Error in main_window fixture teardown: {str(e)}")
-                logging.error(traceback.format_exc())
+    window = MainWindow(mock_conn, test_mode=True)
+    window.show()
+    qtbot.addWidget(window)
+    qtbot.waitForWindowShown(window)
+    
+    logging.info("main_window fixture: setup completed")
+    yield window
+    
+    logging.info("main_window fixture: teardown started")
+    window.cleanup()
+    window.close()
+    window.deleteLater()
+    qapp.processEvents()
+    logging.info("main_window fixture: teardown completed")
 
 @pytest.fixture
 def setup_and_teardown(qtbot):
@@ -75,12 +56,7 @@ def test_main(main_window, qtbot):
 @pytest.mark.gui
 def test_main_window_navigation(main_window, qtbot):
     try:
-        def log_current_widget():
-            current = main_window.stacked_widget.currentWidget()
-            logging.debug(f"Current widget: {current}")
-
         logging.debug("Starting test_main_window_navigation")
-        log_current_widget()
 
         # Test navigation to login form
         logging.debug("Clicking login button")
@@ -99,23 +75,10 @@ def test_main_window_navigation(main_window, qtbot):
         # Test navigation to registration form
         logging.debug("Clicking register button")
         qtbot.mouseClick(main_window.welcome_page.register_button, Qt.LeftButton)
-        logging.debug("Register button clicked")
+        qtbot.waitUntil(lambda: isinstance(main_window.stacked_widget.currentWidget(), RegistrationForm), timeout=5000)
+        assert isinstance(main_window.stacked_widget.currentWidget(), RegistrationForm), "Failed to navigate to registration form"
+        logging.debug("Navigated to registration form")
 
-        def check_registration_form():
-            current_widget = main_window.stacked_widget.currentWidget()
-            logging.debug(f"Current widget in check: {current_widget}")
-            is_registration_form = isinstance(current_widget, RegistrationForm)
-            logging.debug(f"Is RegistrationForm: {is_registration_form}")
-            return is_registration_form
-
-        logging.debug("Waiting for RegistrationForm")
-        qtbot.waitUntil(check_registration_form, timeout=5000)
-        logging.debug("Wait completed")
-
-        current_widget = main_window.stacked_widget.currentWidget()
-        logging.debug(f"Final current widget: {current_widget}")
-        assert isinstance(current_widget, RegistrationForm), "Failed to navigate to registration form"
-        logging.debug("Test completed successfully")
     except Exception as e:
         logging.error(f"Error in test_main_window_navigation: {str(e)}")
         logging.error(traceback.format_exc())

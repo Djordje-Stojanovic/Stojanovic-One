@@ -34,7 +34,7 @@ def cleanup_widgets(qapp):
             widget.close()
         widget.deleteLater()
     qapp.processEvents()
-    QTest.qWait(100)  # Wait for deletion to complet
+    QTest.qWait(100)  # Wait for deletion to complete
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_runtest_makereport(item, call):

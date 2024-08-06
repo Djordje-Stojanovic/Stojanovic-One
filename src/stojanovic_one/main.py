@@ -30,10 +30,10 @@ class MainWindow(QMainWindow):
 
             self.stacked_widget = QStackedWidget(self)
             self.setCentralWidget(self.stacked_widget)
-
             self.welcome_page = WelcomePage()
             self.login_form = LoginForm(login_user_func=self.login_user)        
             self.registration_form = RegistrationForm(register_user_func=self.register_user)
+
             logging.debug(f"RegistrationForm initialized: {self.registration_form}")
             self.logout_form = LogoutForm(logout_user_func=self.logout_user)
 
