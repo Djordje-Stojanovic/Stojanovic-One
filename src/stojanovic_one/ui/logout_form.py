@@ -3,30 +3,13 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel
 from PySide6.QtCore import Slot, Signal
 from typing import Callable, Optional
+import logging
 
 class LogoutForm(QWidget):
-    """
-    A widget that provides a user logout form.
-
-    This form includes a logout button and a message label for feedback.
-
-    Args:
-        logout_user_func (Callable, optional): A function to handle user logout.
-            If not provided, a default function will be used.
-        token (str, optional): The user's authentication token.
-
-    Attributes:
-        logout_user_func (Callable): The function to handle user logout.
-        token (str): The user's authentication token.
-        logout_button (QPushButton): The button to trigger logout.
-        message_label (QLabel): A label to display feedback messages.
-    """
-
-    logout_successful = Signal()  # Add this line to define the signal
+    logout_successful = Signal()
 
     def __init__(self, logout_user_func: Callable = None, token: Optional[str] = None):
         super().__init__()
-
         self.logout_user_func = logout_user_func or self._default_logout_user
         self.token = token
 
@@ -52,21 +35,23 @@ class LogoutForm(QWidget):
 
     @Slot()
     def logout_user(self):
-        """
-        Handle the user logout process when the logout button is clicked.
-        """
+        logging.debug("LogoutForm.logout_user called")
         if self.token is None:
             self.message_label.setText("No active session. Please log in first.")
+            logging.debug("No active session for logout")
             return
 
         result = self.logout_user_func(self.token)
+        logging.debug(f"Logout result: {result}")
 
         if result:
             self.message_label.setText("Logout successful!")
             self.token = None
-            self.logout_successful.emit()  # Emit the signal when logout is successful
+            logging.debug("Emitting logout_successful signal")
+            self.logout_successful.emit()
         else:
             self.message_label.setText("Logout failed. Please try again.")
+            logging.debug("Logout failed")
 
     def _default_logout_user(self, token: str) -> bool:
         """
