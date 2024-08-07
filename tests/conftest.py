@@ -9,7 +9,7 @@ from datetime import datetime
 
 def pytest_configure(config):
     QApplication.setAttribute(Qt.AA_ShareOpenGLContexts)
-    logging.basicConfig(filename=f'test_errors_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log', level=logging.ERROR)
+    logging.basicConfig(filename=f'test_errors_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log', level=logging.DEBUG)
 
 @pytest.fixture(scope="session")
 def qapp():
@@ -51,3 +51,13 @@ def run_around_tests(qapp):
     yield
     qapp.processEvents()
     QTest.qWait(100)
+
+@pytest.fixture(autouse=True)
+def close_widgets(qapp):
+    yield
+    for widget in QApplication.topLevelWidgets():
+        if widget.isWindow():
+            widget.close()
+        widget.deleteLater()
+    qapp.processEvents()
+    QTest.qWait(1000)  # Increased wait time

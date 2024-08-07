@@ -63,6 +63,10 @@ class MainWindow(QMainWindow):
             logging.error(f"Error in MainWindow.__init__: {str(e)}")
             logging.error(traceback.format_exc())
             raise
+    
+    def __del__(self):
+        logging.info("MainWindow __del__ called")
+        self.cleanup()
 
     def cleanup(self):
         # Disconnect all signals
@@ -114,12 +118,17 @@ class MainWindow(QMainWindow):
 
     @protect_route
     def show_logout_form(self):
-        print("show_logout_form called")
-        if self.current_token:
-            self.logout_form.set_token(self.current_token)
-            self.stacked_widget.setCurrentWidget(self.logout_form)
-        else:
-            print("No valid token, redirecting to welcome page")
+        try:
+            print("show_logout_form called")
+            if self.current_token:
+                self.logout_form.set_token(self.current_token)
+                self.stacked_widget.setCurrentWidget(self.logout_form)
+            else:
+                print("No valid token, redirecting to welcome page")
+                self.handle_auth_failure()
+            QApplication.processEvents()
+        except Exception as e:
+            logging.error(f"Error in show_logout_form: {str(e)}")
             self.handle_auth_failure()
 
     def on_registration_successful(self):

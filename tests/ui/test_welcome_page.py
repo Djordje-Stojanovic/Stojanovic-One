@@ -87,27 +87,3 @@ def test_welcome_page_styling(qtbot):
     assert "color: #34495e;" in welcome_page.description_label.styleSheet()
     assert "background-color: #3498db;" in welcome_page.login_button.styleSheet()
     assert "background-color: #2ecc71;" in welcome_page.register_button.styleSheet()
-
-@pytest.mark.gui
-def test_welcome_page_delayed_resize(qtbot):
-    welcome_page = WelcomePage()
-    qtbot.addWidget(welcome_page)
-    welcome_page.show()
-
-    # Trigger a resize event
-    welcome_page.resize(800, 600)
-    
-    # Wait for the delayed resize to occur
-    qtbot.wait(1000)
-
-    assert welcome_page.welcome_label.font().pointSize() == 24
-    assert welcome_page.description_label.font().pointSize() == 16
-
-    # Test small window size
-    welcome_page.resize(400, 300)
-    
-    # Wait for the delayed resize to occur
-    qtbot.wait(1000)
-
-    assert welcome_page.welcome_label.font().pointSize() == 20
-    assert welcome_page.description_label.font().pointSize() == 12

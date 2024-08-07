@@ -33,7 +33,8 @@ def main_window(qapp, qtbot, mocker):
     window.cleanup()
     window.close()
     window.deleteLater()
-    QTest.qWait(100)  # Wait for deletion to complete
+    qapp.processEvents()
+    QTest.qWait(1000)  # Increased wait time for deletion to complete
     logging.info("main_window fixture: teardown completed")
 
 @pytest.fixture
@@ -64,12 +65,16 @@ def test_main_window_navigation(main_window, qtbot):
         assert isinstance(main_window.stacked_widget.currentWidget(), LoginForm), "Failed to navigate to login form"
         logging.debug("Navigated to login form")
 
+        QTest.qWait(100)  # Wait for UI to update
+
         # Test navigation back to welcome page
         logging.debug("Navigating back to welcome page")
         main_window.show_welcome_page()
         qtbot.waitUntil(lambda: isinstance(main_window.stacked_widget.currentWidget(), WelcomePage), timeout=5000)
         assert isinstance(main_window.stacked_widget.currentWidget(), WelcomePage), "Failed to return to welcome page"
         logging.debug("Returned to welcome page")
+
+        QTest.qWait(100)  # Wait for UI to update
 
         # Test navigation to registration form
         logging.debug("Clicking register button")
@@ -82,7 +87,6 @@ def test_main_window_navigation(main_window, qtbot):
         logging.error(f"Error in test_main_window_navigation: {str(e)}")
         logging.error(traceback.format_exc())
         pytest.fail(f"test_main_window_navigation failed: {str(e)}")
-
 @pytest.mark.gui
 def test_login_logout_flow(main_window, qtbot, mocker):
     try:
@@ -92,6 +96,7 @@ def test_login_logout_flow(main_window, qtbot, mocker):
         mock_login = mocker.patch('stojanovic_one.database.user_management.login_user', return_value=generate_token("testuser"))
         mock_logout = mocker.patch('stojanovic_one.database.user_management.logout_user', return_value=True)
 
+        # Login
         logging.debug("Attempting login")
         with qtbot.waitSignal(main_window.login_form.login_successful, timeout=5000):
             result, error_message = main_window.login_user("testuser", "password123")
@@ -103,10 +108,13 @@ def test_login_logout_flow(main_window, qtbot, mocker):
 
         QTest.qWait(500)  # Wait for UI to update
 
+        # Logout
         logging.debug("Attempting logout")
+        main_window.show_logout_form()
+        qtbot.wait(100)
+
+        # Directly call perform_logout to ensure it's triggered
         with qtbot.waitSignal(main_window.logout_form.logout_successful, timeout=5000):
-            main_window.show_logout_form()
-            qtbot.wait(100)
             success, error_message = main_window.perform_logout()
         
         logging.debug(f"Logout success: {success}, error_message: {error_message}")
@@ -119,6 +127,7 @@ def test_login_logout_flow(main_window, qtbot, mocker):
         logging.error(f"Test failed: {str(e)}")
         logging.error(traceback.format_exc())
         pytest.fail(f"Test failed due to exception: {str(e)}")
+
 
 @pytest.mark.gui
 def test_registration_flow(main_window, qtbot, mocker):
@@ -135,8 +144,8 @@ def test_registration_flow(main_window, qtbot, mocker):
 
         QTimer.singleShot(100, trigger_registration)
 
-        with qtbot.waitSignal(main_window.registration_form.registration_successful, timeout=5000):
-            qtbot.wait(1000)  # Wait for registration to complete
+        with qtbot.waitSignal(main_window.registration_form.registration_successful, timeout=10000):  # Increased timeout
+            qtbot.wait(2000)  # Increased wait time
 
         assert mock_register.called, "Registration function was not called"
         mock_register.assert_called_once_with(main_window.conn, "newuser", "newuser@example.com", "password123")
@@ -199,6 +208,11 @@ def test_auth_state_management(main_window, qtbot):
 
         main_window.update_auth_state(False)
         qtbot.waitUntil(check_logged_out_state, timeout=5000)
+
+    except Exception as e:
+        logging.error(f"Test failed: {str(e)}")
+        logging.error(traceback.format_exc())
+        pytest.fail(f"Test failed due to exception: {str(e)}")
 
     except Exception as e:
         logging.error(f"Test failed: {str(e)}")

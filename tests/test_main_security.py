@@ -9,6 +9,7 @@ from stojanovic_one.auth.jwt_utils import generate_token, validate_token
 from stojanovic_one.database.user_management import register_user
 import bcrypt
 import logging
+import traceback  # Add this import at the top of the file
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -32,6 +33,7 @@ def main_window(qapp, qtbot, mocker):
     window.close()
     window.deleteLater()
     qapp.processEvents()
+    QTest.qWait(1000)  # Increased wait time for deletion to complete
     logging.info("main_window fixture: teardown completed")
 
 @pytest.fixture
@@ -65,15 +67,28 @@ def test_token_expiration(main_window, qtbot, mocker):
         expired_token = generate_token("testuser", expiration=1)
         main_window.current_token = expired_token
 
+        # Mock the validate_token function to simulate an expired token
+        mocker.patch('stojanovic_one.auth.jwt_utils.validate_token', return_value=None)
+
+        # Mock the handle_auth_failure method
+        mock_handle_auth_failure = mocker.patch.object(main_window, 'handle_auth_failure')
+
         def check_condition():
             main_window.show_logout_form()
-            return main_window.stacked_widget.currentWidget() == main_window.welcome_page
+            return mock_handle_auth_failure.called
 
-        QTest.qWait(2000)
+        # Wait for the token to expire
+        qtbot.wait(2000)
+
+        # Try to access a protected route
         assert check_condition()
+
+        # Verify that the current_token is None after expiration
+        assert main_window.current_token is None
 
     except Exception as e:
         logging.error(f"Error in test_token_expiration: {str(e)}")
+        logging.error(traceback.format_exc())
         pytest.fail(f"Test failed: {str(e)}")
 
 @pytest.mark.gui
@@ -85,9 +100,11 @@ def test_token_tampering(main_window, qtbot, mocker):
 
         mock_middleware = mocker.patch('stojanovic_one.auth.middleware.JWTMiddleware.check_auth', return_value=False)
 
-        main_window.show_logout_form()
-        
-        QTest.qWait(500)
+        def check_condition():
+            main_window.show_logout_form()
+            return main_window.stacked_widget.currentWidget() == main_window.welcome_page
+
+        qtbot.waitUntil(check_condition, timeout=5000)
         
         mock_middleware.assert_called_once_with(tampered_token)
         
@@ -96,6 +113,7 @@ def test_token_tampering(main_window, qtbot, mocker):
 
     except Exception as e:
         logging.error(f"Error in test_token_tampering: {str(e)}")
+        logging.error(traceback.format_exc())
         pytest.fail(f"Test failed: {str(e)}")
 
 @pytest.mark.gui
