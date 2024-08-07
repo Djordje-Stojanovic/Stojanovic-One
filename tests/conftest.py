@@ -17,11 +17,11 @@ def qapp():
     if app is None:
         app = QApplication([])
     yield app
+    app.processEvents()
     app.quit()
 
 @pytest.fixture(autouse=True)
 def qtest_setup(qapp):
-    from PySide6.QtTest import QTest
     QTest.qWait(0)  # Process pending events before each test
     yield
     QTest.qWait(0)  # Process pending events after each test
@@ -45,3 +45,9 @@ def pytest_runtest_makereport(item, call):
         if call.excinfo:
             logging.error(f"Exception: {call.excinfo.value}")
             logging.error(f"Traceback: {call.excinfo.traceback}")
+
+@pytest.fixture(autouse=True)
+def run_around_tests(qapp):
+    yield
+    qapp.processEvents()
+    QTest.qWait(100)

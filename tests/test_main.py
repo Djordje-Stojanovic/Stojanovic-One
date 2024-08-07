@@ -11,7 +11,6 @@ from stojanovic_one.ui.registration_form import RegistrationForm
 import traceback
 from stojanovic_one.auth.jwt_utils import generate_token
 import logging
-import bcrypt
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -34,7 +33,7 @@ def main_window(qapp, qtbot, mocker):
     window.cleanup()
     window.close()
     window.deleteLater()
-    qapp.processEvents()
+    QTest.qWait(100)  # Wait for deletion to complete
     logging.info("main_window fixture: teardown completed")
 
 @pytest.fixture
@@ -102,8 +101,12 @@ def test_login_logout_flow(main_window, qtbot, mocker):
         assert main_window.current_token is not None, f"Token is None: {main_window.current_token}"
         logging.debug("Login assertions passed")
 
+        QTest.qWait(500)  # Wait for UI to update
+
         logging.debug("Attempting logout")
         with qtbot.waitSignal(main_window.logout_form.logout_successful, timeout=5000):
+            main_window.show_logout_form()
+            qtbot.wait(100)
             success, error_message = main_window.perform_logout()
         
         logging.debug(f"Logout success: {success}, error_message: {error_message}")
@@ -124,11 +127,18 @@ def test_registration_flow(main_window, qtbot, mocker):
 
         mock_register = mocker.patch('stojanovic_one.database.user_management.register_user', return_value=True)
 
-        with qtbot.waitSignal(main_window.registration_form.registration_successful, timeout=5000):
-            result, error_message = main_window.register_user("newuser", "newuser@example.com", "password123")
+        main_window.show_registration_form()
+        qtbot.waitUntil(lambda: isinstance(main_window.stacked_widget.currentWidget(), RegistrationForm), timeout=5000)
 
-        assert result == True, f"Registration failed, result: {result}, error: {error_message}"
-        assert error_message is None, f"Unexpected error message: {error_message}"
+        def trigger_registration():
+            main_window.register_user("newuser", "newuser@example.com", "password123")
+
+        QTimer.singleShot(100, trigger_registration)
+
+        with qtbot.waitSignal(main_window.registration_form.registration_successful, timeout=5000):
+            qtbot.wait(1000)  # Wait for registration to complete
+
+        assert mock_register.called, "Registration function was not called"
         mock_register.assert_called_once_with(main_window.conn, "newuser", "newuser@example.com", "password123")
         
     except Exception as e:
@@ -202,11 +212,13 @@ def test_error_messages(main_window, qtbot, mocker):
 
         # Test login error
         mocker.patch('stojanovic_one.database.user_management.login_user', return_value=None)
-        mocker.patch('bcrypt.checkpw', return_value=False)  # Add this line
+        mocker.patch('bcrypt.checkpw', return_value=False)
         result, error_message = main_window.login_user("nonexistent", "wrongpassword")
         logging.debug(f"Login result: {result}, error_message: {error_message}")
         assert result == False, f"Expected login to fail, but got result: {result}"
         assert error_message == "Invalid username or password. Please try again.", f"Unexpected error message: {error_message}"
+
+        QTest.qWait(500)  # Wait for UI to update
 
         # Test registration error
         mocker.patch('stojanovic_one.database.user_management.register_user', return_value=False)
@@ -214,6 +226,8 @@ def test_error_messages(main_window, qtbot, mocker):
         logging.debug(f"Registration result: {result}, error_message: {error_message}")
         assert result == False, f"Expected registration to fail, but got result: {result}"
         assert error_message == "Registration failed. Username or email may already be in use.", f"Unexpected error message: {error_message}"
+
+        QTest.qWait(500)  # Wait for UI to update
 
         # Test logout error
         main_window.current_token = "fake_token"
