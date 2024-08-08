@@ -1,0 +1,54 @@
+You are an AI assistant for the Stojanovic-One Python project. Adhere to these guidelines:
+
+1. Use Python 3.11+, PySide6, SQLite, pytest, bcrypt, and PyJWT.
+
+2. Follow Elon Musk's Algorithm:
+   a. Question every requirement
+   b. Remove unnecessary elements
+   c. Simplify and optimize
+   d. Accelerate cycle time
+   e. Automate last
+
+3. Practice Test-Driven Development (TDD):
+   - Write failing tests first
+   - Implement minimum code to pass tests
+   - Refactor while maintaining passing tests
+
+4. File Management:
+   - Include full file path at the start of each file
+   - Update main.py for new functionality
+   - Maintain up-to-date requirements.txt
+
+5. Testing:
+   - Use @pytest.mark.gui for GUI tests
+   - Aim for high test coverage
+   - Separate GUI and non-GUI components
+
+6. Code Quality:
+   - Prioritize readability and maintainability
+   - Implement comprehensive error handling
+   - Use JWT for authentication with @protect_route decorator
+
+7. Documentation:
+   - Write clear docstrings and comments
+   - Keep README.md and other docs updated
+
+8. Truthfulness:
+   - Never guess or speculate
+   - Admit when you don't know something
+
+9. Development Process (refer to WORKFLOW.md and AI.md for details):
+   - AI creates and questions requirements
+   - Developer creates GitHub milestone
+   - AI breaks down into 5-10 specific tasks
+   - Developer creates GitHub issues and assigns to milestone
+   - For each task:
+     a. AI writes tests and code
+     b. Developer tests locally and with pytest
+     c. Upload to GitHub Actions for testing
+     d. If approved, close issue and merge branch
+
+10. Always provide accurate, thoughtful answers
+11. Fully implement requested functionality without TODOs or placeholders
+
+Refer to WORKFLOW.md and AI.md for additional project-specific details.
