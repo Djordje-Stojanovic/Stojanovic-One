@@ -1,49 +1,98 @@
-Stojanovic-One
-Project Description
-Stojanovic-One is a [brief description of your project]. This project aims to [main goal or purpose of the project].
-Table of Contents
+Based on the provided context, it looks like you have updated the `README.md` and `AI.MD` files to align with the new project guidelines. Here is the updated `README.md` file without the line numbers:
 
-Installation
-Usage
-Features
-Contributing
-Tests
-License
-Contact
+````markdown:README.md
+# Stojanovic-One
 
-Installation
-Describe the installation process here. For example:
-bashCopygit clone https://github.com/Djordje-Stojanovic/Stojanovic-One.git
+## Project Description
+
+Stojanovic-One is a web application built using a modern tech stack, focusing on best practices in software development, including Test-Driven Development (TDD) and continuous integration. This project aims to provide a robust and efficient platform for [main goal or purpose of the project].
+
+## Table of Contents
+
+- [Installation](#installation)
+- [Usage](#usage)
+- [Features](#features)
+- [Contributing](#contributing)
+- [Tests](#tests)
+- [License](#license)
+- [Contact](#contact)
+
+## Installation
+
+To get started with the project, follow these steps:
+
+```bash
+git clone https://github.com/Djordje-Stojanovic/Stojanovic-One.git
 cd Stojanovic-One
 
-# Add any additional steps (e.g., installing dependencies)
+# Backend setup
+cd backend
+python -m venv venv
+source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+pip install -r requirements.txt
 
-Usage
+# Frontend setup
+cd ../frontend
+npm install
+````
+
+## Usage
+
 Provide instructions and examples for use. Include screenshots as needed and tutorials.
-bashCopy# Add code examples for how to use your project
-Features
+
+```bash
+# Backend
+cd backend
+uvicorn app.main:app --reload
+
+# Frontend
+cd frontend
+npm start
+```
+
+## Features
+
 List the key features of your project:
 
-Feature 1
-Feature 2
-Feature 3
+- Feature 1
+- Feature 2
+- Feature 3
 
-Contributing
+## Contributing
+
 Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are greatly appreciated.
 
-Fork the Project
-Create your Feature Branch (git checkout -b feature/AmazingFeature)
-Commit your Changes (git commit -m 'Add some AmazingFeature')
-Push to the Branch (git push origin feature/AmazingFeature)
-Open a Pull Request
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-Tests
+## Tests
+
 Describe and show how to run the tests with code examples.
-bashCopy# Add commands to run tests
-License
-Distributed under the [Choose a license] License. See LICENSE for more information.
-Contact
-Your Name - @your_twitter - email@example.com
-Project Link: https://github.com/Djordje-Stojanovic/Stojanovic-One
 
-Feel free to customize this README to better fit your project as it develops!
+```bash
+# Backend tests
+cd backend
+pytest -v --import-mode=importlib
+
+# Frontend tests
+cd frontend
+npm test
+```
+
+## License
+
+Distributed under the [Choose a license] License. See `LICENSE` for more information.
+
+## Contact
+
+Djordje Stojanovic - [@your_twitter](https://twitter.com/your_twitter) - email@example.com
+
+Project Link: [https://github.com/Djordje-Stojanovic/Stojanovic-One](https://github.com/Djordje-Stojanovic/Stojanovic-One)
+
+```
+
+This `README.md` file should now be up-to-date and aligned with the new project guidelines as specified in `AI.MD`. If you need any further modifications or have specific questions, feel free to ask!
+```
