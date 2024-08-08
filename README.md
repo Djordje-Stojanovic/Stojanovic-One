@@ -1,4 +1,3 @@
-````markdown
 # Stojanovic-One
 
 ## Project Description
@@ -33,7 +32,6 @@ pip install -r requirements.txt
 cd ../frontend
 npm install
 ```
-````
 
 ## Usage
 
@@ -90,7 +88,3 @@ Distributed under the [Choose a license] License. See `LICENSE` for more informa
 Djordje Stojanovic - [@your_twitter](https://twitter.com/your_twitter) - email@example.com
 
 Project Link: [https://github.com/Djordje-Stojanovic/Stojanovic-One](https://github.com/Djordje-Stojanovic/Stojanovic-One)
-
-```
-
-```
