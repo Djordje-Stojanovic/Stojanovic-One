@@ -45,16 +45,8 @@ class MainWindow(QMainWindow):
             logging.debug("All forms added to stacked widget")
 
             logging.debug("Connecting signals")
-            self.welcome_page.login_clicked.connect(self.show_login_form)
-            self.welcome_page.register_clicked.connect(self.show_registration_form)
-            self.welcome_page.logout_clicked.connect(self.show_logout_form)
+            self.connect_signals()
             logging.debug("Signals connected")
-            self.registration_form.registration_successful.connect(self.on_registration_successful)
-            self.login_form.login_successful.connect(self.on_login_successful)
-            self.logout_form.logout_successful.connect(self.perform_logout)
-            self.jwt_middleware = JWTMiddleware()
-            self.jwt_middleware.authentication_failed.connect(self.handle_auth_failure)
-            self.rate_limiter = RateLimiter()
 
             logging.info("MainWindow initialized")
             self.show_welcome_page()
@@ -230,6 +222,11 @@ class MainWindow(QMainWindow):
         self.stacked_widget.setCurrentWidget(self.welcome_page)
         if not self.test_mode:
             QMessageBox.warning(self, "Authentication Failed", "Your session has expired. Please log in again.")
+
+    def connect_signals(self):
+        self.welcome_page.login_button.clicked.connect(self.show_login_form)
+        self.welcome_page.register_button.clicked.connect(self.show_registration_form)
+        self.logout_form.logout_button.clicked.connect(self.logout_user)
 
 
 def main(test_mode=False):
