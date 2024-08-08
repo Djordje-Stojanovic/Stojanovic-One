@@ -89,6 +89,11 @@ def test_main_window_navigation(main_window, qtbot):
         pytest.fail(f"test_main_window_navigation failed: {str(e)}")
 @pytest.mark.gui
 def test_login_logout_flow(main_window, qtbot, mocker):
+    # Add documentation for the test
+    """
+    This test checks the login and logout flow.
+    """
+    
     try:
         logging.debug("Starting test_login_logout_flow")
 
