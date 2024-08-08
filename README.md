@@ -1,4 +1,4 @@
-````markdown:README.md
+````markdown
 # Stojanovic-One
 
 ## Project Description
@@ -32,6 +32,7 @@ pip install -r requirements.txt
 # Frontend setup
 cd ../frontend
 npm install
+```
 ````
 
 ## Usage
@@ -90,5 +91,6 @@ Djordje Stojanovic - [@your_twitter](https://twitter.com/your_twitter) - email@e
 
 Project Link: [https://github.com/Djordje-Stojanovic/Stojanovic-One](https://github.com/Djordje-Stojanovic/Stojanovic-One)
 
-<insert>
-<!-- End of README.md -->
+```
+
+```
