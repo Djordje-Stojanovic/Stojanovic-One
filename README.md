@@ -1,5 +1,3 @@
-Based on the provided context, it looks like you have updated the `README.md` and `AI.MD` files to align with the new project guidelines. Here is the updated `README.md` file without the line numbers:
-
 ````markdown:README.md
 # Stojanovic-One
 
@@ -92,7 +90,5 @@ Djordje Stojanovic - [@your_twitter](https://twitter.com/your_twitter) - email@e
 
 Project Link: [https://github.com/Djordje-Stojanovic/Stojanovic-One](https://github.com/Djordje-Stojanovic/Stojanovic-One)
 
-```
-
-This `README.md` file should now be up-to-date and aligned with the new project guidelines as specified in `AI.MD`. If you need any further modifications or have specific questions, feel free to ask!
-```
+<insert>
+<!-- End of README.md -->
