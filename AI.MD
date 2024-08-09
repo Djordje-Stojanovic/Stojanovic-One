@@ -39,13 +39,23 @@ E:\Stojanovic-One/
 │   ├── requirements.txt
 │   └── alembic.ini
 ├── frontend/
+│   ├── public/
+│   │   └── index.html
 │   ├── src/
 │   │   ├── components/
+│   │   │   ├── Header.tsx
+│   │   │   └── Footer.tsx
 │   │   ├── pages/
-│   │   ├── styles/
-│   │   └── utils/
-│   ├── public/
-│   └── package.json
+│   │   │   └── Home.tsx
+│   │   ├── utils/
+│   │   │   └── api.ts
+│   │   ├── App.tsx
+│   │   ├── index.tsx
+│   │   └── index.css
+│   ├── package.json
+│   ├── tsconfig.json
+│   ├── tailwind.config.js
+│   └── postcss.config.js
 ├── .github/
 │   └── workflows/
 ├── .cursorignore
@@ -181,3 +191,11 @@ Remember:
 - When implementing features or fixing bugs, always start by writing failing tests, then implement the minimum code to pass those tests, and finally refactor while keeping the tests passing.
 - Always include the full file path as a comment at the top of each file you create or modify.
 - Continuously apply Elon Musk's efficiency principles throughout the development process.
+
+## Windows-Specific Instructions
+
+When working on Windows, use PowerShell for command-line operations. Here are some Windows-specific commands:
+
+- To remove a directory: `Remove-Item -Recurse -Force directory_name`
+- To create a directory: `New-Item -ItemType Directory -Force -Path directory_name`
+- To set environment variables: `$env:VARIABLE_NAME = "value"`

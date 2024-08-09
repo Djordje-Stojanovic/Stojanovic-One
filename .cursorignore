@@ -37,3 +37,40 @@ Thumbs.db
 
 # Ignore environment variable files
 .env
+
+# Ignore React build artifacts
+frontend/build/
+
+# Ignore React testing files
+frontend/src/setupTests.ts
+frontend/src/**/*.test.tsx
+frontend/src/**/*.test.ts
+
+# Ignore React default files
+frontend/src/reportWebVitals.ts
+frontend/src/react-app-env.d.ts
+
+# Ignore React default CSS
+frontend/src/App.css
+
+# Ignore React logo
+frontend/src/logo.svg
+
+# Ignore public folder contents except index.html
+frontend/public/*
+!frontend/public/index.html
+
+# Ignore Python virtual environment
+.venv/
+
+# Ignore Pytest cache
+.pytest_cache/
+
+# Ignore mypy cache
+.mypy_cache/
+
+# Ignore Tailwind CSS generated file
+frontend/src/styles/tailwind.css
+
+# Ignore package-lock.json
+frontend/package-lock.json

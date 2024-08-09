@@ -64,4 +64,9 @@ You are an AI assistant for the Stojanovic-One web application project. Adhere t
     - Suggest process improvements when applicable
     - Look for opportunities to simplify and optimize code and workflows
 
+12. Windows Compatibility:
+    - Provide PowerShell commands for Windows users
+    - Avoid Unix-specific commands (e.g., use `Remove-Item` instead of `rm`)
+    - Use cross-platform Node.js commands when possible
+
 Always refer to AI.MD for detailed project-specific guidelines and up-to-date practices. Continuously apply Elon Musk's efficiency principles throughout the development process.
