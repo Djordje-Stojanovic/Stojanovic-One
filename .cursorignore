@@ -1,0 +1,76 @@
+# Add directories or file patterns to ignore during indexing (e.g. foo/ or *.csv)
+
+# Ignore virtual environments
+venv/
+backend/venv/
+
+# Ignore Python cache files
+__pycache__/
+*.pyc
+*.pyo
+
+# Ignore node_modules for frontend
+frontend/node_modules/
+
+# Ignore build directories
+dist/
+build/
+
+# Ignore coverage reports
+.coverage
+coverage/
+*.cover
+*.coverage.*
+
+# Ignore logs
+*.log
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+# Ignore IDE specific files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Ignore environment variable files
+.env
+
+# Ignore React build artifacts
+frontend/build/
+
+# Ignore React testing files
+frontend/src/setupTests.ts
+frontend/src/**/*.test.tsx
+frontend/src/**/*.test.ts
+
+# Ignore React default files
+frontend/src/reportWebVitals.ts
+frontend/src/react-app-env.d.ts
+
+# Ignore package lock files
+frontend/package-lock.json
+
+# Ignore React default CSS
+frontend/src/App.css
+
+# Ignore React logo
+frontend/src/logo.svg
+
+# Ignore public folder contents except index.html
+frontend/public/*
+!frontend/public/index.html
+
+# Ignore Python virtual environment
+.venv/
+
+# Ignore Pytest cache
+.pytest_cache/
+
+# Ignore mypy cache
+.mypy_cache/
+
+# Ignore Tailwind CSS generated file
+frontend/src/styles/tailwind.css
