@@ -88,6 +88,9 @@ Apply these principles throughout the development process:
 9. Be concise in explanations while ensuring clarity.
 10. Admit when there's uncertainty rather than guessing.
 11. Always include file paths at the top of each code file and update the Project Structure section.
+12. Always run database migrations after updating models:
+    a. `alembic revision --autogenerate -m "Description of changes"`
+    b. `alembic upgrade head`
 
 ## Database Migrations
 
