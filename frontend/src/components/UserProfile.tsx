@@ -1,53 +1,52 @@
 import React, { useState, useEffect } from 'react';
 import api from '../utils/api';
+import { useAuth } from '../context/AuthContext';
 
 interface User {
   id: number;
   email: string;
-  first_name: string;
-  last_name: string;
-  is_active: boolean;
+  first_name: string | null;
+  last_name: string | null;
 }
 
 const UserProfile: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
-    const fetchUserProfile = async () => {
-      try {
-        const response = await api.get('/users/me');
-        setUser(response.data);
-      } catch (err) {
-        setError('Failed to fetch user profile');
-      } finally {
-        setLoading(false);
+    const fetchUser = async () => {
+      if (isAuthenticated) {
+        try {
+          const response = await api.get('/users/me');
+          setUser(response.data);
+        } catch (error) {
+          console.error('Failed to fetch user profile', error);
+          setError('Failed to fetch user profile. Please try again.');
+        }
       }
     };
+    fetchUser();
+  }, [isAuthenticated]);
 
-    fetchUserProfile();
-  }, []);
+  if (!isAuthenticated) {
+    return <div>Please log in to view your profile.</div>;
+  }
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>{error}</div>;
-  if (!user) return <div>No user data available</div>;
+  if (error) {
+    return <div className="text-red-500">{error}</div>;
+  }
+
+  if (!user) {
+    return <div>Loading...</div>;
+  }
 
   return (
-    <div className="max-w-md mx-auto mt-8 p-6 bg-white rounded-lg shadow-xl">
-      <h2 className="text-2xl font-bold mb-4">User Profile</h2>
-      <div className="mb-4">
-        <strong>Email:</strong> {user.email}
-      </div>
-      <div className="mb-4">
-        <strong>First Name:</strong> {user.first_name || 'Not set'}
-      </div>
-      <div className="mb-4">
-        <strong>Last Name:</strong> {user.last_name || 'Not set'}
-      </div>
-      <div className="mb-4">
-        <strong>Active:</strong> {user.is_active ? 'Yes' : 'No'}
-      </div>
+    <div className="max-w-md mx-auto mt-8">
+      <h2 className="text-2xl mb-4">User Profile</h2>
+      <p><strong>Email:</strong> {user.email}</p>
+      <p><strong>First Name:</strong> {user.first_name || 'Not set'}</p>
+      <p><strong>Last Name:</strong> {user.last_name || 'Not set'}</p>
     </div>
   );
 };

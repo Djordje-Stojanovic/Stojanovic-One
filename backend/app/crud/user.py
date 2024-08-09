@@ -40,9 +40,8 @@ def update_user(db: Session, user_id: int, user: UserUpdate):
     return db_user
 
 def delete_user(db: Session, user_id: int):
-    db_user = get_user(db, user_id)
-    if not db_user:
-        return None
-    db.delete(db_user)
-    db.commit()
-    return db_user
+    user = get_user(db, user_id)
+    if user:
+        db.delete(user)
+        db.commit()
+    return user

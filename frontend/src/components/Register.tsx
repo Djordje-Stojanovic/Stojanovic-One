@@ -5,15 +5,19 @@ const Register: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+    setSuccess('');
     try {
       const data = await register({ email, password });
-      // Here you would typically store the token and redirect the user
+      setSuccess('Registration successful. You can now log in.');
       console.log('Registration successful', data);
     } catch (err) {
       setError('Registration failed. Please try again.');
+      console.error('Registration error:', err);
     }
   };
 
@@ -22,6 +26,7 @@ const Register: React.FC = () => {
       <form onSubmit={handleSubmit} className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
         <h2 className="text-2xl mb-4">Register</h2>
         {error && <p className="text-red-500 mb-4">{error}</p>}
+        {success && <p className="text-green-500 mb-4">{success}</p>}
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
             Email

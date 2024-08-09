@@ -8,26 +8,16 @@ class UserBase(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
 
-class UserCreate(BaseModel):
-    email: EmailStr
+class UserCreate(UserBase):
     password: str
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
 
 class UserUpdate(UserBase):
     password: Optional[str] = None
 
-class UserInDB(UserBase):
+class User(UserBase):
     id: int
-    created_at: datetime
-    updated_at: datetime
+    is_active: bool
+    is_superuser: bool
 
     class Config:
         from_attributes = True
-
-class User(UserInDB):
-    pass
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str

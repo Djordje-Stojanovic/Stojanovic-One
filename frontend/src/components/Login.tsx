@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
 import { login } from '../utils/auth';
+import { useNavigate } from 'react-router-dom';
 
 const Login: React.FC = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       const data = await login({ username, password });
-      // Here you would typically store the token and redirect the user
-      console.log('Login successful', data);
+      localStorage.setItem('token', data.access_token);
+      navigate('/'); // Redirect to home page after successful login
     } catch (err) {
       setError('Login failed. Please check your credentials.');
     }
