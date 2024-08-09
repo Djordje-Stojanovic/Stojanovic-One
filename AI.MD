@@ -17,7 +17,7 @@ This project is a web application built using a modern tech stack, focusing on b
 Always include the full file path as a comment at the top of each file you create or modify. Update this section with new file paths as the project evolves.
 
 ```
-project_root/
+E:\Stojanovic-One/
 ├── backend/
 │   ├── app/
 │   │   ├── __init__.py
@@ -37,9 +37,11 @@ project_root/
 │   │   └── utils/
 │   ├── public/
 │   └── package.json
-├── docker/
 ├── .github/
 │   └── workflows/
+├── .cursorignore
+├── .cursorrules
+├── AI.MD
 └── README.md
 ```
 
