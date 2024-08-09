@@ -1,19 +1,29 @@
 import React, { useState } from 'react';
-import { login } from '../utils/auth';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import api from '../utils/api';
 
 const Login: React.FC = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const data = await login({ username, password });
-      localStorage.setItem('token', data.access_token);
-      navigate('/'); // Redirect to home page after successful login
+      const response = await api.post('/auth/token', new URLSearchParams({
+        username,
+        password,
+      }), {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      });
+      const { access_token } = response.data;
+      login(access_token);
+      navigate('/profile');
     } catch (err) {
       setError('Login failed. Please check your credentials.');
     }

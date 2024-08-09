@@ -62,12 +62,13 @@ def read_user_me(current_user: User = Depends(get_current_active_user)):
     return current_user
 
 @router.put("/me", response_model=User)
-def update_user_me(user: UserUpdate, current_user: User = Depends(get_current_active_user), db: Session = Depends(get_db)):
-    for key, value in user.dict(exclude_unset=True).items():
-        if key == "password":
-            setattr(current_user, "hashed_password", get_password_hash(value))
-        else:
-            setattr(current_user, key, value)
+def update_user_me(
+    user_update: UserUpdate,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    for key, value in user_update.dict(exclude_unset=True).items():
+        setattr(current_user, key, value)
     db.commit()
     db.refresh(current_user)
     return current_user

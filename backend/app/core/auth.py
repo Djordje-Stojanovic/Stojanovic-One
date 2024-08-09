@@ -19,8 +19,14 @@ def get_password_hash(password):
 
 def authenticate_user(db: Session, username: str, password: str):
     user = db.query(User).filter(User.email == username).first()
-    if not user or not verify_password(password, user.hashed_password):
+    print(f"Attempting to authenticate user: {username}")
+    if not user:
+        print(f"User not found: {username}")
         return False
+    if not verify_password(password, user.hashed_password):
+        print(f"Invalid password for user: {username}")
+        return False
+    print(f"Authentication successful for user: {username}")
     return user
 
 def create_access_token(data: dict, expires_delta: timedelta = None):
