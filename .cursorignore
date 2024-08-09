@@ -50,9 +50,6 @@ frontend/src/**/*.test.ts
 frontend/src/reportWebVitals.ts
 frontend/src/react-app-env.d.ts
 
-# Ignore package lock files
-frontend/package-lock.json
-
 # Ignore React default CSS
 frontend/src/App.css
 
@@ -74,3 +71,6 @@ frontend/public/*
 
 # Ignore Tailwind CSS generated file
 frontend/src/styles/tailwind.css
+
+# Ignore package-lock.json
+frontend/package-lock.json
