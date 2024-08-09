@@ -4,34 +4,36 @@
 
 Stojanovic-One is a web application built using a modern tech stack, focusing on best practices in software development, including Test-Driven Development (TDD) and continuous integration. This project aims to provide a robust and efficient platform for [main goal or purpose of the project].
 
-## Table of Contents
+## Tech Stack
 
-- [Installation](#installation)
-- [Usage](#usage)
-- [Features](#features)
-- [Contributing](#contributing)
-- [Tests](#tests)
-- [License](#license)
-- [Contact](#contact)
+- Backend: Python 3.11+, FastAPI, SQLAlchemy, PostgreSQL
+- Frontend: React, TypeScript, Tailwind CSS
+- Testing: pytest, Jest, React Testing Library
+- Additional: Alembic, JWT, Axios
 
-## Installation
+## Getting Started
 
-To get started with the project, follow these steps:
+### Prerequisites
 
-```bash
-git clone https://github.com/Djordje-Stojanovic/Stojanovic-One.git
-cd Stojanovic-One
+- Python 3.11+
+- Node.js 14+
+- PostgreSQL
 
-# Backend setup
-cd backend
-python -m venv venv
-source venv/bin/activate  # On Windows use `venv\Scripts\activate`
-pip install -r requirements.txt
+### Installation
 
-# Frontend setup
-cd ../frontend
-npm install
-```
+1. Clone the repository
+2. Set up the backend:
+   ```
+   cd backend
+   python -m venv venv
+   source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+   pip install -r requirements.txt
+   ```
+3. Set up the frontend:
+   ```
+   cd frontend
+   npm install
+   ```
 
 ## Usage
 

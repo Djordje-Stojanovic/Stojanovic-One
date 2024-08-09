@@ -181,6 +181,24 @@ Apply Elon Musk's efficiency principles throughout this workflow:
     - This ensures consistent database schema across all environments and developers
     - Review migration files before committing to ensure they accurately represent intended changes
 
+## Code Style and Linting
+
+- Use Black for Python code formatting
+- Use ESLint and Prettier for JavaScript/TypeScript
+- Set up pre-commit hooks for automated checks
+
+## Security
+
+- Implement CORS (Cross-Origin Resource Sharing) correctly
+- Use environment variables for sensitive information
+- Implement rate limiting for API endpoints
+
+## Performance
+
+- Use caching where appropriate (e.g., Redis for backend, React.memo for frontend)
+- Implement pagination for large datasets
+- Use lazy loading for React components when possible
+
 ## Continuous Improvement
 
 This document and our workflow are adaptable. As the project evolves, we may adjust our processes and practices. Always look for ways to simplify, optimize, and accelerate our development cycle without compromising quality.
