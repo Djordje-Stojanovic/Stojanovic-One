@@ -1,12 +1,6 @@
 import React, { useState } from 'react';
-import api from '../utils/api';
-
-interface User {
-  id: number;
-  email: string;
-  first_name: string | null;
-  last_name: string | null;
-}
+import { updateUserProfile } from '../utils/api';
+import { User } from '../types/user';
 
 interface EditUserProfileProps {
   user: User;
@@ -21,12 +15,16 @@ const EditUserProfile: React.FC<EditUserProfileProps> = ({ user, onUpdate, onCan
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     try {
-      const response = await api.put('/users/me', { first_name: firstName, last_name: lastName });
-      onUpdate(response.data);
+      const userData = { first_name: firstName, last_name: lastName };
+      console.log('Sending update request with data:', userData);
+      const result = await updateUserProfile(userData);
+      console.log('Update response:', result);
+      onUpdate(result);
     } catch (error: any) {
       console.error('Failed to update user profile', error);
-      setError('Failed to update user profile. Please try again.');
+      setError(error.message || 'Failed to update user profile. Please try again.');
     }
   };
 

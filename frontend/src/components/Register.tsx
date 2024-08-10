@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { register } from '../utils/auth';
+import { register } from '../utils/api';
 
 const Register: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -12,12 +12,10 @@ const Register: React.FC = () => {
     setError('');
     setSuccess('');
     try {
-      const data = await register({ email, password });
+      await register(email, password);
       setSuccess('Registration successful. You can now log in.');
-      console.log('Registration successful', data);
     } catch (err) {
-      setError('Registration failed. Please try again.');
-      console.error('Registration error:', err);
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
     }
   };
 

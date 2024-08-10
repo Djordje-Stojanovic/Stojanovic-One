@@ -6,7 +6,7 @@ This project is a web application built using a modern tech stack, focusing on b
 
 ## Technology Stack
 
-- Frontend: React, Tailwind CSS
+- Frontend: React, TypeScript, Tailwind CSS
 - Backend: FastAPI, Python 3.11+
 - Database: PostgreSQL
 - ORM: SQLAlchemy
@@ -27,10 +27,17 @@ E:\Stojanovic-One/
 │   │   │   ├── base.py
 │   │   │   └── user.py
 │   │   ├── schemas/
+│   │   │   └── user.py
 │   │   ├── api/
-│   │   └── core/
-│   │       ├── config.py
-│   │       └── database.py
+│   │   │   ├── auth.py
+│   │   │   └── endpoints/
+│   │   │       └── users.py
+│   │   ├── core/
+│   │   │   ├── auth.py
+│   │   │   ├── config.py
+│   │   │   └── database.py
+│   │   └── crud/
+│   │       └── user.py
 │   ├── tests/
 │   ├── alembic/
 │   │   ├── versions/
@@ -43,12 +50,19 @@ E:\Stojanovic-One/
 │   │   └── index.html
 │   ├── src/
 │   │   ├── components/
+│   │   │   ├── EditUserProfile.tsx
+│   │   │   ├── Footer.tsx
 │   │   │   ├── Header.tsx
-│   │   │   └── Footer.tsx
+│   │   │   └── UserProfile.tsx
 │   │   ├── pages/
 │   │   │   └── Home.tsx
 │   │   ├── utils/
-│   │   │   └── api.ts
+│   │   │   ├── api.ts
+│   │   │   └── auth.ts
+│   │   ├── types/
+│   │   │   └── user.ts
+│   │   ├── context/
+│   │   │   └── AuthContext.tsx
 │   │   ├── App.tsx
 │   │   ├── index.tsx
 │   │   └── index.css
