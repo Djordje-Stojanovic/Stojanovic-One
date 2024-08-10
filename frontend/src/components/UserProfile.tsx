@@ -1,15 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import api from '../utils/api';
-import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { getUserProfile, updateUserProfile } from '../utils/api';
+import api from '../utils/api';
 import EditUserProfile from './EditUserProfile';
-
-interface User {
-  id: number;
-  email: string;
-  first_name: string | null;
-  last_name: string | null;
-}
+import { User } from '../types/user';
 
 const UserProfile: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -26,15 +21,13 @@ const UserProfile: React.FC = () => {
         return;
       }
       try {
-        const response = await api.get('/auth/me');
-        setUser(response.data);
-      } catch (error: any) {
-        console.error('Failed to fetch user profile', error);
-        if (error.response && error.response.status === 401) {
+        const userData = await getUserProfile();
+        setUser(userData);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch user profile');
+        if (err instanceof Error && err.message.includes('Unauthorized')) {
           logout();
           navigate('/login');
-        } else {
-          setError('Failed to fetch user profile. Please try again.');
         }
       } finally {
         setIsLoading(false);
@@ -43,9 +36,14 @@ const UserProfile: React.FC = () => {
     fetchUser();
   }, [isAuthenticated, logout, navigate]);
 
-  const handleUpdate = (updatedUser: User) => {
-    setUser(updatedUser);
-    setIsEditing(false);
+  const handleUpdate = async (updatedUser: Partial<User>) => {
+    try {
+      const result = await updateUserProfile(updatedUser);
+      setUser(result);
+      setIsEditing(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update user profile');
+    }
   };
 
   const handleDelete = async () => {

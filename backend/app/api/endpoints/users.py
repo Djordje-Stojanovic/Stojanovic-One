@@ -4,7 +4,7 @@ from typing import List
 from app.crud import user as user_crud
 from app.schemas.user import User, UserCreate, UserUpdate
 from app.core.database import get_db
-from app.core.auth import get_current_active_user, get_password_hash
+from app.core.auth import get_current_active_user
 
 router = APIRouter()
 
@@ -24,6 +24,32 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
 def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     users = user_crud.get_users(db, skip=skip, limit=limit)
     return users
+
+@router.get("/me", response_model=User)
+def read_user_me(current_user: User = Depends(get_current_active_user)):
+    return current_user
+
+@router.put("/me", response_model=User)
+def update_user_me(
+    user_update: UserUpdate,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    try:
+        for key, value in user_update.dict(exclude_unset=True).items():
+            setattr(current_user, key, value)
+        db.commit()
+        db.refresh(current_user)
+        return current_user
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=422, detail=f"Error updating user: {str(e)}")
+
+@router.delete("/me", status_code=204)
+def delete_user_me(current_user: User = Depends(get_current_active_user), db: Session = Depends(get_db)):
+    db.delete(current_user)
+    db.commit()
+    return {"ok": True}
 
 @router.get("/{user_id}", response_model=User)
 def read_user(user_id: int, db: Session = Depends(get_db)):
@@ -55,26 +81,4 @@ def delete_user(
     if current_user.id != user_id:
         raise HTTPException(status_code=403, detail="Not authorized to delete this user")
     user_crud.delete_user(db, user_id=user_id)
-    return {"ok": True}
-
-@router.get("/me", response_model=User)
-def read_user_me(current_user: User = Depends(get_current_active_user)):
-    return current_user
-
-@router.put("/me", response_model=User)
-def update_user_me(
-    user_update: UserUpdate,
-    current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
-):
-    for key, value in user_update.dict(exclude_unset=True).items():
-        setattr(current_user, key, value)
-    db.commit()
-    db.refresh(current_user)
-    return current_user
-
-@router.delete("/me", status_code=204)
-def delete_user_me(current_user: User = Depends(get_current_active_user), db: Session = Depends(get_db)):
-    db.delete(current_user)
-    db.commit()
     return {"ok": True}

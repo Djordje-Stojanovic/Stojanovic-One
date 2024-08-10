@@ -1,15 +1,16 @@
 # Ignore virtual environments
 venv/
-backend/venv/
+env/
 .venv/
 
 # Ignore Python cache files
 __pycache__/
 *.pyc
 *.pyo
+*.pyd
 
 # Ignore node_modules for frontend
-frontend/node_modules/
+node_modules/
 
 # Ignore build directories
 dist/
@@ -19,8 +20,6 @@ frontend/build/
 # Ignore coverage reports
 .coverage
 coverage/
-*.cover
-*.coverage.*
 
 # Ignore logs
 *.log
@@ -46,8 +45,6 @@ frontend/src/**/*.test.ts
 # Ignore React default files
 frontend/src/reportWebVitals.ts
 frontend/src/react-app-env.d.ts
-frontend/src/App.css
-frontend/src/logo.svg
 
 # Ignore public folder contents except index.html
 frontend/public/*
@@ -75,15 +72,13 @@ backend/alembic/versions/*
 # Ignore temporary files
 *.tmp
 *.swp
+*~
+*.bak
 
 # Ignore large data files
 *.csv
 *.json
 *.xml
-
-# Ignore backup files
-*~
-*.bak
 
 # Ignore local configuration files
 *.local
