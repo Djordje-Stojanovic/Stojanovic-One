@@ -13,6 +13,7 @@ const Login: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      console.log('Attempting login...');
       const response = await api.post('/auth/token', new URLSearchParams({
         username,
         password,
@@ -21,10 +22,12 @@ const Login: React.FC = () => {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
       });
+      console.log('Login response:', response);
       const { access_token } = response.data;
       login(access_token);
       navigate('/profile');
     } catch (err) {
+      console.error('Login error:', err);
       setError('Login failed. Please check your credentials.');
     }
   };
