@@ -19,6 +19,7 @@ yarn-error.log
 # Build
 /build
 /dist
+/frontend/build
 
 # Environment variables
 .env
@@ -48,13 +49,43 @@ htmlcov/
 *.log
 
 # Alembic
-alembic/versions/*
-!alembic/versions/.gitkeep
+/backend/alembic/versions/*
+!/backend/alembic/versions/.gitkeep
 
 # Frontend specific
-/frontend/build
 /frontend/coverage
+/frontend/build
+/frontend/npm-debug.log*
+/frontend/yarn-debug.log*
+/frontend/yarn-error.log*
 
 # Backend specific
 /backend/.pytest_cache
 /backend/.mypy_cache
+
+# Tailwind CSS
+/frontend/src/styles/tailwind.css
+
+# Package lock files
+package-lock.json
+yarn.lock
+
+# Temporary files
+*.tmp
+*.swp
+*~
+*.bak
+
+# Large data files
+*.csv
+*.json
+*.xml
+
+# Local configuration files
+*.local
+
+# Directories
+**/temp/
+**/data/
+**/logs/
+**/cache/

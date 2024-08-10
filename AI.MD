@@ -39,12 +39,14 @@ E:\Stojanovic-One/
 │   │   └── crud/
 │   │       └── user.py
 │   ├── tests/
+│   │   └── conftest.py
 │   ├── alembic/
 │   │   ├── versions/
 │   │   ├── env.py
 │   │   └── script.py.mako
 │   ├── requirements.txt
-│   └── alembic.ini
+│   ├── alembic.ini
+│   └── pytest.ini
 ├── frontend/
 │   ├── public/
 │   │   └── index.html
@@ -64,12 +66,14 @@ E:\Stojanovic-One/
 │   │   ├── context/
 │   │   │   └── AuthContext.tsx
 │   │   ├── App.tsx
+│   │   ├── App.css
 │   │   ├── index.tsx
 │   │   └── index.css
 │   ├── package.json
 │   ├── tsconfig.json
 │   ├── tailwind.config.js
-│   └── postcss.config.js
+│   ├── postcss.config.js
+│   └── babel.config.js
 ├── .github/
 │   └── workflows/
 ├── .cursorignore

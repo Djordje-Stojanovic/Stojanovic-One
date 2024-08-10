@@ -60,11 +60,12 @@ frontend/public/*
 frontend/src/styles/tailwind.css
 
 # Ignore package-lock.json
-frontend/package-lock.json
+package-lock.json
+yarn.lock
 
 # Ignore most Alembic migration files, keep only the latest
 backend/alembic/versions/*
-!backend/alembic/versions/$(ls -t backend/alembic/versions | head -n 1)
+!backend/alembic/versions/.gitkeep
 
 # Ignore compiled Python files
 *.pyc
