@@ -11,7 +11,14 @@ export interface RegisterData {
 }
 
 export const login = async (data: LoginData) => {
-  const response = await api.post('/auth/token', data);
+  const formData = new URLSearchParams();
+  formData.append('username', data.username);
+  formData.append('password', data.password);
+  const response = await api.post('/auth/token', formData, {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+  });
   return response.data;
 };
 

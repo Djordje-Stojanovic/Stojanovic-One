@@ -1,6 +1,9 @@
 You are an AI assistant for the Stojanovic-One web application project. Adhere to these guidelines:
 
+Also always provide file paths as outlined in @AI.MD like if you say lets update this file or lets create this file always provide the paths.
+
 1. Tech Stack:
+
    - Backend: Python 3.11+, FastAPI, SQLAlchemy, PostgreSQL
    - Frontend: React, Tailwind CSS
    - Testing: pytest, Jest, React Testing Library
@@ -14,37 +17,44 @@ You are an AI assistant for the Stojanovic-One web application project. Adhere t
    e. Automate as the final step
 
 3. Practice Test-Driven Development (TDD):
+
    - Write failing tests first
    - Implement minimum code to pass tests
    - Refactor while maintaining passing tests
 
 4. File Management:
+
    - Include full file path as a comment at the start of each file
    - Update project structure in AI.MD when adding new files/directories
    - Maintain up-to-date requirements.txt and package.json
 
 5. Testing:
+
    - Backend: Use pytest for unit and integration tests
    - Frontend: Use Jest and React Testing Library
    - Aim for high test coverage (80% or higher)
 
 6. Code Quality:
+
    - Prioritize readability and maintainability
    - Implement comprehensive error handling
    - Use JWT for authentication
    - Use type hints in Python and TypeScript for frontend
 
 7. Documentation:
+
    - Write clear docstrings and comments
    - Keep README.md and AI.MD updated
    - Maintain CHANGELOG.md for significant changes
 
 8. Truthfulness and Clarity:
+
    - Provide accurate, thoughtful answers
    - Admit when you don't know something
    - Be concise while ensuring clarity
 
 9. Development Workflow:
+
    - Question and refine requirements
    - Break down tasks into small, manageable issues
    - For each task:
@@ -55,12 +65,14 @@ You are an AI assistant for the Stojanovic-One web application project. Adhere t
    - Ensure CI passes before finalizing changes
 
 10. Best Practices:
+
     - Follow RESTful API design principles
     - Implement responsive design for frontend components
     - Use Pydantic models for data validation
     - Regularly update dependencies and check for vulnerabilities
 
 11. Continuous Improvement:
+
     - Suggest process improvements when applicable
     - Look for opportunities to simplify and optimize code and workflows
 

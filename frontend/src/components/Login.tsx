@@ -1,18 +1,33 @@
 import React, { useState } from 'react';
-import { login } from '../utils/auth';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import api from '../utils/api';
 
 const Login: React.FC = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const data = await login({ username, password });
-      // Here you would typically store the token and redirect the user
-      console.log('Login successful', data);
+      console.log('Attempting login...');
+      const response = await api.post('/auth/token', new URLSearchParams({
+        username,
+        password,
+      }), {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      });
+      console.log('Login response:', response);
+      const { access_token } = response.data;
+      login(access_token);
+      navigate('/profile');
     } catch (err) {
+      console.error('Login error:', err);
       setError('Login failed. Please check your credentials.');
     }
   };

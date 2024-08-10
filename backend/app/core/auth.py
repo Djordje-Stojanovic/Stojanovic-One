@@ -17,10 +17,16 @@ def verify_password(plain_password, hashed_password):
 def get_password_hash(password):
     return pwd_context.hash(password)
 
-def authenticate_user(db: Session, email: str, password: str):
-    user = db.query(User).filter(User.email == email).first()
-    if not user or not verify_password(password, user.hashed_password):
+def authenticate_user(db: Session, username: str, password: str):
+    user = db.query(User).filter(User.email == username).first()
+    print(f"Attempting to authenticate user: {username}")
+    if not user:
+        print(f"User not found: {username}")
         return False
+    if not verify_password(password, user.hashed_password):
+        print(f"Invalid password for user: {username}")
+        return False
+    print(f"Authentication successful for user: {username}")
     return user
 
 def create_access_token(data: dict, expires_delta: timedelta = None):
@@ -33,7 +39,7 @@ def create_access_token(data: dict, expires_delta: timedelta = None):
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
 
-async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+async def get_current_active_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -49,4 +55,6 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
     user = db.query(User).filter(User.email == email).first()
     if user is None:
         raise credentials_exception
+    if not user.is_active:
+        raise HTTPException(status_code=400, detail="Inactive user")
     return user
