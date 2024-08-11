@@ -1,5 +1,8 @@
 # AI.MD - Project Collaboration Guide
 
+Please this is utterly important provide full file paths for each file you edit, create or delete.
+Always provide it in a format like this: edit this file now: /Stojanovic-One/frontend/src/pages/Home.tsx or create this file in this path: /Stojanovic-One/frontend/src/pages/Home.tsx
+
 ## Project Overview
 
 This project is a web application built using a modern tech stack, focusing on best practices in software development, including Test-Driven Development (TDD) and continuous integration.

@@ -11,4 +11,8 @@ module.exports = {
     }],
   },
   testMatch: ['**/__tests__/**/*.ts?(x)', '**/?(*.)+(spec|test).ts?(x)'],
+  collectCoverage: true,
+  coverageDirectory: 'coverage',
+  coverageReporters: ['text', 'lcov'],
+  testPathIgnorePatterns: ['/node_modules/', '/dist/'],
 };
