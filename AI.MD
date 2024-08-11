@@ -166,7 +166,7 @@ Apply Elon Musk's efficiency principles throughout this workflow:
    - Aim for high test coverage (e.g., 80% or higher)
    - Run the full test suite before pushing changes
    - For backend: `pytest -v --import-mode=importlib`
-   - For frontend: Use Jest and React Testing Library
+   - For frontend: `npm test` or `npm run test:watch` for watch mode
 
 6. **Continuous Integration**
 
