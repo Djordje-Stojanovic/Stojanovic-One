@@ -42,7 +42,8 @@ E:\Stojanovic-One/
 │   │   └── crud/
 │   │       └── user.py
 │   ├── tests/
-│   │   └── conftest.py
+│   │   ├── conftest.py
+│   │   └── test_users.py
 │   ├── alembic/
 │   │   ├── versions/
 │   │   ├── env.py
@@ -58,6 +59,7 @@ E:\Stojanovic-One/
 │   │   │   ├── EditUserProfile.tsx
 │   │   │   ├── Footer.tsx
 │   │   │   ├── Header.tsx
+│   │   │   ├── Login.tsx
 │   │   │   └── UserProfile.tsx
 │   │   ├── pages/
 │   │   │   └── Home.tsx

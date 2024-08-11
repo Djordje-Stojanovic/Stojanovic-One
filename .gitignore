@@ -89,3 +89,10 @@ yarn.lock
 **/data/
 **/logs/
 **/cache/
+
+# Add these lines
+.pytest_cache/
+*.pyc
+__pycache__/
+.coverage
+htmlcov/
