@@ -90,9 +90,40 @@ yarn.lock
 **/logs/
 **/cache/
 
-# Add these lines
-.pytest_cache/
-*.pyc
+# SQLite database files
+*.db
+
+# Python cache
 __pycache__/
-.coverage
-htmlcov/
+*.pyc
+
+# Virtual environment
+venv/
+.venv/
+
+# IDE settings
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Environment variables
+.env
+
+# Alembic version files (keep only .gitkeep)
+/backend/alembic/versions/*
+!/backend/alembic/versions/.gitkeep
+
+# Frontend build
+/frontend/build/
+
+# Node modules
+/frontend/node_modules/
+
+# Coverage reports
+/frontend/coverage/
+/backend/htmlcov/
+
+# Tailwind CSS generated file
+/frontend/src/styles/tailwind.css

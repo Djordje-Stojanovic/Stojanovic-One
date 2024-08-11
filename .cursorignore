@@ -107,3 +107,10 @@ frontend/src/**/*.test.ts
 __pycache__/
 .coverage
 htmlcov/
+
+# SQLite database files
+*.db
+
+# Alembic version files (keep only .gitkeep)
+backend/alembic/versions/*
+!backend/alembic/versions/.gitkeep
