@@ -95,3 +95,22 @@ backend/alembic/versions/*
 
 # Ignore any files in a 'cache' directory
 **/cache/
+
+# Ignore test files
+backend/tests/**/*.py
+backend/.pytest_cache/
+backend/alembic/versions/*
+!backend/alembic/versions/.gitkeep
+frontend/src/**/*.test.tsx
+frontend/src/**/*.test.ts
+*.pyc
+__pycache__/
+.coverage
+htmlcov/
+
+# SQLite database files
+*.db
+
+# Alembic version files (keep only .gitkeep)
+backend/alembic/versions/*
+!backend/alembic/versions/.gitkeep
