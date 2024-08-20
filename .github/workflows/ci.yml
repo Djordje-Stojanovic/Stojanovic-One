@@ -7,6 +7,9 @@ on:
 jobs:
   backend-tests:
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: "sqlite:///./test.db"
+      SECRET_KEY: "thisisasecretkeyforcitesting"
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python
@@ -23,8 +26,9 @@ jobs:
           pytest -v --import-mode=importlib
       - name: Run backend linting
         run: |
-          pip install flake8 mypy
           flake8 backend
+      - name: Run backend type checking
+        run: |
           mypy backend
 
   frontend-tests:
@@ -43,8 +47,11 @@ jobs:
         run: |
           cd frontend
           npm test -- --coverage
-      - name: Run frontend linting and type checking
+      - name: Run frontend linting
         run: |
           cd frontend
           npm run lint
+      - name: Run frontend type checking
+        run: |
+          cd frontend
           npm run type-check
