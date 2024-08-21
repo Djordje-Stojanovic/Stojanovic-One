@@ -22,9 +22,9 @@ const EditUserProfile: React.FC<EditUserProfileProps> = ({ user, onUpdate, onCan
       const result = await updateUserProfile(userData);
       console.log('Update response:', result);
       onUpdate(result);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to update user profile', error);
-      setError(error.message || 'Failed to update user profile. Please try again.');
+      setError(error instanceof Error ? error.message : 'Failed to update user profile. Please try again.');
     }
   };
 

@@ -10,15 +10,18 @@ const api = axios.create({
   },
 });
 
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers['Authorization'] = `Bearer ${token}`;
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token && config.headers) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
   }
-  return config;
-}, (error) => {
-  return Promise.reject(error);
-});
+);
 
 api.interceptors.response.use(
   (response) => response,
@@ -83,13 +86,11 @@ export const updateUserProfile = async (userData: Partial<User>) => {
   }
 };
 
-const handleApiError = (error: any) => {
-  if (axios.isAxiosError(error)) {
-    const serverError = error as AxiosError<any>;
-    if (serverError && serverError.response) {
-      console.error('API Error:', serverError.response.data);
-      throw new Error(serverError.response.data.detail || 'An unexpected error occurred');
-    }
+export const handleApiError = (error: unknown): never => {
+  if (axios.isAxiosError(error) && error.response) {
+    const errorMessage = (error.response.data as { detail?: string }).detail || 'An unexpected error occurred';
+    console.error('API Error:', errorMessage);
+    throw new Error(errorMessage);
   }
   throw error;
 };
