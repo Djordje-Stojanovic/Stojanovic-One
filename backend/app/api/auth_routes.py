@@ -4,10 +4,12 @@ from sqlalchemy.orm import Session
 from datetime import timedelta
 from ..core import auth
 from ..core import database
-from ..models import user as user_model
-from ..schemas import user as user_schemas
+from ..models.user import User as UserModel
+from ..schemas.user import UserCreate, Token, User
 from ..core.config import settings
 from jose import JWTError, jwt
+from ..core.database import get_db
+from ..core.auth import get_current_active_user, authenticate_user, create_access_token, get_password_hash
 
 router = APIRouter()
 

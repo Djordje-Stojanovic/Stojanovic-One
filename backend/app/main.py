@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from .core import database
+from .core.database import Base, engine
 from .models import user
 from .api.endpoints import users
 from .api import auth_routes
