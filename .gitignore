@@ -67,7 +67,6 @@ htmlcov/
 /frontend/src/styles/tailwind.css
 
 # Package lock files
-package-lock.json
 yarn.lock
 
 # Temporary files
