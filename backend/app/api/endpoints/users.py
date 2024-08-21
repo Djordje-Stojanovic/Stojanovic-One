@@ -4,7 +4,7 @@ from typing import List
 from app.crud import user as user_crud
 from app.schemas.user import User, UserCreate, UserUpdate
 from app.core.database import get_db
-from app.core.auth import get_current_active_user
+from app.core.auth import get_current_active_user, get_password_hash
 
 router = APIRouter()
 
@@ -14,7 +14,12 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
     hashed_password = get_password_hash(user.password)
-    db_user = User(email=user.email, hashed_password=hashed_password, first_name=user.first_name, last_name=user.last_name)
+    db_user = User(
+        email=user.email,
+        hashed_password=hashed_password,
+        first_name=user.first_name,
+        last_name=user.last_name
+    )
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
