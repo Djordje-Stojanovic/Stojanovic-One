@@ -11,6 +11,8 @@ app = FastAPI(
     title="Stojanovic-One API",
     description="API for Stojanovic-One project",
     version="1.0.0",
+    docs_url="/docs",  # Swagger UI endpoint
+    redoc_url="/redoc",  # ReDoc endpoint
 )
 
 app.add_middleware(
