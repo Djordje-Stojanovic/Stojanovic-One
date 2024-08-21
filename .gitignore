@@ -66,8 +66,6 @@ htmlcov/
 # Tailwind CSS
 /frontend/src/styles/tailwind.css
 
-# Package lock files
-yarn.lock
 
 # Temporary files
 *.tmp
