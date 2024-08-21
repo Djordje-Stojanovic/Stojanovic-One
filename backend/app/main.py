@@ -1,13 +1,17 @@
 from fastapi import FastAPI
-from .core.database import engine
-from .models.user import Base
+from .core.database import Base, engine
+from .models import user
 from .api.endpoints import users
-from .api import auth
+from .api import auth_routes
 from fastapi.middleware.cors import CORSMiddleware
 
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="Stojanovic-One API", description="API for Stojanovic-One project", version="1.0.0")
+app = FastAPI(
+    title="Stojanovic-One API",
+    description="API for Stojanovic-One project",
+    version="1.0.0",
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -17,8 +21,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(auth.router, prefix="/auth", tags=["auth"])
+app.include_router(auth_routes.router, prefix="/auth", tags=["auth"])
 app.include_router(users.router, prefix="/users", tags=["users"])
+
 
 @app.get("/")
 async def root():

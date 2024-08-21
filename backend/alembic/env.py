@@ -7,11 +7,11 @@ from alembic import context
 
 import os
 import sys
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.core.config import settings
 from app.models.base import Base
-from app.models import user  # Import all models here
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -28,6 +28,7 @@ target_metadata = Base.metadata
 
 # Update this line to use the DATABASE_URL from your settings
 config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+
 
 def run_migrations_offline():
     """Run migrations in 'offline' mode."""
@@ -52,9 +53,7 @@ def run_migrations_online():
     )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()
