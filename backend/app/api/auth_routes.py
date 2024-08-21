@@ -64,10 +64,10 @@ async def refresh_token(refresh_token: str, db: Session = Depends(get_db)):
         payload = jwt.decode(
             refresh_token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
         )
-        email: str = payload.get("sub")
-        if email is None:
+        user_id: str = payload.get("sub", "")
+        if user_id is None:
             raise HTTPException(status_code=401, detail="Invalid refresh token")
-        user = db.query(UserModel).filter(UserModel.email == email).first()
+        user = db.query(UserModel).filter(UserModel.email == user_id).first()
         if user is None:
             raise HTTPException(status_code=401, detail="User not found")
         access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)

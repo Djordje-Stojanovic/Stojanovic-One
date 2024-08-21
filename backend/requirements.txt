@@ -14,3 +14,5 @@ pytest-cov
 httpx
 flake8
 mypy
+types-python-jose
+types-passlib

@@ -12,20 +12,10 @@ router = APIRouter()
 
 @router.post("/", response_model=user_schemas.User)
 def create_user(user: user_schemas.UserCreate, db: Session = Depends(database.get_db)):
-    db_user = db.query(user_schemas.User).filter(user_schemas.User.email == user.email).first()
+    db_user = user_crud.get_user_by_email(db, email=user.email)
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
-    hashed_password = auth.get_password_hash(user.password)
-    db_user = user_schemas.User(
-        email=user.email,
-        hashed_password=hashed_password,
-        first_name=user.first_name,
-        last_name=user.last_name,
-    )
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    return db_user
+    return user_crud.create_user(db=db, user=user)
 
 
 @router.get("/", response_model=List[user_schemas.User])
