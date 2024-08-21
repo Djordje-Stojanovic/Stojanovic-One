@@ -35,7 +35,8 @@ def downgrade() -> None:
     sa.Column('is_active', sa.BOOLEAN(), autoincrement=False, nullable=True),
     sa.Column('first_name', sa.VARCHAR(), autoincrement=False, nullable=True),
     sa.Column('last_name', sa.VARCHAR(), autoincrement=False, nullable=True),
-    sa.Column('created_at', postgresql.TIMESTAMP(timezone=True), server_default=sa.text('now()'), autoincrement=False, nullable=True),
+    sa.Column('created_at', postgresql.TIMESTAMP(timezone=True), 
+              server_default=sa.text('now()'), autoincrement=False, nullable=True),
     sa.Column('updated_at', postgresql.TIMESTAMP(timezone=True), autoincrement=False, nullable=True),
     sa.PrimaryKeyConstraint('id', name='users_pkey')
     )
