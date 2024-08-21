@@ -95,4 +95,12 @@ export const handleApiError = (error: unknown): never => {
   throw error;
 };
 
+export const reportError = async (error: string, componentStack: string) => {
+  try {
+    await api.post('/error-report', { error, componentStack });
+  } catch (err) {
+    console.error('Failed to report error:', err);
+  }
+};
+
 export default api;
