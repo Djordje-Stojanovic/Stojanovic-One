@@ -2,14 +2,21 @@
 
 ## Project Description
 
-Stojanovic-One is a web application built using a modern tech stack, focusing on best practices in software development, including Test-Driven Development (TDD) and continuous integration. This project aims to provide a robust and efficient platform for [main goal or purpose of the project].
+Stojanovic-One is a web application built using a modern tech stack, focusing on best practices in software development, including Test-Driven Development (TDD) and continuous integration. This project aims to provide a robust and efficient platform for user management and authentication.
+
+Key features include:
+
+- User registration and authentication
+- User profile management
+- Secure API endpoints with JWT authentication
+- Responsive frontend design
 
 ## Tech Stack
 
 - Backend: Python 3.11+, FastAPI, SQLAlchemy, PostgreSQL
 - Frontend: React, TypeScript, Tailwind CSS
 - Testing: pytest, Jest, React Testing Library
-- Additional: Alembic, JWT, Axios
+- Additional: Alembic (for database migrations), JWT (for authentication), Axios (for API requests)
 
 ## Getting Started
 
@@ -22,71 +29,105 @@ Stojanovic-One is a web application built using a modern tech stack, focusing on
 ### Installation
 
 1. Clone the repository
+
+   ```
+   git clone https://github.com/your-username/Stojanovic-One.git
+   cd Stojanovic-One
+   ```
+
 2. Set up the backend:
+
    ```
    cd backend
    python -m venv venv
    source venv/bin/activate  # On Windows use `venv\Scripts\activate`
    pip install -r requirements.txt
    ```
-3. Set up the frontend:
+
+3. Set up the database:
+
+   - Create a PostgreSQL database
+   - Create a `.env` file in the `backend` directory with the following content:
+     ```
+     DATABASE_URL=postgresql://username:password@localhost/database_name
+     SECRET_KEY=your_secret_key_here
+     ```
+
+4. Run database migrations:
+
    ```
-   cd frontend
+   alembic upgrade head
+   ```
+
+5. Set up the frontend:
+   ```
+   cd ../frontend
    npm install
    ```
 
 ## Usage
 
-Provide instructions and examples for use. Include screenshots as needed and tutorials.
+1. Start the backend server:
 
-```bash
-# Backend
-cd backend
-uvicorn app.main:app --reload
+   ```
+   cd backend
+   uvicorn app.main:app --reload
+   ```
 
-# Frontend
-cd frontend
-npm start
-```
+2. Start the frontend development server:
+
+   ```
+   cd frontend
+   npm start
+   ```
+
+3. Access the application at `http://localhost:3000`
+
+4. API documentation is available at `http://localhost:8000/docs`
 
 ## Features
 
-List the key features of your project:
+- User Registration: New users can create an account with email and password.
+- User Authentication: Secure login system using JWT tokens.
+- User Profile: Users can view and edit their profile information.
+- Responsive Design: The frontend is built with a mobile-first approach using Tailwind CSS.
+- API Documentation: Comprehensive API documentation using Swagger UI.
 
-- Feature 1
-- Feature 2
-- Feature 3
+## Running Tests
+
+- Backend tests:
+
+  ```
+  cd backend
+  pytest
+  ```
+
+- Frontend tests:
+  ```
+  cd frontend
+  npm test
+  ```
 
 ## Contributing
 
-Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are greatly appreciated.
+We welcome contributions to Stojanovic-One! Please read our [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
 
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+## Continuous Integration
 
-## Tests
+This project uses GitHub Actions for continuous integration. The workflow includes:
 
-Describe and show how to run the tests with code examples.
-
-```bash
-# Backend tests
-cd backend
-pytest -v --import-mode=importlib
-
-# Frontend tests
-cd frontend
-npm test
-```
+- Running backend tests with pytest
+- Running frontend tests with Jest
+- Linting Python code with flake8
+- Type checking Python code with mypy
+- Linting TypeScript code with ESLint
 
 ## License
 
-Distributed under the [Choose a license] License. See `LICENSE` for more information.
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
 
-## Contact
+## Acknowledgments
 
-Djordje Stojanovic - [@your_twitter](https://twitter.com/your_twitter) - email@example.com
-
-Project Link: [https://github.com/Djordje-Stojanovic/Stojanovic-One](https://github.com/Djordje-Stojanovic/Stojanovic-One)
+- FastAPI for the excellent Python web framework
+- React team for the powerful frontend library
+- All contributors who have helped shape this project

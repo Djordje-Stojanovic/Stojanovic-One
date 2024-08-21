@@ -81,6 +81,7 @@ E:\Stojanovic-One/
 │   └── babel.config.js
 ├── .github/
 │   └── workflows/
+│       └── ci.yml
 ├── .cursorignore
 ├── .cursorrules
 ├── .gitignore
