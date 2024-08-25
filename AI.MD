@@ -39,7 +39,11 @@ E:\Stojanovic-One\
 ├── svelte.config.js
 ├── tailwind.config.ts
 ├── tsconfig.json
-└── vite.config.ts
+├── vite.config.ts
+├── .env
+└── src\
+    └── lib\
+        └── supabaseClient.ts
 ```
 
 This structure will be updated as the project evolves.
