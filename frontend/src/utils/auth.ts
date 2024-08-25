@@ -1,7 +1,7 @@
-import api from './api';
+import { setAuthToken, clearAuthToken, login as apiLogin, register as apiRegister } from './api';
 
 export interface LoginData {
-  username: string;
+  email: string;
   password: string;
 }
 
@@ -11,18 +11,15 @@ export interface RegisterData {
 }
 
 export const login = async (data: LoginData) => {
-  const formData = new URLSearchParams();
-  formData.append('username', data.username);
-  formData.append('password', data.password);
-  const response = await api.post('/auth/token', formData, {
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-  });
-  return response.data;
+  const response = await apiLogin(data.email, data.password);
+  setAuthToken(response.access_token);
+  return response;
 };
 
 export const register = async (data: RegisterData) => {
-  const response = await api.post('/auth/register', data);
-  return response.data;
+  await apiRegister(data.email, data.password);
+};
+
+export const logout = () => {
+  clearAuthToken();
 };

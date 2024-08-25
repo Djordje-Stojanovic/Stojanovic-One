@@ -1,39 +1,29 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
-import api from '../utils/api';
+import React, { createContext, useContext, ReactNode } from 'react';
+import { useAuth0, User, LogoutOptions } from '@auth0/auth0-react';
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  login: (token: string) => void;
+  isLoading: boolean;
+  login: () => void;
   logout: () => void;
+  user: User | undefined;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      setIsAuthenticated(true);
-    }
-  }, []);
-
-  const login = (token: string) => {
-    localStorage.setItem('token', token);
-    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    setIsAuthenticated(true);
-  };
-
-  const logout = () => {
-    localStorage.removeItem('token');
-    delete api.defaults.headers.common['Authorization'];
-    setIsAuthenticated(false);
-  };
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const { isAuthenticated, isLoading, loginWithRedirect, logout, user } = useAuth0();
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        isAuthenticated,
+        isLoading,
+        login: loginWithRedirect,
+        logout: () => logout({ logoutParams: { returnTo: window.location.origin } } as LogoutOptions),
+        user,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

@@ -10,80 +10,35 @@ const api = axios.create({
   },
 });
 
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token && config.headers) {
-      config.headers['Authorization'] = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+export const setAuthToken = (token: string) => {
+  api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+};
 
-api.interceptors.response.use(
-  (response) => response,
-  (error: AxiosError) => {
-    if (error.response?.status === 401) {
-      // Handle unauthorized access (e.g., redirect to login)
-      console.error('Unauthorized access');
-      // You might want to dispatch a logout action or redirect to login page here
-    }
-    return Promise.reject(error);
-  }
-);
+export const clearAuthToken = () => {
+  delete api.defaults.headers.common['Authorization'];
+};
 
-export const login = async (email: string, password: string) => {
+export const getUserProfile = async (): Promise<User> => {
   try {
-    const formData = new URLSearchParams();
-    formData.append('username', email);
-    formData.append('password', password);
-    const response = await api.post('/auth/token', formData, {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-    });
+    const response = await api.get('/users/me');
     return response.data;
   } catch (error) {
-    handleApiError(error);
+    return handleApiError(error);
   }
 };
 
-export const register = async (email: string, password: string) => {
-  try {
-    const response = await api.post('/auth/register', { email, password });
-    return response.data;
-  } catch (error) {
-    handleApiError(error);
-  }
+export const register = async (email: string, password: string): Promise<void> => {
+  await api.post('/auth/register', { email, password });
 };
 
-export const getUserProfile = async () => {
-  try {
-    const response = await api.get('/auth/me');
-    return response.data;
-  } catch (error) {
-    handleApiError(error);
-  }
+export const login = async (email: string, password: string): Promise<{ access_token: string }> => {
+  const response = await api.post('/auth/token', { email, password });
+  return response.data;
 };
 
-export const updateUserProfile = async (userData: Partial<User>) => {
-  try {
-    console.log('Sending update request:', userData);
-    const response = await api.put('/users/me', userData);
-    console.log('Update response:', response.data);
-    return response.data;
-  } catch (error) {
-    console.error('Error in updateUserProfile:', error);
-    if (axios.isAxiosError(error) && error.response) {
-      const errorData = error.response.data;
-      console.error('Detailed error:', errorData);
-      throw new Error(JSON.stringify(errorData));
-    }
-    throw error;
-  }
+export const updateUserProfile = async (userData: Partial<User>): Promise<User> => {
+  const response = await api.put('/users/me', userData);
+  return response.data;
 };
 
 export const handleApiError = (error: unknown): never => {
@@ -93,14 +48,6 @@ export const handleApiError = (error: unknown): never => {
     throw new Error(errorMessage);
   }
   throw error;
-};
-
-export const reportError = async (error: string, componentStack: string) => {
-  try {
-    await api.post('/error-report', { error, componentStack });
-  } catch (err) {
-    console.error('Failed to report error:', err);
-  }
 };
 
 export default api;

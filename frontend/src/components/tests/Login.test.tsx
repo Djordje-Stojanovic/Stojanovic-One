@@ -26,15 +26,13 @@ describe('Login component', () => {
     
     render(
       <Router>
-        <AuthProvider>
-          <Login />
-        </AuthProvider>
+        <Login />
       </Router>
     );
 
-    fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: 'test@example.com' } });
-    fireEvent.change(screen.getByLabelText(/Password/i), { target: { value: 'password123' } });
-    fireEvent.click(screen.getByRole('button', { name: /Sign In/i }));
+    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'test@example.com' } });
+    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } });
+    fireEvent.click(screen.getByRole('button', { name: /log in/i }));
 
     await waitFor(() => {
       expect(api.login).toHaveBeenCalledWith('test@example.com', 'password123');

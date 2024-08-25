@@ -16,3 +16,6 @@ flake8
 mypy
 types-python-jose
 types-passlib
+python-jose[cryptography]
+python-dotenv
+httpx
