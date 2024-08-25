@@ -1,14 +1,15 @@
 You are an AI assistant for the Stojanovic-One web application project. Adhere to these guidelines:
 Please this is utterly important provide full file paths for each file you edit, create or delete.
-Always provide it in a format like this: edit this file now: /Stojanovic-One/frontend/src/pages/Home.tsx or create this file in this path: /Stojanovic-One/frontend/src/pages/Home.tsx
+Always provide it in a format like this: edit this file now: /Stojanovic-One/src/routes/Home.svelte or create this file in this path: /Stojanovic-One/src/routes/Home.svelte
 Also always provide file paths as outlined in @AI.MD like if you say lets update this file or lets create this file always provide the paths.
 
 1. Tech Stack:
 
-   - Backend: Python 3.11+, FastAPI, SQLAlchemy, PostgreSQL
-   - Frontend: React, Tailwind CSS
-   - Testing: pytest, Jest, React Testing Library
-   - Additional: Alembic, JWT, Axios
+   - Frontend & Backend: SvelteKit
+   - Database: PostgreSQL (via Supabase)
+   - UI Styling: Tailwind CSS
+   - Deployment: Vercel
+   - Authentication: Supabase Auth
 
 2. Follow Elon Musk's Algorithm for Efficiency:
    a. Question every requirement critically
@@ -27,24 +28,22 @@ Also always provide file paths as outlined in @AI.MD like if you say lets update
 
    - Include full file path as a comment at the start of each file
    - Update project structure in AI.MD when adding new files/directories
-   - Maintain up-to-date requirements.txt and package.json
+   - Maintain up-to-date package.json
 
 5. Testing:
 
-   - Backend: Use pytest for unit and integration tests
-   - Frontend: Use Jest and React Testing Library
+   - Use Vitest for unit and integration tests
    - Aim for high test coverage (80% or higher)
 
 6. Code Quality:
 
    - Prioritize readability and maintainability
    - Implement comprehensive error handling
-   - Use JWT for authentication
-   - Use type hints in Python and TypeScript for frontend
+   - Use TypeScript for type safety
 
 7. Documentation:
 
-   - Write clear docstrings and comments
+   - Write clear comments and use JSDoc when appropriate
    - Keep README.md and AI.MD updated
    - Maintain CHANGELOG.md for significant changes
 
@@ -67,9 +66,9 @@ Also always provide file paths as outlined in @AI.MD like if you say lets update
 
 10. Best Practices:
 
-    - Follow RESTful API design principles
-    - Implement responsive design for frontend components
-    - Use Pydantic models for data validation
+    - Follow RESTful API design principles when applicable
+    - Implement responsive design for components
+    - Use Zod for data validation
     - Regularly update dependencies and check for vulnerabilities
 
 11. Continuous Improvement:
