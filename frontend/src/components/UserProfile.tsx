@@ -1,99 +1,79 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth0 } from '@auth0/auth0-react';
 import { getUserProfile, updateUserProfile } from '../utils/api';
-import api from '../utils/api';
-import EditUserProfile from './EditUserProfile';
 import { User } from '../types/user';
+import EditUserProfile from './EditUserProfile';
 
 const UserProfile: React.FC = () => {
+  const { user: auth0User, isAuthenticated, isLoading, logout } = useAuth0();
   const [user, setUser] = useState<User | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const { isAuthenticated, logout } = useAuth();
-  const navigate = useNavigate();
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchUser = async () => {
-      if (!isAuthenticated) {
-        setIsLoading(false);
-        return;
-      }
+    const fetchUserProfile = async () => {
       try {
-        const userData = await getUserProfile();
-        setUser(userData);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch user profile');
-        if (err instanceof Error && err.message.includes('Unauthorized')) {
-          logout();
-          navigate('/login');
-        }
-      } finally {
-        setIsLoading(false);
+        const profile = await getUserProfile();
+        setUser(profile);
+      } catch (error) {
+        console.error('Failed to fetch user profile', error);
+        setError('Failed to fetch user profile. Please try again.');
       }
     };
-    fetchUser();
-  }, [isAuthenticated, logout, navigate]);
 
-  const handleUpdate = async (updatedUser: Partial<User>) => {
-    try {
-      const result = await updateUserProfile(updatedUser);
-      setUser(result);
-      setIsEditing(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update user profile');
+    if (isAuthenticated) {
+      fetchUserProfile();
     }
-  };
-
-  const handleDelete = async () => {
-    if (window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
-      try {
-        await api.delete('/users/me');
-        localStorage.removeItem('token');
-        logout();
-        navigate('/');
-      } catch (error) {
-        console.error('Failed to delete user account', error);
-        setError('Failed to delete user account. Please try again.');
-      }
-    }
-  };
+  }, [isAuthenticated]);
 
   if (isLoading) {
     return <div>Loading...</div>;
   }
 
-  if (!isAuthenticated || !user) {
+  if (!isAuthenticated || !auth0User) {
     return <div>Please log in to view your profile.</div>;
   }
 
-  if (error) {
-    return <div className="text-red-500">{error}</div>;
-  }
-
-  if (isEditing) {
-    return <EditUserProfile user={user} onUpdate={handleUpdate} onCancel={() => setIsEditing(false)} />;
-  }
+  const handleUpdate = async (updatedUser: User) => {
+    try {
+      const result = await updateUserProfile(updatedUser);
+      setUser(result);
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Failed to update user profile', error);
+      setError('Failed to update user profile. Please try again.');
+    }
+  };
 
   return (
     <div className="max-w-md mx-auto mt-8">
       <h2 className="text-2xl mb-4">User Profile</h2>
-      <p><strong>Email:</strong> {user.email}</p>
-      <p><strong>First Name:</strong> {user.first_name || 'Not set'}</p>
-      <p><strong>Last Name:</strong> {user.last_name || 'Not set'}</p>
-      <button
-        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mt-4 mr-2"
-        onClick={() => setIsEditing(true)}
-      >
-        Edit Profile
-      </button>
-      <button
-        className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mt-4"
-        onClick={handleDelete}
-      >
-        Delete Account
-      </button>
+      {error && <p className="text-red-500 mb-4">{error}</p>}
+      {isEditing ? (
+        <EditUserProfile
+          user={user || { id: 0, first_name: '', last_name: '', email: auth0User.email || '' }}
+          onUpdate={handleUpdate}
+          onCancel={() => setIsEditing(false)}
+        />
+      ) : (
+        <>
+          <img src={auth0User.picture} alt={auth0User.name} className="rounded-full mb-4" />
+          <p><strong>Name:</strong> {user?.first_name} {user?.last_name}</p>
+          <p><strong>Email:</strong> {auth0User.email}</p>
+          <button
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mt-4"
+            onClick={() => setIsEditing(true)}
+          >
+            Edit Profile
+          </button>
+          <button
+            className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mt-4 ml-4"
+            onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
+          >
+            Log Out
+          </button>
+        </>
+      )}
     </div>
   );
 };

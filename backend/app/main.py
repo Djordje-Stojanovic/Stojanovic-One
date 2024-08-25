@@ -1,11 +1,10 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from .core.database import Base, engine
-from .models import user
 from .api.endpoints import users
-from .api import auth_routes
 from fastapi.middleware.cors import CORSMiddleware
 from .core.error_handler import custom_exception_handler
 from .core.logger import logger
+from .core.auth0 import verify_token
 
 Base.metadata.create_all(bind=engine)
 
@@ -27,8 +26,7 @@ app.add_middleware(
 
 app.add_exception_handler(Exception, custom_exception_handler)
 
-app.include_router(auth_routes.router, prefix="/auth", tags=["auth"])
-app.include_router(users.router, prefix="/users", tags=["users"])
+app.include_router(users.router, prefix="/users", tags=["users"], dependencies=[Depends(verify_token)])
 
 @app.get("/")
 async def root():

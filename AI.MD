@@ -20,73 +20,113 @@ This project is a web application built using a modern tech stack, focusing on b
 Always include the full file path as a comment at the top of each file you create or modify. Update this section with new file paths as the project evolves.
 
 ```
-E:\Stojanovic-One/
-├── backend/
-│   ├── app/
-│   │   ├── __init__.py
-│   │   ├── main.py
-│   │   ├── models/
-│   │   │   ├── __init__.py
-│   │   │   ├── base.py
-│   │   │   └── user.py
-│   │   ├── schemas/
-│   │   │   └── user.py
-│   │   ├── api/
-│   │   │   ├── auth.py
-│   │   │   └── endpoints/
-│   │   │       └── users.py
-│   │   ├── core/
-│   │   │   ├── auth.py
-│   │   │   ├── config.py
-│   │   │   └── database.py
-│   │   └── crud/
-│   │       └── user.py
-│   ├── tests/
-│   │   ├── conftest.py
-│   │   └── test_users.py
-│   ├── alembic/
-│   │   ├── versions/
-│   │   ├── env.py
-│   │   └── script.py.mako
-│   ├── requirements.txt
-│   ├── alembic.ini
-│   └── pytest.ini
-├── frontend/
-│   ├── public/
-│   │   └── index.html
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── EditUserProfile.tsx
-│   │   │   ├── Footer.tsx
-│   │   │   ├── Header.tsx
-│   │   │   ├── Login.tsx
-│   │   │   └── UserProfile.tsx
-│   │   ├── pages/
-│   │   │   └── Home.tsx
-│   │   ├── utils/
-│   │   │   ├── api.ts
-│   │   │   └── auth.ts
-│   │   ├── types/
-│   │   │   └── user.ts
-│   │   ├── context/
-│   │   │   └── AuthContext.tsx
-│   │   ├── App.tsx
-│   │   ├── App.css
-│   │   ├── index.tsx
-│   │   └── index.css
-│   ├── package.json
-│   ├── tsconfig.json
-│   ├── tailwind.config.js
-│   ├── postcss.config.js
-│   └── babel.config.js
-├── .github/
-│   └── workflows/
-│       └── ci.yml
+E:\Stojanovic-One\
 ├── .cursorignore
 ├── .cursorrules
+├── .flake8
 ├── .gitignore
 ├── AI.MD
-└── README.md
+├── README.md
+├── .github\
+│   └── workflows\
+│       └── ci.yml
+├── backend\
+│   ├── .env
+│   ├── .pytest_cache\
+│   ├── alembic\
+│   │   ├── versions\
+│   │   ├── env.py
+│   │   ├── README
+│   │   └── script.py.mako
+│   ├── alembic.ini
+│   ├── app\
+│   │   ├── api\
+│   │   │   ├── endpoints\
+│   │   │   │   └── users.py
+│   │   │   └── auth_routes.py
+│   │   ├── core\
+│   │   │   ├── auth.py
+│   │   │   ├── auth0.py
+│   │   │   ├── config.py
+│   │   │   ├── database.py
+│   │   │   ├── error_handler.py
+│   │   │   └── logger.py
+│   │   ├── crud\
+│   │   │   └── user_crud.py
+│   │   ├── models\
+│   │   │   ├── base.py
+│   │   │   ├── user.py
+│   │   │   └── __init__.py
+│   │   ├── schemas\
+│   │   │   └── user.py
+│   │   ├── main.py
+│   │   └── __init__.py
+│   ├── app.log
+│   ├── mypy.ini
+│   ├── pytest.ini
+│   ├── requirements.txt
+│   ├── test.db
+│   └── tests\
+│       ├── conftest.py
+│       ├── test_main.py
+│       └── test_users.py
+└── frontend\
+    ├── .env
+    ├── .eslintrc.js
+    ├── .gitignore
+    ├── babel.config.js
+    ├── coverage\
+    │   ├── lcov-report\
+    │   └── lcov.info
+    ├── jest.config.js
+    ├── package-lock.json
+    ├── package.json
+    ├── postcss.config.js
+    ├── public\
+    │   ├── favicon.ico
+    │   ├── index.html
+    │   ├── logo192.png
+    │   ├── logo512.png
+    │   ├── manifest.json
+    │   └── robots.txt
+    ├── README.md
+    ├── src\
+    │   ├── components\
+    │   │   ├── tests\
+    │   │   │   ├── Login.test.tsx
+    │   │   │   └── UserProfile.test.tsx
+    │   │   ├── EditUserProfile.tsx
+    │   │   ├── ErrorBoundary.tsx
+    │   │   ├── Footer.tsx
+    │   │   ├── Header.tsx
+    │   │   ├── Login.tsx
+    │   │   ├── Navbar.tsx
+    │   │   ├── Register.tsx
+    │   │   └── UserProfile.tsx
+    │   ├── context\
+    │   │   └── AuthContext.tsx
+    │   ├── pages\
+    │   │   ├── tests\
+    │   │   │   └── Home.test.tsx
+    │   │   └── Home.tsx
+    │   ├── types\
+    │   │   └── user.ts
+    │   ├── utils\
+    │   │   ├── tests\
+    │   │   │   └── api.test.ts
+    │   │   ├── api.ts
+    │   │   └── auth.ts
+    │   ├── App.css
+    │   ├── App.test.tsx
+    │   ├── App.tsx
+    │   ├── index.css
+    │   ├── index.tsx
+    │   ├── logo.svg
+    │   ├── react-app-env.d.ts
+    │   ├── reportWebVitals.ts
+    │   └── setupTests.ts
+    ├── tailwind.config.js
+    └── tsconfig.json
 ```
 
 ## Elon Musk's Algorithm for Efficiency
@@ -200,7 +240,6 @@ Apply Elon Musk's efficiency principles throughout this workflow:
    - Check for security vulnerabilities regularly
 
 10. **Version Control**
-
     - Include Alembic migration files in version control
     - This ensures consistent database schema across all environments and developers
     - Review migration files before committing to ensure they accurately represent intended changes
@@ -244,3 +283,7 @@ When working on Windows, use PowerShell for command-line operations. Here are so
 - To remove a directory: `Remove-Item -Recurse -Force directory_name`
 - To create a directory: `New-Item -ItemType Directory -Force -Path directory_name`
 - To set environment variables: `$env:VARIABLE_NAME = "value"`
+
+## Auth0:
+
+- dev-mq6z36ctrsx6y3c0.eu.auth0.com

@@ -1,5 +1,5 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import reportError from '../utils/api';
+import { handleApiError } from '../utils/api';
 
 interface Props {
   children: ReactNode;
@@ -20,7 +20,7 @@ class ErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error("Uncaught error:", error, errorInfo);
-    reportError(error.toString(), { data: errorInfo.componentStack || '' });
+    handleApiError(error);
   }
 
   public render() {

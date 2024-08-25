@@ -65,6 +65,21 @@ Key features include:
    npm install
    ```
 
+## Authentication
+
+This project uses Auth0 for authentication. To set up Auth0:
+
+1. Create an Auth0 account and set up a new application.
+2. Configure the following environment variables in your `.env` file:
+
+   ```
+   REACT_APP_AUTH0_DOMAIN=your-auth0-domain
+   REACT_APP_AUTH0_CLIENT_ID=your-auth0-client-id
+   REACT_APP_AUTH0_AUDIENCE=your-api-identifier
+   ```
+
+3. Update the allowed callback URLs in your Auth0 application settings to include `http://localhost:3000`.
+
 ## Usage
 
 1. Start the backend server:
