@@ -14,9 +14,6 @@ This project is transitioning from a React + FastAPI stack to a SvelteKit Full-S
 
 ## Project Structure
 
-The current project structure is as follows:
-
-```
 E:\Stojanovic-One\
 ├── .gitignore
 ├── .npmrc
@@ -28,23 +25,30 @@ E:\Stojanovic-One\
 ├── package.json
 ├── postcss.config.js
 ├── src\
-│   ├── app.css
-│   ├── app.d.ts
-│   ├── app.html
-│   └── routes\
-│       ├── +layout.svelte
-│       └── +page.svelte
+│ ├── app.css
+│ ├── app.d.ts
+│ ├── app.html
+│ ├── lib\
+│ │ ├── supabaseClient.ts
+│ │ └── stores\
+│ │ └── sessionStore.ts
+│ └── routes\
+│ ├── +layout.svelte
+│ ├── +layout.ts
+│ ├── +page.svelte
+│ ├── login\
+│ │ └── +page.svelte
+│ ├── profile\
+│ │ └── +page.svelte
+│ └── register\
+│ └── +page.svelte
 ├── static\
-│   └── favicon.png
+│ └── favicon.png
 ├── svelte.config.js
 ├── tailwind.config.ts
 ├── tsconfig.json
 ├── vite.config.ts
-├── .env
-└── src\
-    └── lib\
-        └── supabaseClient.ts
-```
+└── .env
 
 This structure will be updated as the project evolves.
 
