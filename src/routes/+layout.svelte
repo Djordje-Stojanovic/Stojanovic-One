@@ -42,6 +42,6 @@
 	</div>
 </nav>
 
-<main class="container mx-auto mt-4">
+<main class="container mx-auto mt-4 dark:bg-gray-800 dark:text-white">
 	<slot />
 </main>
