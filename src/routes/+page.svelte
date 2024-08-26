@@ -1,2 +1,47 @@
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to read the documentation</p>
+<script lang="ts">
+	import { onMount } from 'svelte';
+	import { session } from '$lib/stores/sessionStore';
+	import SubprojectCard from '$lib/components/SubprojectCard.svelte';
+	import { supabase } from '$lib/supabaseClient';
+
+	let subprojects = [];
+
+	onMount(async () => {
+		if ($session) {
+			const { data, error } = await supabase
+				.from('subprojects')
+				.select('id, title, description')
+				.eq('user_id', $session.user.id);
+
+			if (error) {
+				console.error('Error fetching subprojects:', error);
+			} else {
+				subprojects = data;
+			}
+		}
+	});
+</script>
+
+<svelte:head>
+	<title>Dashboard - Stojanovic-One</title>
+</svelte:head>
+
+{#if $session}
+	<div class="container mx-auto px-4 py-8">
+		<h1 class="mb-6 text-3xl font-bold">Your Subprojects</h1>
+		<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+			{#each subprojects as subproject (subproject.id)}
+				<SubprojectCard
+					title={subproject.title}
+					description={subproject.description}
+					id={subproject.id}
+				/>
+			{/each}
+		</div>
+	</div>
+{:else}
+	<div class="container mx-auto px-4 py-8 text-center">
+		<h1 class="mb-4 text-3xl font-bold">Welcome to Stojanovic-One</h1>
+		<p class="text-xl">Please log in to view your dashboard.</p>
+	</div>
+{/if}
