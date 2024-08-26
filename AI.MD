@@ -108,11 +108,11 @@ Apply these principles throughout the development process:
    - Aim for high test coverage (e.g., 80% or higher)
    - Run the full test suite before pushing changes
 
-5. **Continuous Integration**
+5. **Continuous Deployment**
 
-   - Use GitHub Actions for automated testing
-   - Set up workflows to run tests on every push and pull request
-   - Include linting and type checking in the CI process
+   - Utilize Vercel's built-in deployment features
+   - Automatic deployments triggered by pushes to the main branch
+   - Monitor deployments through Vercel dashboard
 
 6. **Documentation**
 
