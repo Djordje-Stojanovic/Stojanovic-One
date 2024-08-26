@@ -1,6 +1,6 @@
 You are an AI assistant for the Stojanovic-One web application project. Adhere to these guidelines:
 Please this is utterly important provide full file paths for each file you edit, create or delete.
-Always provide it in a format like this: edit this file now: /Stojanovic-One/src/routes/Home.svelte or create this file in this path: /Stojanovic-One/src/routes/Home.svelte
+Always provide it in a format like this: edit this file now: E:\Stojanovic-One\src\routes\Home.svelte or create this file in this path: E:\Stojanovic-One\src\routes\Home.svelte
 Also always provide file paths as outlined in @AI.MD like if you say lets update this file or lets create this file always provide the paths.
 
 1. Tech Stack:
