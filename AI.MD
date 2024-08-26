@@ -4,6 +4,10 @@
 
 This project is transitioning from a React + FastAPI stack to a SvelteKit Full-Stack Solution, focusing on best practices in software development, including Test-Driven Development (TDD) and continuous integration.
 
+## Full File Paths:
+
+Always provide it in a format like this: edit this file now: E:\Stojanovic-One\src\routes\Home.svelte or create this file in this path: E:\Stojanovic-One\src\routes\Home.svelte
+
 ## Technology Stack
 
 - Frontend & Backend: SvelteKit
@@ -145,3 +149,5 @@ Apply these principles throughout the development process:
 This document and our workflow are adaptable. As the project evolves, we may adjust our processes and practices. Always look for ways to simplify, optimize, and accelerate our development cycle without compromising quality.
 
 Remember to apply Elon Musk's efficiency principles throughout the development process.
+
+Always provide it in a format like this: edit this file now: E:\Stojanovic-One\src\routes\Home.svelte or create this file in this path: E:\Stojanovic-One\src\routes\Home.svelte

@@ -28,7 +28,7 @@
 
 {#if $session}
 	<div class="container mx-auto px-4 py-8">
-		<h1 class="mb-6 text-3xl font-bold">Your Subprojects</h1>
+		<h1 class="mb-6 text-3xl font-bold dark:text-gray-100">Your Subprojects</h1>
 		<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
 			{#each subprojects as subproject (subproject.id)}
 				<SubprojectCard
@@ -41,7 +41,7 @@
 	</div>
 {:else}
 	<div class="container mx-auto px-4 py-8 text-center">
-		<h1 class="mb-4 text-3xl font-bold">Welcome to Stojanovic-One</h1>
-		<p class="text-xl">Please log in to view your dashboard.</p>
+		<h1 class="mb-4 text-3xl font-bold dark:text-gray-100">Welcome to Stojanovic-One</h1>
+		<p class="text-xl dark:text-gray-300">Please log in to view your dashboard.</p>
 	</div>
 {/if}

@@ -59,17 +59,28 @@
 </script>
 
 <div class="mx-auto mt-10 max-w-md">
-	<h1 class="mb-5 text-2xl font-bold">User Profile</h1>
+	<h1 class="mb-5 text-2xl font-bold dark:text-white">User Profile</h1>
 	<form on:submit|preventDefault={updateProfile} class="space-y-4">
 		<div>
-			<label for="username" class="mb-1 block">Username</label>
-			<input id="username" bind:value={username} class="w-full rounded border p-2" />
+			<label for="username" class="mb-1 block dark:text-gray-300">Username</label>
+			<input
+				id="username"
+				bind:value={username}
+				class="w-full rounded border p-2 dark:bg-gray-700 dark:text-white"
+			/>
 		</div>
 		<div>
-			<label for="website" class="mb-1 block">Website</label>
-			<input id="website" bind:value={website} class="w-full rounded border p-2" />
+			<label for="website" class="mb-1 block dark:text-gray-300">Website</label>
+			<input
+				id="website"
+				bind:value={website}
+				class="w-full rounded border p-2 dark:bg-gray-700 dark:text-white"
+			/>
 		</div>
-		<button type="submit" class="w-full rounded bg-blue-500 p-2 text-white hover:bg-blue-600">
+		<button
+			type="submit"
+			class="w-full rounded bg-blue-500 p-2 text-white hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700"
+		>
 			Update Profile
 		</button>
 	</form>
