@@ -34,7 +34,7 @@
 	}
 </script>
 
-<nav class="bg-secondary-800 text-secondary-100 p-4">
+<nav class="bg-secondary-800 p-4 text-secondary-100">
 	<div class="container mx-auto flex items-center justify-between">
 		<a href="/" class="text-xl font-bold">Home</a>
 		<div class="hidden items-center space-x-4 md:flex">
@@ -61,16 +61,16 @@
 </nav>
 
 {#if isMenuOpen}
-	<div class="bg-secondary-800 text-secondary-100 p-4 md:hidden">
+	<div class="bg-secondary-800 p-4 text-secondary-100 md:hidden">
 		<ThemeToggle />
 		{#if $session}
-			<a href="/profile" class="hover:text-primary-300 block py-2">Profile</a>
-			<button on:click={handleLogout} class="hover:text-primary-300 block w-full py-2 text-left"
+			<a href="/profile" class="block py-2 hover:text-primary-300">Profile</a>
+			<button on:click={handleLogout} class="block w-full py-2 text-left hover:text-primary-300"
 				>Logout</button
 			>
 		{:else}
-			<a href="/login" class="hover:text-primary-300 block py-2">Login</a>
-			<a href="/register" class="hover:text-primary-300 block py-2">Register</a>
+			<a href="/login" class="block py-2 hover:text-primary-300">Login</a>
+			<a href="/register" class="block py-2 hover:text-primary-300">Register</a>
 		{/if}
 	</div>
 {/if}
