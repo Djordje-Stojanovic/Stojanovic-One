@@ -9,12 +9,14 @@
 	onMount(() => {
 		supabase.auth.getSession().then(({ data: { session } }) => {
 			$session = session;
+			if (session) goto('/');
 		});
 
 		const {
 			data: { subscription }
 		} = supabase.auth.onAuthStateChange((_event, session) => {
 			$session = session;
+			if (session) goto('/');
 		});
 
 		return () => subscription.unsubscribe();
