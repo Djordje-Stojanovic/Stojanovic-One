@@ -34,10 +34,13 @@ E:\Stojanovic-One\
 │ ├── app.html
 │ ├── lib\
 │ │ ├── components\
+│ │ │ ├── ErrorMessage.svelte
+│ │ │ ├── LoadingSpinner.svelte
+│ │ │ ├── SubprojectCard.svelte
 │ │ │ └── ThemeToggle.svelte
-│ │ ├── supabaseClient.ts
-│ │ └── stores\
-│ │ └── sessionStore.ts
+│ │ ├── stores\
+│ │ │ └── sessionStore.ts
+│ │ └── supabaseClient.ts
 │ └── routes\
 │ ├── +layout.svelte
 │ ├── +layout.ts
@@ -46,7 +49,10 @@ E:\Stojanovic-One\
 │ │ └── +page.svelte
 │ ├── profile\
 │ │ └── +page.svelte
-│ └── register\
+│ ├── register\
+│ │ └── +page.svelte
+│ └── subprojects\
+│ └── clothing-outfit-calculator\
 │ └── +page.svelte
 ├── static\
 │ └── favicon.png
@@ -174,3 +180,26 @@ When referencing, editing, or creating files, always use the full file path. For
 - Create this file: E:\Stojanovic-One\src\components\NewComponent.svelte
 
 This ensures clarity and prevents confusion when working with multiple files across the whole project.
+
+## Main Routes and Components
+
+- Home: E:\Stojanovic-One\src\routes\+page.svelte
+- Login: E:\Stojanovic-One\src\routes\login\+page.svelte
+- Register: E:\Stojanovic-One\src\routes\register\+page.svelte
+- Profile: E:\Stojanovic-One\src\routes\profile\+page.svelte
+- Clothing Outfit Calculator: E:\Stojanovic-One\src\routes\subprojects\clothing-outfit-calculator\+page.svelte
+
+Components:
+
+- SubprojectCard: E:\Stojanovic-One\src\lib\components\SubprojectCard.svelte
+- ErrorMessage: E:\Stojanovic-One\src\lib\components\ErrorMessage.svelte
+- LoadingSpinner: E:\Stojanovic-One\src\lib\components\LoadingSpinner.svelte
+- ThemeToggle: E:\Stojanovic-One\src\lib\components\ThemeToggle.svelte
+
+Stores:
+
+- Session Store: E:\Stojanovic-One\src\lib\stores\sessionStore.ts
+
+Supabase Client:
+
+- E:\Stojanovic-One\src\lib\supabaseClient.ts

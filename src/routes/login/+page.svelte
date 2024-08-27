@@ -29,17 +29,18 @@
 	}
 
 	const signInWithGoogle = () => {
+		const redirectTo = import.meta.env.DEV
+			? 'http://localhost:5173/auth/callback'
+			: 'https://stojanovic-one.vercel.app/auth/callback';
 		return supabase.auth.signInWithOAuth({
 			provider: 'google',
-			options: {
-				redirectTo: `${import.meta.env.VITE_SITE_URL}/auth/callback`
-			}
+			options: { redirectTo }
 		});
 	};
 </script>
 
 <div
-	class="bg-secondary-50 dark:bg-secondary-900 flex min-h-screen items-center justify-center px-4 py-12 sm:px-6 lg:px-8"
+	class="flex min-h-screen items-center justify-center bg-secondary-50 px-4 py-12 dark:bg-secondary-900 sm:px-6 lg:px-8"
 >
 	<div class="w-full max-w-md space-y-8">
 		<h2 class="mt-6 text-center text-3xl font-extrabold">Sign in to your account</h2>
@@ -101,7 +102,7 @@
 		<div class="mt-4 text-center">
 			<a
 				href="/register"
-				class="text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300 text-sm"
+				class="text-sm text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
 			>
 				Don't have an account? Register
 			</a>
