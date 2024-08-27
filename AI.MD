@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-This project is transitioning from a React + FastAPI stack to a SvelteKit Full-Stack Solution, focusing on best practices in software development, including Test-Driven Development (TDD) and continuous integration.
+This project is a SvelteKit Full-Stack Solution, focusing on best practices in software development, including Test-Driven Development (TDD) and continuous integration. It features a dark mode implementation and uses Supabase for authentication and database management.
 
 ## Full File Paths:
 
@@ -33,6 +33,8 @@ E:\Stojanovic-One\
 │ ├── app.d.ts
 │ ├── app.html
 │ ├── lib\
+│ │ ├── components\
+│ │ │ └── ThemeToggle.svelte
 │ │ ├── supabaseClient.ts
 │ │ └── stores\
 │ │ └── sessionStore.ts
@@ -147,6 +149,18 @@ Apply these principles throughout the development process:
 ## Continuous Improvement
 
 This document and our workflow are adaptable. As the project evolves, we may adjust our processes and practices. Always look for ways to simplify, optimize, and accelerate our development cycle without compromising quality.
+
+## Recent Updates
+
+1. Dark Mode Implementation:
+
+   - Tailwind CSS configured for dark mode
+   - ThemeToggle component created
+   - Dark mode styles applied to existing pages
+   - User preference persistence implemented
+
+2. Layout Update:
+   - Fixed issue with missing `<slot />` in +layout.svelte
 
 Remember to apply Elon Musk's efficiency principles throughout the development process.
 
