@@ -2,10 +2,13 @@
 	import { supabase } from '$lib/supabaseClient';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
+	import ErrorMessage from '$lib/components/ErrorMessage.svelte';
+	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 
 	let email = '';
 	let password = '';
 	let errorMessage = '';
+	let loading = false;
 
 	let redirectedFrom = '';
 	$: {
@@ -14,12 +17,15 @@
 	}
 
 	async function handleLogin() {
+		loading = true;
+		errorMessage = '';
 		const { error } = await supabase.auth.signInWithPassword({ email, password });
 		if (error) {
 			errorMessage = error.message;
 		} else {
 			goto('/');
 		}
+		loading = false;
 	}
 
 	const signInWithGoogle = () => {
@@ -33,12 +39,10 @@
 </script>
 
 <div
-	class="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 dark:bg-gray-900 sm:px-6 lg:px-8"
+	class="bg-secondary-50 dark:bg-secondary-900 flex min-h-screen items-center justify-center px-4 py-12 sm:px-6 lg:px-8"
 >
 	<div class="w-full max-w-md space-y-8">
-		<h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
-			Sign in to your account
-		</h2>
+		<h2 class="mt-6 text-center text-3xl font-extrabold">Sign in to your account</h2>
 		{#if $page.url.searchParams.get('redirected') === 'true'}
 			<div class="mb-4 rounded-md bg-yellow-50 p-4 dark:bg-yellow-900">
 				<p class="text-sm text-yellow-700 dark:text-yellow-200">
@@ -58,7 +62,7 @@
 						type="email"
 						required
 						bind:value={email}
-						class="relative block w-full appearance-none rounded-none rounded-t-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 sm:text-sm"
+						class="input-field relative block w-full rounded-t-md"
 						placeholder="Email address"
 					/>
 				</div>
@@ -70,29 +74,34 @@
 						type="password"
 						required
 						bind:value={password}
-						class="relative block w-full appearance-none rounded-none rounded-b-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 sm:text-sm"
+						class="input-field relative block w-full rounded-b-md"
 						placeholder="Password"
 					/>
 				</div>
 			</div>
 
 			{#if errorMessage}
-				<p class="mt-2 text-center text-sm text-red-600 dark:text-red-400">{errorMessage}</p>
+				<ErrorMessage message={errorMessage} />
 			{/if}
 
 			<div>
 				<button
 					type="submit"
-					class="group relative flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:bg-indigo-500 dark:hover:bg-indigo-600"
+					class="btn-primary group relative flex w-full justify-center rounded-md px-4 py-2 text-sm font-medium"
+					disabled={loading}
 				>
-					Sign in
+					{#if loading}
+						<LoadingSpinner size="w-5 h-5" />
+					{:else}
+						Sign in
+					{/if}
 				</button>
 			</div>
 		</form>
 		<div class="mt-4 text-center">
 			<a
 				href="/register"
-				class="text-sm text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+				class="text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300 text-sm"
 			>
 				Don't have an account? Register
 			</a>
@@ -100,7 +109,7 @@
 		<div class="mt-4">
 			<button
 				on:click={() => signInWithGoogle()}
-				class="flex w-full items-center justify-center space-x-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
+				class="btn-secondary flex w-full items-center justify-center space-x-2 rounded-md px-4 py-2 text-sm font-medium"
 			>
 				<img src="/google-logo.svg" alt="Google logo" class="h-5 w-5" />
 				<span>Sign in with Google</span>
