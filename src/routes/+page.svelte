@@ -5,20 +5,24 @@
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 	import { supabase } from '$lib/supabaseClient';
 
-	let subprojects = [];
+	let subprojects = [
+		{
+			id: 'clothing-outfit-calculator',
+			title: 'Clothing Outfit Calculator',
+			description: 'Mix and match your clothing items to create perfect outfits.',
+			route: '/subprojects/clothing-outfit-calculator'
+		}
+	];
 	let loading = true;
 
 	onMount(async () => {
 		if ($session) {
-			const { data, error } = await supabase
-				.from('subprojects')
-				.select('id, title, description')
-				.eq('user_id', $session.user.id);
+			const { data, error } = await supabase.from('subprojects').select('id, title, description');
 
 			if (error) {
 				console.error('Error fetching subprojects:', error);
-			} else {
-				subprojects = data;
+			} else if (data) {
+				subprojects = [...subprojects, ...data];
 			}
 			loading = false;
 		}
@@ -40,7 +44,7 @@
 					<SubprojectCard
 						title={subproject.title}
 						description={subproject.description}
-						id={subproject.id}
+						route={subproject.route || `/subproject/${subproject.id}`}
 					/>
 				{/each}
 			</div>
