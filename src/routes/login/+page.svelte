@@ -1,10 +1,17 @@
 <script lang="ts">
 	import { supabase } from '$lib/supabaseClient';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
 
 	let email = '';
 	let password = '';
 	let errorMessage = '';
+
+	let redirectedFrom = '';
+	$: {
+		const params = $page.url.searchParams;
+		redirectedFrom = params.get('from') || '';
+	}
 
 	async function handleLogin() {
 		const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -14,6 +21,15 @@
 			goto('/');
 		}
 	}
+
+	const signInWithGoogle = () => {
+		return supabase.auth.signInWithOAuth({
+			provider: 'google',
+			options: {
+				redirectTo: `${import.meta.env.VITE_SITE_URL}/auth/callback`
+			}
+		});
+	};
 </script>
 
 <div
@@ -23,6 +39,14 @@
 		<h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
 			Sign in to your account
 		</h2>
+		{#if $page.url.searchParams.get('redirected') === 'true'}
+			<div class="mb-4 rounded-md bg-yellow-50 p-4 dark:bg-yellow-900">
+				<p class="text-sm text-yellow-700 dark:text-yellow-200">
+					You've been redirected to the login page. Please log in to access {redirectedFrom ||
+						'the requested page'}.
+				</p>
+			</div>
+		{/if}
 		<form class="mt-8 space-y-6" on:submit|preventDefault={handleLogin}>
 			<input type="hidden" name="remember" value="true" />
 			<div class="-space-y-px rounded-md shadow-sm">
@@ -75,7 +99,7 @@
 		</div>
 		<div class="mt-4">
 			<button
-				on:click={() => supabase.auth.signInWithOAuth({ provider: 'google' })}
+				on:click={() => signInWithGoogle()}
 				class="flex w-full items-center justify-center space-x-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
 			>
 				<img src="/google-logo.svg" alt="Google logo" class="h-5 w-5" />
