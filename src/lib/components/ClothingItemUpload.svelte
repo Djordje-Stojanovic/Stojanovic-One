@@ -3,6 +3,9 @@
 	import { session } from '$lib/stores/sessionStore';
 	import { compressImage } from '$lib/utils/imageCompression';
 	import ErrorMessage from './ErrorMessage.svelte';
+	import { createEventDispatcher } from 'svelte';
+
+	const dispatch = createEventDispatcher();
 
 	let file: File | null = null;
 	let name = '';
@@ -37,24 +40,37 @@
 
 			if (error) throw error;
 
+			const { data: publicUrlData } = supabase.storage
+				.from('clothing-items')
+				.getPublicUrl(data.path);
+
+			console.log('Public URL data:', publicUrlData);
+
 			const { data: insertData, error: insertError } = await supabase
 				.from('clothing_items')
 				.insert({
 					user_id: $session.user.id,
 					name,
 					category,
-					image_path: data.path
+					image_path: data.path,
+					public_url: publicUrlData.publicUrl
 				});
 
 			if (insertError) throw insertError;
 
+			console.log('Insert data:', insertData);
+
 			file = null;
 			name = '';
 			category = '';
-			alert('Item uploaded successfully!');
+			dispatch('itemUploaded');
 		} catch (error) {
 			console.error('Error uploading item:', error);
-			errorMessage = 'Failed to upload item. Please try again.';
+			if (error instanceof Error) {
+				errorMessage = `Failed to upload item: ${error.message}`;
+			} else {
+				errorMessage = 'Failed to upload item. Please try again.';
+			}
 		} finally {
 			isUploading = false;
 		}
