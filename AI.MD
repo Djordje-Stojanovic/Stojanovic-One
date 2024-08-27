@@ -173,4 +173,4 @@ When referencing, editing, or creating files, always use the full file path. For
 - Edit this file: E:\Stojanovic-One\src\routes\Home.svelte
 - Create this file: E:\Stojanovic-One\src\components\NewComponent.svelte
 
-This ensures clarity and prevents confusion when working with multiple files across the project.
+This ensures clarity and prevents confusion when working with multiple files across the whole project.
