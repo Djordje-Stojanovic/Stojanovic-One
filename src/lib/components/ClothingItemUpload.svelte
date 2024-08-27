@@ -40,11 +40,11 @@
 
 			if (error) throw error;
 
-			const { data: publicUrlData } = supabase.storage
+			const { data: publicUrlData, error: publicUrlError } = supabase.storage
 				.from('clothing-items')
 				.getPublicUrl(data.path);
 
-			console.log('Public URL data:', publicUrlData);
+			if (publicUrlError) throw publicUrlError;
 
 			const { data: insertData, error: insertError } = await supabase
 				.from('clothing_items')
@@ -57,8 +57,6 @@
 				});
 
 			if (insertError) throw insertError;
-
-			console.log('Insert data:', insertData);
 
 			file = null;
 			name = '';
@@ -118,50 +116,20 @@
 	<div>
 		<label
 			for="image"
-			class="mb-1 block text-sm font-medium text-secondary-50 dark:text-secondary-100">Image</label
+			class="mb-1 block text-sm font-medium text-secondary-700 dark:text-secondary-100">Image</label
 		>
-		<div class="flex w-full items-center justify-center">
-			<label
-				for="image"
-				class="flex h-32 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-secondary-300 bg-secondary-100 transition-colors duration-200 hover:bg-secondary-200 dark:border-secondary-500 dark:bg-secondary-600 dark:hover:bg-secondary-500"
-			>
-				<div class="flex flex-col items-center justify-center pb-6 pt-5">
-					<svg
-						class="mb-4 h-8 w-8 text-secondary-300 dark:text-secondary-400"
-						aria-hidden="true"
-						xmlns="http://www.w3.org/2000/svg"
-						fill="none"
-						viewBox="0 0 20 16"
-					>
-						<path
-							stroke="currentColor"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
-						/>
-					</svg>
-					<p class="mb-2 text-sm text-secondary-300 dark:text-secondary-400">
-						<span class="font-semibold">Click to upload</span> or drag and drop
-					</p>
-					<p class="text-xs text-secondary-300 dark:text-secondary-400">
-						PNG, JPG or GIF (MAX. 800x400px)
-					</p>
-				</div>
-				<input
-					type="file"
-					id="image"
-					accept="image/*"
-					on:change={(e) => (file = e.target.files[0])}
-					class="hidden"
-					required
-				/>
-			</label>
-		</div>
+		<input
+			type="file"
+			id="image"
+			accept="image/*"
+			on:change={(e) => (file = e.target.files[0])}
+			class="input-field w-full bg-secondary-100 dark:bg-secondary-600"
+			required
+		/>
 	</div>
 
 	{#if file}
-		<p class="text-sm text-secondary-200 dark:text-secondary-300">Selected file: {file.name}</p>
+		<p class="text-sm text-secondary-700 dark:text-secondary-300">Selected file: {file.name}</p>
 	{/if}
 
 	{#if errorMessage}

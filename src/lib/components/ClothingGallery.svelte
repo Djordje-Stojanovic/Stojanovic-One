@@ -13,7 +13,7 @@
 	let selectedCategory = 'All';
 	let searchQuery = '';
 
-	const categories = ['All', 'Tops', 'Bottoms', 'Shoes', 'Jewelry', 'Bags'];
+	const categories = ['All', 'Tops', 'Bottoms', 'Dresses', 'Shoes', 'Accessories'];
 
 	onMount(async () => {
 		await loadItems();
@@ -97,7 +97,15 @@
 	<div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
 		{#each filteredItems as item (item.id)}
 			<div class="rounded-lg bg-white p-2 shadow-md dark:bg-gray-800">
-				<img src={item.public_url} alt={item.name} class="h-40 w-full object-cover" />
+				<img
+					src={item.public_url}
+					alt={item.name}
+					class="h-40 w-full object-cover"
+					on:error={(e) => {
+						console.error(`Failed to load image: ${item.public_url}`);
+						e.target.src = 'https://via.placeholder.com/150?text=Image+Not+Found';
+					}}
+				/>
 				<p class="mt-2 text-sm font-semibold">{item.name}</p>
 				<p class="text-xs text-gray-500">{item.category}</p>
 			</div>
