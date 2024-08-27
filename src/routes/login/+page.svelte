@@ -73,5 +73,14 @@
 				Don't have an account? Register
 			</a>
 		</div>
+		<div class="mt-4">
+			<button
+				on:click={() => supabase.auth.signInWithOAuth({ provider: 'google' })}
+				class="flex w-full items-center justify-center space-x-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
+			>
+				<img src="/google-logo.svg" alt="Google logo" class="h-5 w-5" />
+				<span>Sign in with Google</span>
+			</button>
+		</div>
 	</div>
 </div>

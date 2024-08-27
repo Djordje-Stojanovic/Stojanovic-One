@@ -1,37 +1,34 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 
-	let isDarkMode = false;
+	let isDarkMode = true;
 
 	onMount(() => {
 		const savedTheme = localStorage.getItem('theme');
-		isDarkMode = savedTheme === 'dark';
-		updateTheme();
+		isDarkMode = savedTheme !== 'light';
+		setTheme(isDarkMode);
 	});
 
 	function toggleTheme() {
 		isDarkMode = !isDarkMode;
-		updateTheme();
+		setTheme(isDarkMode);
 	}
 
-	function updateTheme() {
-		if (isDarkMode) {
-			document.documentElement.classList.add('dark');
-			localStorage.setItem('theme', 'dark');
-		} else {
-			document.documentElement.classList.remove('dark');
-			localStorage.setItem('theme', 'light');
-		}
+	function setTheme(dark: boolean) {
+		localStorage.setItem('theme', dark ? 'dark' : 'light');
+		document.documentElement.classList.toggle('dark', dark);
 	}
 </script>
 
-<button
-	on:click={toggleTheme}
-	class="rounded-full p-2 text-gray-500 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-700"
-	aria-label="Toggle dark mode"
->
+<button on:click={toggleTheme} class="rounded-full p-2 hover:bg-gray-700 dark:hover:bg-gray-600">
 	{#if isDarkMode}
-		<svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+		<svg
+			class="h-6 w-6"
+			fill="none"
+			stroke="currentColor"
+			viewBox="0 0 24 24"
+			xmlns="http://www.w3.org/2000/svg"
+		>
 			<path
 				stroke-linecap="round"
 				stroke-linejoin="round"
@@ -40,7 +37,13 @@
 			/>
 		</svg>
 	{:else}
-		<svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+		<svg
+			class="h-6 w-6"
+			fill="none"
+			stroke="currentColor"
+			viewBox="0 0 24 24"
+			xmlns="http://www.w3.org/2000/svg"
+		>
 			<path
 				stroke-linecap="round"
 				stroke-linejoin="round"

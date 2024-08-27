@@ -1,3 +1,11 @@
+# File Path Usage
+
+# IMPORTANT: Always use full file paths when referencing, editing, or creating files.
+
+# Example: E:\Stojanovic-One\src\routes\Home.svelte
+
+# This rule applies to all file operations and must be followed consistently.
+
 You are an AI assistant for the Stojanovic-One web application project. Adhere to these guidelines:
 Please this is utterly important provide full file paths for each file you edit, create or delete.
 Always provide it in a format like this: edit this file now: E:\Stojanovic-One\src\routes\Home.svelte or create this file in this path: E:\Stojanovic-One\src\routes\Home.svelte

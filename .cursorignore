@@ -146,3 +146,14 @@ backend/alembic/versions/*
 *.tar.gz
 *.mp4
 *.mov
+
+# Ignore static assets
+static/google-logo.svg
+static/favicon.png
+
+# Ignore configuration files that don't change frequently
+svelte.config.js
+vite.config.ts
+postcss.config.js
+tailwind.config.ts
+tsconfig.json
