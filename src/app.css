@@ -23,4 +23,10 @@
   .input-field {
     @apply rounded-md border border-secondary-300 bg-white px-3 py-2 text-secondary-900 placeholder-secondary-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-secondary-600 dark:bg-secondary-800 dark:text-secondary-100 dark:placeholder-secondary-500;
   }
+  .bg-content-light {
+    @apply bg-secondary-100 text-secondary-900;
+  }
+  .bg-content-dark {
+    @apply bg-secondary-800 text-secondary-50;
+  }
 }
