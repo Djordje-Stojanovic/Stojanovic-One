@@ -165,3 +165,12 @@ This document and our workflow are adaptable. As the project evolves, we may adj
 Remember to apply Elon Musk's efficiency principles throughout the development process.
 
 Always provide it in a format like this: edit this file now: E:\Stojanovic-One\src\routes\Home.svelte or create this file in this path: E:\Stojanovic-One\src\routes\Home.svelte
+
+## File Path Importance
+
+When referencing, editing, or creating files, always use the full file path. For example:
+
+- Edit this file: E:\Stojanovic-One\src\routes\Home.svelte
+- Create this file: E:\Stojanovic-One\src\components\NewComponent.svelte
+
+This ensures clarity and prevents confusion when working with multiple files across the project.
