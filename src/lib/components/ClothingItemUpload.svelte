@@ -12,7 +12,8 @@
 
 	const categories = ['Tops', 'Bottoms', 'Dresses', 'Shoes', 'Accessories'];
 
-	async function handleSubmit() {
+	async function handleSubmit(event: Event) {
+		event.preventDefault();
 		if (!$session) {
 			errorMessage = 'You must be logged in to upload items.';
 			return;
@@ -61,7 +62,7 @@
 </script>
 
 <form
-	on:submit|preventDefault={handleSubmit}
+	on:submit={handleSubmit}
 	class="space-y-6 rounded-lg bg-white p-6 shadow-md dark:bg-secondary-700"
 >
 	<div>
