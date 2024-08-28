@@ -31,8 +31,9 @@
 
 	async function handleSubmit(event: Event) {
 		event.preventDefault();
-		if (!$session) {
-			errorMessage = 'You must be logged in to upload items.';
+		if (!$session || !$session.user) {
+			errorMessage =
+				'You must be logged in to upload items. Please refresh the page and try again.';
 			return;
 		}
 

@@ -3,19 +3,28 @@
 	import ClothingItemUpload from '$lib/components/ClothingItemUpload.svelte';
 	import ClothingGallery from '$lib/components/ClothingGallery.svelte';
 	import OutfitCreator from '$lib/components/OutfitCreator.svelte';
+	import { onMount } from 'svelte';
 	let refreshGallery: () => Promise<void>;
 	let activeComponent = 'gallery';
 
 	function setActiveComponent(component: string) {
 		activeComponent = component;
 	}
+
+	onMount(() => {
+		console.log('Session state:', $session);
+	});
 </script>
 
 <svelte:head>
 	<title>Clothing Outfit Calculator - Stojanovic-One</title>
 </svelte:head>
 
-{#if $session}
+{#if $session === undefined}
+	<div class="flex h-screen items-center justify-center">
+		<p class="text-xl text-gray-700 dark:text-gray-300">Loading...</p>
+	</div>
+{:else if $session}
 	<div class="flex h-screen bg-gray-100 dark:bg-gray-900">
 		<!-- Sidebar for desktop -->
 		<aside class="hidden w-64 bg-white shadow-md dark:bg-gray-800 md:block">
