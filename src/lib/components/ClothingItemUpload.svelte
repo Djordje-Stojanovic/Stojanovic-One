@@ -15,6 +15,20 @@
 
 	const categories = ['Tops', 'Bottoms', 'Dresses', 'Shoes', 'Accessories'];
 
+	async function checkItemCount() {
+		const { count, error } = await supabase
+			.from('clothing_items')
+			.select('id', { count: 'exact' })
+			.eq('user_id', $session.user.id);
+
+		if (error) {
+			console.error('Error checking item count:', error);
+			return false;
+		}
+
+		return count < 100;
+	}
+
 	async function handleSubmit(event: Event) {
 		event.preventDefault();
 		if (!$session) {
@@ -24,6 +38,13 @@
 
 		if (!file || !name || !category) {
 			errorMessage = 'Please fill in all fields and select an image.';
+			return;
+		}
+
+		const canUpload = await checkItemCount();
+		if (!canUpload) {
+			errorMessage =
+				'You have reached the maximum limit of 100 items. Please delete some items before uploading new ones.';
 			return;
 		}
 
