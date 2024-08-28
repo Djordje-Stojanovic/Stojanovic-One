@@ -88,6 +88,42 @@ Apply these principles throughout the development process:
 10. Admit when there's uncertainty rather than guessing.
 11. Always include file paths at the top of each code file and update the Project Structure section.
 
+## Design and User Experience Guidelines
+
+1. Dark Mode Compatibility:
+
+   - Ensure all components and pages support dark mode
+   - Use Tailwind CSS classes for dark mode styling (e.g., dark:bg-gray-800)
+   - Test all features in both light and dark modes
+
+2. Mobile-Friendly and Responsive Design:
+
+   - Design for mobile-first, then scale up for larger screens
+   - Use responsive Tailwind CSS classes (e.g., sm:, md:, lg:)
+   - Test on various device sizes and orientations
+
+3. Performance Optimization:
+
+   - Minimize unnecessary re-renders
+   - Optimize images and assets
+   - Use lazy loading for images and components when appropriate
+   - Implement code splitting for better initial load times
+
+4. Modern and Beautiful UI:
+
+   - Use consistent color schemes and typography
+   - Implement smooth transitions and animations
+   - Ensure proper spacing and alignment of elements
+   - Use modern UI components and design patterns
+
+5. Accessibility:
+   - Ensure proper color contrast ratios
+   - Use semantic HTML elements
+   - Implement proper ARIA attributes where necessary
+   - Test with screen readers and keyboard navigation
+
+Always consider these guidelines when developing new features or updating existing ones.
+
 ## Development Workflow
 
 1. **Issue Management**

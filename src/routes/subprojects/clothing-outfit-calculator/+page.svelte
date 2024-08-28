@@ -2,6 +2,7 @@
 	import { session } from '$lib/stores/sessionStore';
 	import ClothingItemUpload from '$lib/components/ClothingItemUpload.svelte';
 	import ClothingGallery from '$lib/components/ClothingGallery.svelte';
+	import OutfitCreator from '$lib/components/OutfitCreator.svelte';
 	let refreshGallery: () => Promise<void>;
 </script>
 
@@ -30,6 +31,12 @@
 				</h2>
 				<ClothingGallery bind:refreshData={refreshGallery} />
 			</div>
+		</div>
+		<div class="mt-8 rounded-lg bg-secondary-100 p-6 shadow-md dark:bg-secondary-800">
+			<h2 class="mb-4 text-xl font-semibold text-secondary-900 dark:text-secondary-50">
+				Create Your Outfit
+			</h2>
+			<OutfitCreator />
 		</div>
 	</div>
 {:else}

@@ -90,3 +90,10 @@ Also always provide file paths as outlined in @AI.MD like if you say lets update
     - Use cross-platform Node.js commands when possible
 
 Always refer to AI.MD for detailed project-specific guidelines and up-to-date practices. Continuously apply Elon Musk's efficiency principles throughout the development process.
+
+13. Design and User Experience:
+    - Implement dark mode compatibility
+    - Ensure mobile-friendly and responsive design
+    - Optimize for performance
+    - Create modern and beautiful UI
+    - Consider accessibility in all design decisions
