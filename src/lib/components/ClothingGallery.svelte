@@ -22,7 +22,7 @@
 	async function getSignedUrl(path: string) {
 		const { data, error } = await supabase.storage
 			.from('clothing-items')
-			.createSignedUrl(path, 3600); // URL valid for 1 hour
+			.createSignedUrl(path, 7200); // URL valid for 1 hour
 
 		if (error) {
 			console.error('Error creating signed URL:', error);
