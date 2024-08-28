@@ -93,11 +93,21 @@
 			sortDirection = 'asc';
 		}
 	}
-
-	export function toggleAddForm() {
-		showAddForm = !showAddForm;
-	}
 </script>
+
+<h2 class="mb-4 text-2xl font-semibold text-gray-800 dark:text-gray-200">Watchlist</h2>
+<div class="mb-4">
+	<button
+		on:click={() => (showAddForm = !showAddForm)}
+		class="rounded bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600"
+	>
+		{showAddForm ? 'Cancel' : 'Add New Stock'}
+	</button>
+</div>
+
+{#if showAddForm}
+	<AddStockForm on:stockAdded={handleStockAdded} />
+{/if}
 
 <div class="mb-4">
 	<input

@@ -2,8 +2,10 @@
 	import { session } from '$lib/stores/sessionStore';
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 	import Watchlist from '$lib/components/Watchlist.svelte';
+	import DueDiligence from '$lib/components/DueDiligence.svelte';
 
 	let activeSection = 'watchlist';
+	let watchlistComponent;
 
 	function setActiveSection(section: string) {
 		activeSection = section;
@@ -107,19 +109,27 @@
 				</p>
 
 				{#if activeSection === 'watchlist'}
-					<Watchlist />
+					<h2 class="mb-4 text-2xl font-semibold text-gray-800 dark:text-gray-200">Watchlist</h2>
+					<div class="mb-4">
+						<button
+							on:click={() => {
+								if (typeof watchlistComponent?.toggleAddForm === 'function') {
+									watchlistComponent.toggleAddForm();
+								}
+							}}
+							class="rounded bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600"
+						>
+							Add New Stock
+						</button>
+					</div>
+					<Watchlist bind:this={watchlistComponent} />
 				{:else if activeSection === 'due-diligence'}
-					<h2 class="mb-4 text-2xl font-semibold text-gray-800 dark:text-gray-200">
-						Due Diligence
-					</h2>
-					<p class="text-gray-700 dark:text-gray-300">
-						Your due diligence tools and content will go here.
-					</p>
+					<DueDiligence />
 				{:else if activeSection === 'decision-lists'}
 					<h2 class="mb-4 text-2xl font-semibold text-gray-800 dark:text-gray-200">
 						Decision Lists
 					</h2>
-					<p class="text-gray-700 dark:text-gray-300">Your decision lists will go here.</p>
+					<p class="text-gray-700 dark:text-gray-300">Your decision lists content will go here.</p>
 				{/if}
 			</main>
 

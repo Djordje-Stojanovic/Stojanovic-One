@@ -2,17 +2,15 @@
 	import { supabase } from '$lib/supabaseClient';
 	import { session } from '$lib/stores/sessionStore';
 	import { onMount } from 'svelte';
-	import AddStockForm from './AddStockForm.svelte';
 
-	let watchlistItems = [];
+	let dueDiligenceItems = [];
 	let loading = true;
-	let showAddForm = false;
 
 	let sortField = 'symbol';
 	let sortDirection = 'asc';
 	let filterText = '';
 
-	$: sortedAndFilteredItems = watchlistItems
+	$: sortedAndFilteredItems = dueDiligenceItems
 		.filter(
 			(item) =>
 				item.symbol.toLowerCase().includes(filterText.toLowerCase()) ||
@@ -27,62 +25,22 @@
 
 	onMount(async () => {
 		if ($session) {
-			await fetchWatchlistItems();
+			await fetchDueDiligenceItems();
 		}
 	});
 
-	async function fetchWatchlistItems() {
+	async function fetchDueDiligenceItems() {
 		const { data, error } = await supabase
-			.from('watchlist_items')
+			.from('due_diligence_items')
 			.select('*')
 			.eq('user_id', $session.user.id);
 
 		if (error) {
-			console.error('Error fetching watchlist items:', error);
+			console.error('Error fetching due diligence items:', error);
 		} else {
-			watchlistItems = data;
+			dueDiligenceItems = data;
 		}
 		loading = false;
-	}
-
-	function handleStockAdded(event) {
-		watchlistItems = [event.detail, ...watchlistItems];
-		showAddForm = false;
-	}
-
-	async function moveToDD(item) {
-		const { data, error } = await supabase
-			.from('due_diligence_items')
-			.insert({
-				user_id: $session.user.id,
-				watchlist_item_id: item.id,
-				symbol: item.symbol,
-				company_name: item.company_name,
-				sector: item.sector,
-				current_price: item.current_price,
-				target_price: item.target_price,
-				notes: item.notes,
-				checklist: {}
-			})
-			.select();
-
-		if (error) {
-			console.error('Error moving item to Due Diligence:', error);
-		} else {
-			// Remove item from watchlist
-			watchlistItems = watchlistItems.filter((i) => i.id !== item.id);
-			await supabase.from('watchlist_items').delete().eq('id', item.id);
-		}
-	}
-
-	async function deleteStock(item) {
-		const { error } = await supabase.from('watchlist_items').delete().eq('id', item.id);
-
-		if (error) {
-			console.error('Error deleting stock:', error);
-		} else {
-			watchlistItems = watchlistItems.filter((i) => i.id !== item.id);
-		}
 	}
 
 	function toggleSort(field) {
@@ -94,10 +52,45 @@
 		}
 	}
 
-	export function toggleAddForm() {
-		showAddForm = !showAddForm;
+	async function updateChecklist(item, checklistItem) {
+		const updatedChecklist = { ...item.checklist, [checklistItem]: !item.checklist[checklistItem] };
+		const { error } = await supabase
+			.from('due_diligence_items')
+			.update({ checklist: updatedChecklist })
+			.eq('id', item.id);
+
+		if (error) {
+			console.error('Error updating checklist:', error);
+		} else {
+			item.checklist = updatedChecklist;
+		}
+	}
+
+	async function moveToWatchlist(item) {
+		const { data, error } = await supabase
+			.from('watchlist_items')
+			.insert({
+				user_id: $session.user.id,
+				symbol: item.symbol,
+				company_name: item.company_name,
+				sector: item.sector,
+				current_price: item.current_price,
+				target_price: item.target_price,
+				notes: item.notes
+			})
+			.select();
+
+		if (error) {
+			console.error('Error moving item to Watchlist:', error);
+		} else {
+			// Remove item from due diligence
+			dueDiligenceItems = dueDiligenceItems.filter((i) => i.id !== item.id);
+			await supabase.from('due_diligence_items').delete().eq('id', item.id);
+		}
 	}
 </script>
+
+<h2 class="mb-4 text-2xl font-semibold text-gray-800 dark:text-gray-200">Due Diligence</h2>
 
 <div class="mb-4">
 	<input
@@ -121,7 +114,7 @@
 </div>
 
 {#if loading}
-	<p>Loading watchlist items...</p>
+	<p>Loading due diligence items...</p>
 {:else}
 	<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
 		{#each sortedAndFilteredItems as item (item.id)}
@@ -132,18 +125,28 @@
 				<p class="text-sm text-gray-600 dark:text-gray-400">Current Price: ${item.current_price}</p>
 				<p class="text-sm text-gray-600 dark:text-gray-400">Target Price: ${item.target_price}</p>
 				<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">{item.notes}</p>
+				<h4 class="text-md mt-4 font-semibold text-gray-800 dark:text-gray-200">Checklist</h4>
+				<ul class="mt-2">
+					{#each ['Financial Statements', 'Management Team', 'Competitive Landscape', 'Growth Potential', 'Risks'] as checklistItem}
+						<li>
+							<label class="flex items-center">
+								<input
+									type="checkbox"
+									checked={item.checklist?.[checklistItem] || false}
+									on:change={() => updateChecklist(item, checklistItem)}
+									class="form-checkbox h-4 w-4 text-primary-600 transition duration-150 ease-in-out"
+								/>
+								<span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{checklistItem}</span>
+							</label>
+						</li>
+					{/each}
+				</ul>
 				<div class="mt-4 flex justify-between">
 					<button
-						on:click={() => moveToDD(item)}
+						on:click={() => moveToWatchlist(item)}
 						class="rounded bg-secondary-600 px-3 py-1 text-sm text-white transition-colors hover:bg-secondary-700 dark:bg-secondary-500 dark:hover:bg-secondary-600"
 					>
-						Move to Due Diligence
-					</button>
-					<button
-						on:click={() => deleteStock(item)}
-						class="rounded bg-red-600 px-3 py-1 text-sm text-white transition-colors hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600"
-					>
-						Delete
+						Move to Watchlist
 					</button>
 				</div>
 			</div>
