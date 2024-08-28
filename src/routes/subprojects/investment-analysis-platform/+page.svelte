@@ -3,6 +3,14 @@
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 	import Watchlist from '$lib/components/Watchlist.svelte';
 	import DueDiligence from '$lib/components/DueDiligence.svelte';
+	import BuyReady from '$lib/components/BuyReady.svelte';
+	import TooExpensive from '$lib/components/TooExpensive.svelte';
+	import PassForNow from '$lib/components/PassForNow.svelte';
+	import PermanentPass from '$lib/components/PermanentPass.svelte';
+	import CoreHoldings from '$lib/components/CoreHoldings.svelte';
+	import RegularReview from '$lib/components/RegularReview.svelte';
+	import SellReady from '$lib/components/SellReady.svelte';
+	import Sold from '$lib/components/Sold.svelte';
 	import AddStockForm from '$lib/components/AddStockForm.svelte';
 
 	let activeSection = 'watchlist';
@@ -37,75 +45,19 @@
 	<div class="flex min-h-screen flex-col bg-gray-100 dark:bg-gray-900 lg:flex-row">
 		<!-- Sidebar for desktop -->
 		<aside class="hidden w-64 bg-white shadow-md dark:bg-gray-800 lg:block">
-			<nav class="mt-5 px-2">
-				<button
-					on:click={() => setActiveSection('watchlist')}
-					class="group mb-2 flex w-full items-center rounded-md px-2 py-2 text-sm font-medium transition-colors {activeSection ===
-					'watchlist'
-						? 'bg-primary-100 text-primary-900 dark:bg-primary-900 dark:text-primary-100'
-						: 'text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700'}"
-					aria-current={activeSection === 'watchlist' ? 'page' : undefined}
-				>
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						class="mr-3 h-5 w-5"
-						viewBox="0 0 20 20"
-						fill="currentColor"
+			<nav class="space-y-1">
+				{#each ['watchlist', 'due-diligence', 'buy-ready', 'too-expensive', 'pass-for-now', 'permanent-pass', 'core-holdings', 'regular-review', 'sell-ready', 'sold'] as section}
+					<button
+						on:click={() => setActiveSection(section)}
+						class="group mb-2 flex w-full items-center rounded-md px-2 py-2 text-sm font-medium transition-colors {activeSection ===
+						section
+							? 'bg-primary-100 text-primary-900 dark:bg-primary-900 dark:text-primary-100'
+							: 'text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700'}"
+						aria-current={activeSection === section ? 'page' : undefined}
 					>
-						<path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-						<path
-							fill-rule="evenodd"
-							d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
-							clip-rule="evenodd"
-						/>
-					</svg>
-					Watchlist
-				</button>
-				<button
-					on:click={() => setActiveSection('due-diligence')}
-					class="group mb-2 flex w-full items-center rounded-md px-2 py-2 text-sm font-medium transition-colors {activeSection ===
-					'due-diligence'
-						? 'bg-primary-100 text-primary-900 dark:bg-primary-900 dark:text-primary-100'
-						: 'text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700'}"
-					aria-current={activeSection === 'due-diligence' ? 'page' : undefined}
-				>
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						class="mr-3 h-5 w-5"
-						viewBox="0 0 20 20"
-						fill="currentColor"
-					>
-						<path
-							fill-rule="evenodd"
-							d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm2 10a1 1 0 10-2 0v3a1 1 0 102 0v-3zm2-3a1 1 0 011 1v5a1 1 0 11-2 0v-5a1 1 0 011-1zm4-1a1 1 0 10-2 0v7a1 1 0 102 0V8z"
-							clip-rule="evenodd"
-						/>
-					</svg>
-					Due Diligence
-				</button>
-				<button
-					on:click={() => setActiveSection('decision-lists')}
-					class="group flex w-full items-center rounded-md px-2 py-2 text-sm font-medium transition-colors {activeSection ===
-					'decision-lists'
-						? 'bg-primary-100 text-primary-900 dark:bg-primary-900 dark:text-primary-100'
-						: 'text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700'}"
-					aria-current={activeSection === 'decision-lists' ? 'page' : undefined}
-				>
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						class="mr-3 h-5 w-5"
-						viewBox="0 0 20 20"
-						fill="currentColor"
-					>
-						<path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-						<path
-							fill-rule="evenodd"
-							d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z"
-							clip-rule="evenodd"
-						/>
-					</svg>
-					Decision Lists
-				</button>
+						{section.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
+					</button>
+				{/each}
 			</nav>
 		</aside>
 
@@ -117,13 +69,9 @@
 				<h1 class="mb-6 text-3xl font-bold text-gray-900 dark:text-gray-100">
 					Investment Analysis Platform
 				</h1>
-				<p class="mb-8 text-gray-700 dark:text-gray-300">
-					Welcome to your personal Investment Analysis Platform!
-				</p>
-
 				{#if activeSection === 'watchlist'}
-					<h2 class="mb-4 text-2xl font-semibold text-gray-800 dark:text-gray-200">Watchlist</h2>
-					<div class="mb-4">
+					<div class="mb-4 flex justify-between">
+						<h2 class="text-2xl font-semibold text-gray-800 dark:text-gray-200">Watchlist</h2>
 						<button
 							on:click={toggleAddForm}
 							class="rounded bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600"
@@ -137,82 +85,39 @@
 					<Watchlist bind:this={watchlistComponent} />
 				{:else if activeSection === 'due-diligence'}
 					<DueDiligence />
-				{:else if activeSection === 'decision-lists'}
-					<h2 class="mb-4 text-2xl font-semibold text-gray-800 dark:text-gray-200">
-						Decision Lists
-					</h2>
-					<p class="text-gray-700 dark:text-gray-300">Your decision lists content will go here.</p>
+				{:else if activeSection === 'buy-ready'}
+					<BuyReady />
+				{:else if activeSection === 'too-expensive'}
+					<TooExpensive />
+				{:else if activeSection === 'pass-for-now'}
+					<PassForNow />
+				{:else if activeSection === 'permanent-pass'}
+					<PermanentPass />
+				{:else if activeSection === 'core-holdings'}
+					<CoreHoldings />
+				{:else if activeSection === 'regular-review'}
+					<RegularReview />
+				{:else if activeSection === 'sell-ready'}
+					<SellReady />
+				{:else if activeSection === 'sold'}
+					<Sold />
 				{/if}
 			</main>
 
 			<!-- Floating navigation bar for mobile -->
 			<div class="fixed bottom-0 left-0 right-0 z-50 bg-white shadow-md dark:bg-gray-800 lg:hidden">
 				<div class="flex justify-around">
-					<button
-						on:click={() => setActiveSection('watchlist')}
-						class="flex flex-1 flex-col items-center py-3 {activeSection === 'watchlist'
-							? 'text-primary-600 dark:text-primary-400'
-							: 'text-gray-500 dark:text-gray-400'}"
-						aria-current={activeSection === 'watchlist' ? 'page' : undefined}
-					>
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							class="h-6 w-6"
-							viewBox="0 0 20 20"
-							fill="currentColor"
+					{#each ['watchlist', 'due-diligence', 'buy-ready', 'too-expensive', 'pass-for-now', 'permanent-pass', 'core-holdings', 'regular-review', 'sell-ready', 'sold'] as section}
+						<button
+							on:click={() => setActiveSection(section)}
+							class="flex flex-1 flex-col items-center py-3 {activeSection === section
+								? 'text-primary-600 dark:text-primary-400'
+								: 'text-gray-500 dark:text-gray-400'}"
+							aria-current={activeSection === section ? 'page' : undefined}
 						>
-							<path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-							<path
-								fill-rule="evenodd"
-								d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
-								clip-rule="evenodd"
-							/>
-						</svg>
-						<span class="text-xs">Watchlist</span>
-					</button>
-					<button
-						on:click={() => setActiveSection('due-diligence')}
-						class="flex flex-1 flex-col items-center py-3 {activeSection === 'due-diligence'
-							? 'text-primary-600 dark:text-primary-400'
-							: 'text-gray-500 dark:text-gray-400'}"
-						aria-current={activeSection === 'due-diligence' ? 'page' : undefined}
-					>
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							class="h-6 w-6"
-							viewBox="0 0 20 20"
-							fill="currentColor"
-						>
-							<path
-								fill-rule="evenodd"
-								d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm2 10a1 1 0 10-2 0v3a1 1 0 102 0v-3zm2-3a1 1 0 011 1v5a1 1 0 11-2 0v-5a1 1 0 011-1zm4-1a1 1 0 10-2 0v7a1 1 0 102 0V8z"
-								clip-rule="evenodd"
-							/>
-						</svg>
-						<span class="text-xs">Due Diligence</span>
-					</button>
-					<button
-						on:click={() => setActiveSection('decision-lists')}
-						class="flex flex-1 flex-col items-center py-3 {activeSection === 'decision-lists'
-							? 'text-primary-600 dark:text-primary-400'
-							: 'text-gray-500 dark:text-gray-400'}"
-						aria-current={activeSection === 'decision-lists' ? 'page' : undefined}
-					>
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							class="h-6 w-6"
-							viewBox="0 0 20 20"
-							fill="currentColor"
-						>
-							<path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-							<path
-								fill-rule="evenodd"
-								d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z"
-								clip-rule="evenodd"
-							/>
-						</svg>
-						<span class="text-xs">Decisions</span>
-					</button>
+							{section.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
+						</button>
+					{/each}
 				</div>
 			</div>
 		</div>
