@@ -4,6 +4,7 @@
 	import { compressImage } from '$lib/utils/imageCompression';
 	import ErrorMessage from './ErrorMessage.svelte';
 	import { createEventDispatcher } from 'svelte';
+	import { browser } from '$app/environment';
 
 	const dispatch = createEventDispatcher();
 
@@ -14,6 +15,13 @@
 	let isUploading = false;
 
 	const categories = ['Tops', 'Bottoms', 'Dresses', 'Shoes', 'Accessories'];
+
+	let isUnsupportedBrowser = false;
+
+	if (browser) {
+		const ua = navigator.userAgent.toLowerCase();
+		isUnsupportedBrowser = ua.indexOf('safari') > -1 && ua.indexOf('chrome') === -1;
+	}
 
 	async function checkItemCount() {
 		const { count, error } = await supabase
@@ -117,6 +125,15 @@
 	on:submit|preventDefault={handleSubmit}
 	class="space-y-6 rounded-lg bg-secondary-100 p-6 shadow-md dark:bg-secondary-800"
 >
+	{#if isUnsupportedBrowser}
+		<div class="mb-4 rounded-md bg-yellow-100 p-4 text-yellow-700">
+			<p>
+				Warning: This feature may not work correctly in your current browser. For the best
+				experience, please use Google Chrome.
+			</p>
+		</div>
+	{/if}
+
 	<div>
 		<label
 			for="name"
@@ -160,9 +177,12 @@
 			type="file"
 			id="image"
 			accept="image/*"
-			on:change|preventDefault={(e) => {
-				file = e.target.files[0];
-				console.log('File selected:', file?.name);
+			on:change={(e) => {
+				const files = e.target.files;
+				if (files && files.length > 0) {
+					file = files[0];
+					console.log('File selected:', file.name);
+				}
 			}}
 			class="input-field w-full bg-secondary-50 dark:bg-secondary-700"
 			required
