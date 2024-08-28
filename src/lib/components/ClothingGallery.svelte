@@ -10,7 +10,7 @@
 	let filteredItems = [];
 	let loading = true;
 	let error = null;
-	let selectedCategory = 'All';
+	let selectedCategories: string[] = [];
 	let searchQuery = '';
 
 	const categories = ['All', 'Tops', 'Bottoms', 'Dresses', 'Shoes', 'Accessories'];
@@ -22,7 +22,7 @@
 	async function getSignedUrl(path: string) {
 		const { data, error } = await supabase.storage
 			.from('clothing-items')
-			.createSignedUrl(path, 7200); // URL valid for 1 hour
+			.createSignedUrl(path, 7200); // URL valid for 2 hours
 
 		if (error) {
 			console.error('Error creating signed URL:', error);
@@ -64,12 +64,62 @@
 		await loadItems();
 	};
 
+	function toggleCategory(category: string) {
+		if (category === 'All') {
+			selectedCategories = selectedCategories.length === categories.length ? [] : [...categories];
+		} else {
+			selectedCategories = selectedCategories.includes(category)
+				? selectedCategories.filter((c) => c !== category)
+				: [...selectedCategories, category];
+		}
+		filterItems();
+	}
+
+	function clearFilters() {
+		selectedCategories = [];
+		searchQuery = '';
+		filterItems();
+	}
+
 	function filterItems() {
 		filteredItems = clothingItems.filter((item) => {
-			const categoryMatch = selectedCategory === 'All' || item.category === selectedCategory;
+			const categoryMatch =
+				selectedCategories.length === 0 ||
+				selectedCategories.includes(item.category) ||
+				selectedCategories.includes('All');
 			const searchMatch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
 			return categoryMatch && searchMatch;
 		});
+
+		if (filteredItems.length === 0 && (selectedCategories.length > 0 || searchQuery)) {
+			selectedCategories = [];
+			searchQuery = '';
+			filteredItems = clothingItems;
+		}
+	}
+
+	async function deleteItem(id: string, imagePath: string) {
+		if (confirm('Are you sure you want to delete this item?')) {
+			try {
+				// Delete the item from the clothing_items table
+				const { error: dbError } = await supabase.from('clothing_items').delete().eq('id', id);
+
+				if (dbError) throw dbError;
+
+				// Delete the image from storage
+				const { error: storageError } = await supabase.storage
+					.from('clothing-items')
+					.remove([imagePath]);
+
+				if (storageError) throw storageError;
+
+				// Refresh the items list
+				await loadItems();
+			} catch (error) {
+				console.error('Error deleting item:', error);
+				alert('Failed to delete item. Please try again.');
+			}
+		}
 	}
 
 	$: {
@@ -79,16 +129,8 @@
 	}
 </script>
 
-{#if loading}
-	<LoadingSpinner />
-{:else if error}
-	<p class="text-red-500">{error}</p>
-{:else if filteredItems.length === 0}
-	<p class="text-center text-secondary-700 dark:text-secondary-200">
-		No clothing items found. Start by uploading some items!
-	</p>
-{:else}
-	<div class="mb-4">
+<div class="space-y-6">
+	<div class="flex flex-col space-y-4 sm:flex-row sm:space-x-4 sm:space-y-0">
 		<input
 			type="text"
 			bind:value={searchQuery}
@@ -96,37 +138,75 @@
 			placeholder="Search items..."
 			class="w-full rounded-md border border-gray-300 p-2 dark:border-gray-700 dark:bg-gray-800"
 		/>
+		<div class="flex flex-wrap gap-2">
+			{#each categories as category}
+				<button
+					class="rounded-full px-3 py-1 text-sm {selectedCategories.includes(category)
+						? 'bg-primary-500 text-white'
+						: 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300'}"
+					on:click={() => toggleCategory(category)}
+				>
+					{category}
+				</button>
+			{/each}
+		</div>
+		<button
+			on:click={clearFilters}
+			class="rounded-full bg-secondary-500 px-3 py-1 text-sm text-white hover:bg-secondary-600"
+		>
+			Clear Filters
+		</button>
 	</div>
-	<div class="mb-4 flex flex-wrap gap-2">
-		{#each categories as category}
-			<button
-				class="rounded-full px-3 py-1 text-sm {selectedCategory === category
-					? 'bg-primary-500 text-white'
-					: 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300'}"
-				on:click={() => {
-					selectedCategory = category;
-					filterItems();
-				}}
-			>
-				{category}
-			</button>
-		{/each}
-	</div>
-	<div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-		{#each filteredItems as item (item.id)}
-			<div class="rounded-lg bg-white p-2 shadow-md dark:bg-gray-800">
-				<img
-					src={item.imageUrl}
-					alt={item.name}
-					class="h-40 w-full object-cover"
-					on:error={(e) => {
-						console.error(`Failed to load image: ${item.image_path}`);
-						e.target.src = 'https://via.placeholder.com/150?text=Image+Not+Found';
-					}}
-				/>
-				<p class="mt-2 text-sm font-semibold">{item.name}</p>
-				<p class="text-xs text-gray-500">{item.category}</p>
-			</div>
-		{/each}
-	</div>
-{/if}
+
+	{#if loading}
+		<LoadingSpinner />
+	{:else if error}
+		<p class="text-red-500">{error}</p>
+	{:else if filteredItems.length === 0}
+		<p class="text-center text-secondary-700 dark:text-secondary-200">
+			No clothing items found. Start by uploading some items!
+		</p>
+	{:else}
+		<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+			{#each filteredItems as item (item.id)}
+				<div
+					class="relative overflow-hidden rounded-lg bg-white shadow-lg transition-transform hover:scale-105 dark:bg-gray-800"
+				>
+					<img
+						src={item.imageUrl}
+						alt={item.name}
+						class="h-48 w-full object-cover"
+						on:error={(e) => {
+							console.error(`Failed to load image: ${item.image_path}`);
+							e.target.src = 'https://via.placeholder.com/150?text=Image+Not+Found';
+						}}
+					/>
+					<div class="p-4">
+						<h3 class="mb-1 text-lg font-semibold text-gray-800 dark:text-gray-200">{item.name}</h3>
+						<p class="text-sm text-gray-600 dark:text-gray-400">{item.category}</p>
+					</div>
+					<button
+						on:click={() => deleteItem(item.id, item.image_path)}
+						class="absolute right-2 top-2 rounded-full bg-red-500 p-2 text-white opacity-75 transition-opacity hover:bg-red-600 hover:opacity-100"
+						title="Delete item"
+					>
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							class="h-4 w-4"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke="currentColor"
+						>
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M6 18L18 6M6 6l12 12"
+							/>
+						</svg>
+					</button>
+				</div>
+			{/each}
+		</div>
+	{/if}
+</div>
