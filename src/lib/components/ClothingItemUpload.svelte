@@ -32,6 +32,11 @@
 	async function handleSubmit(event: Event) {
 		event.preventDefault();
 		console.log('Submit button clicked');
+		console.log('Session:', $session);
+		console.log('File:', file);
+		console.log('Name:', name);
+		console.log('Category:', category);
+
 		if (!$session || !$session.user) {
 			console.error('Session or user not available');
 			errorMessage =
@@ -155,7 +160,10 @@
 			type="file"
 			id="image"
 			accept="image/*"
-			on:change={(e) => (file = e.target.files[0])}
+			on:change|preventDefault={(e) => {
+				file = e.target.files[0];
+				console.log('File selected:', file?.name);
+			}}
 			class="input-field w-full bg-secondary-50 dark:bg-secondary-700"
 			required
 		/>
