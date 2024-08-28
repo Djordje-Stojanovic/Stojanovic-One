@@ -88,6 +88,18 @@
 			await supabase.from('due_diligence_items').delete().eq('id', item.id);
 		}
 	}
+
+	async function deleteStock(item) {
+		if (confirm(`Are you sure you want to delete ${item.symbol} from your due diligence list?`)) {
+			const { error } = await supabase.from('due_diligence_items').delete().eq('id', item.id);
+
+			if (error) {
+				console.error('Error deleting stock:', error);
+			} else {
+				dueDiligenceItems = dueDiligenceItems.filter((i) => i.id !== item.id);
+			}
+		}
+	}
 </script>
 
 <h2 class="mb-4 text-2xl font-semibold text-gray-800 dark:text-gray-200">Due Diligence</h2>
@@ -125,28 +137,18 @@
 				<p class="text-sm text-gray-600 dark:text-gray-400">Current Price: ${item.current_price}</p>
 				<p class="text-sm text-gray-600 dark:text-gray-400">Target Price: ${item.target_price}</p>
 				<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">{item.notes}</p>
-				<h4 class="text-md mt-4 font-semibold text-gray-800 dark:text-gray-200">Checklist</h4>
-				<ul class="mt-2">
-					{#each ['Financial Statements', 'Management Team', 'Competitive Landscape', 'Growth Potential', 'Risks'] as checklistItem}
-						<li>
-							<label class="flex items-center">
-								<input
-									type="checkbox"
-									checked={item.checklist?.[checklistItem] || false}
-									on:change={() => updateChecklist(item, checklistItem)}
-									class="form-checkbox h-4 w-4 text-primary-600 transition duration-150 ease-in-out"
-								/>
-								<span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{checklistItem}</span>
-							</label>
-						</li>
-					{/each}
-				</ul>
 				<div class="mt-4 flex justify-between">
 					<button
 						on:click={() => moveToWatchlist(item)}
 						class="rounded bg-secondary-600 px-3 py-1 text-sm text-white transition-colors hover:bg-secondary-700 dark:bg-secondary-500 dark:hover:bg-secondary-600"
 					>
 						Move to Watchlist
+					</button>
+					<button
+						on:click={() => deleteStock(item)}
+						class="rounded bg-red-600 px-3 py-1 text-sm text-white transition-colors hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600"
+					>
+						Delete
 					</button>
 				</div>
 			</div>

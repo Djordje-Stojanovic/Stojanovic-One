@@ -1,162 +1,133 @@
 <script lang="ts">
 	import { supabase } from '$lib/supabaseClient';
 	import { session } from '$lib/stores/sessionStore';
-	import { onMount } from 'svelte';
-	import AddStockForm from './AddStockForm.svelte';
+	import { createEventDispatcher } from 'svelte';
 
-	let watchlistItems = [];
-	let loading = true;
-	let showAddForm = false;
+	const dispatch = createEventDispatcher();
 
-	let sortField = 'symbol';
-	let sortDirection = 'asc';
-	let filterText = '';
+	let symbol = '';
+	let companyName = '';
+	let sector = '';
+	let currentPrice = '';
+	let targetPrice = '';
+	let notes = '';
 
-	$: sortedAndFilteredItems = watchlistItems
-		.filter(
-			(item) =>
-				item.symbol.toLowerCase().includes(filterText.toLowerCase()) ||
-				item.company_name.toLowerCase().includes(filterText.toLowerCase()) ||
-				item.sector.toLowerCase().includes(filterText.toLowerCase())
-		)
-		.sort((a, b) => {
-			if (a[sortField] < b[sortField]) return sortDirection === 'asc' ? -1 : 1;
-			if (a[sortField] > b[sortField]) return sortDirection === 'asc' ? 1 : -1;
-			return 0;
-		});
+	async function handleSubmit() {
+		if (!$session) return;
 
-	onMount(async () => {
-		if ($session) {
-			await fetchWatchlistItems();
-		}
-	});
+		const newStock = {
+			user_id: $session.user.id,
+			symbol,
+			company_name: companyName,
+			sector,
+			current_price: parseFloat(currentPrice),
+			target_price: parseFloat(targetPrice),
+			notes
+		};
 
-	async function fetchWatchlistItems() {
-		const { data, error } = await supabase
-			.from('watchlist_items')
-			.select('*')
-			.eq('user_id', $session.user.id);
+		const { data, error } = await supabase.from('watchlist_items').insert(newStock).select();
 
 		if (error) {
-			console.error('Error fetching watchlist items:', error);
+			console.error('Error adding stock:', error);
 		} else {
-			watchlistItems = data;
-		}
-		loading = false;
-	}
-
-	function handleStockAdded(event) {
-		watchlistItems = [event.detail, ...watchlistItems];
-		showAddForm = false;
-	}
-
-	async function moveToDD(item) {
-		const { data, error } = await supabase
-			.from('due_diligence_items')
-			.insert({
-				user_id: $session.user.id,
-				watchlist_item_id: item.id,
-				symbol: item.symbol,
-				company_name: item.company_name,
-				sector: item.sector,
-				current_price: item.current_price,
-				target_price: item.target_price,
-				notes: item.notes,
-				checklist: {}
-			})
-			.select();
-
-		if (error) {
-			console.error('Error moving item to Due Diligence:', error);
-		} else {
-			// Remove item from watchlist
-			watchlistItems = watchlistItems.filter((i) => i.id !== item.id);
-			await supabase.from('watchlist_items').delete().eq('id', item.id);
+			dispatch('stockAdded', data[0]);
+			resetForm();
 		}
 	}
 
-	async function deleteStock(item) {
-		const { error } = await supabase.from('watchlist_items').delete().eq('id', item.id);
-
-		if (error) {
-			console.error('Error deleting stock:', error);
-		} else {
-			watchlistItems = watchlistItems.filter((i) => i.id !== item.id);
-		}
-	}
-
-	function toggleSort(field) {
-		if (sortField === field) {
-			sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
-		} else {
-			sortField = field;
-			sortDirection = 'asc';
-		}
+	function resetForm() {
+		symbol = '';
+		companyName = '';
+		sector = '';
+		currentPrice = '';
+		targetPrice = '';
+		notes = '';
 	}
 </script>
 
-<h2 class="mb-4 text-2xl font-semibold text-gray-800 dark:text-gray-200">Watchlist</h2>
-<div class="mb-4">
-	<button
-		on:click={() => (showAddForm = !showAddForm)}
-		class="rounded bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600"
-	>
-		{showAddForm ? 'Cancel' : 'Add New Stock'}
-	</button>
-</div>
-
-{#if showAddForm}
-	<AddStockForm on:stockAdded={handleStockAdded} />
-{/if}
-
-<div class="mb-4">
-	<input
-		type="text"
-		placeholder="Filter stocks..."
-		bind:value={filterText}
-		class="rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:text-sm"
-	/>
-</div>
-
-<div class="mb-4 flex space-x-2">
-	<button on:click={() => toggleSort('symbol')} class="text-sm font-medium">
-		Symbol {sortField === 'symbol' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
-	</button>
-	<button on:click={() => toggleSort('company_name')} class="text-sm font-medium">
-		Company {sortField === 'company_name' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
-	</button>
-	<button on:click={() => toggleSort('current_price')} class="text-sm font-medium">
-		Price {sortField === 'current_price' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
-	</button>
-</div>
-
-{#if loading}
-	<p>Loading watchlist items...</p>
-{:else}
-	<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-		{#each sortedAndFilteredItems as item (item.id)}
-			<div class="rounded-lg border bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-				<h3 class="mb-2 text-lg font-semibold text-gray-800 dark:text-gray-200">{item.symbol}</h3>
-				<p class="text-sm text-gray-600 dark:text-gray-400">{item.company_name}</p>
-				<p class="text-sm text-gray-600 dark:text-gray-400">Sector: {item.sector}</p>
-				<p class="text-sm text-gray-600 dark:text-gray-400">Current Price: ${item.current_price}</p>
-				<p class="text-sm text-gray-600 dark:text-gray-400">Target Price: ${item.target_price}</p>
-				<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">{item.notes}</p>
-				<div class="mt-4 flex justify-between">
-					<button
-						on:click={() => moveToDD(item)}
-						class="rounded bg-secondary-600 px-3 py-1 text-sm text-white transition-colors hover:bg-secondary-700 dark:bg-secondary-500 dark:hover:bg-secondary-600"
-					>
-						Move to Due Diligence
-					</button>
-					<button
-						on:click={() => deleteStock(item)}
-						class="rounded bg-red-600 px-3 py-1 text-sm text-white transition-colors hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600"
-					>
-						Delete
-					</button>
-				</div>
-			</div>
-		{/each}
+<form
+	on:submit|preventDefault={handleSubmit}
+	class="mb-6 max-w-md rounded-lg bg-white p-6 shadow-md dark:bg-gray-800"
+>
+	<div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+		<div class="col-span-1">
+			<label for="symbol" class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+				>Symbol</label
+			>
+			<input
+				type="text"
+				id="symbol"
+				bind:value={symbol}
+				required
+				class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:text-sm"
+			/>
+		</div>
+		<div class="col-span-1">
+			<label for="companyName" class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+				>Company Name</label
+			>
+			<input
+				type="text"
+				id="companyName"
+				bind:value={companyName}
+				required
+				class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:text-sm"
+			/>
+		</div>
+		<div class="col-span-1">
+			<label for="sector" class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+				>Sector</label
+			>
+			<input
+				type="text"
+				id="sector"
+				bind:value={sector}
+				required
+				class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:text-sm"
+			/>
+		</div>
+		<div class="col-span-1">
+			<label for="currentPrice" class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+				>Current Price</label
+			>
+			<input
+				type="number"
+				id="currentPrice"
+				bind:value={currentPrice}
+				required
+				class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:text-sm"
+			/>
+		</div>
+		<div class="col-span-1">
+			<label for="targetPrice" class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+				>Target Price</label
+			>
+			<input
+				type="number"
+				id="targetPrice"
+				bind:value={targetPrice}
+				required
+				class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:text-sm"
+			/>
+		</div>
 	</div>
-{/if}
+	<div class="mt-6">
+		<label for="notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+			>Notes</label
+		>
+		<textarea
+			id="notes"
+			bind:value={notes}
+			rows="3"
+			class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:text-sm"
+		></textarea>
+	</div>
+	<div class="mt-6">
+		<button
+			type="submit"
+			class="w-full rounded-md border border-transparent bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:bg-primary-500 dark:hover:bg-primary-600"
+		>
+			Add Stock
+		</button>
+	</div>
+</form>

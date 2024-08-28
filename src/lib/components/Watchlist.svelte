@@ -2,11 +2,9 @@
 	import { supabase } from '$lib/supabaseClient';
 	import { session } from '$lib/stores/sessionStore';
 	import { onMount } from 'svelte';
-	import AddStockForm from './AddStockForm.svelte';
 
 	let watchlistItems = [];
 	let loading = true;
-	let showAddForm = false;
 
 	let sortField = 'symbol';
 	let sortDirection = 'asc';
@@ -45,11 +43,6 @@
 		loading = false;
 	}
 
-	function handleStockAdded(event) {
-		watchlistItems = [event.detail, ...watchlistItems];
-		showAddForm = false;
-	}
-
 	async function moveToDD(item) {
 		const { data, error } = await supabase
 			.from('due_diligence_items')
@@ -69,19 +62,20 @@
 		if (error) {
 			console.error('Error moving item to Due Diligence:', error);
 		} else {
-			// Remove item from watchlist
 			watchlistItems = watchlistItems.filter((i) => i.id !== item.id);
 			await supabase.from('watchlist_items').delete().eq('id', item.id);
 		}
 	}
 
 	async function deleteStock(item) {
-		const { error } = await supabase.from('watchlist_items').delete().eq('id', item.id);
+		if (confirm(`Are you sure you want to delete ${item.symbol} from your watchlist?`)) {
+			const { error } = await supabase.from('watchlist_items').delete().eq('id', item.id);
 
-		if (error) {
-			console.error('Error deleting stock:', error);
-		} else {
-			watchlistItems = watchlistItems.filter((i) => i.id !== item.id);
+			if (error) {
+				console.error('Error deleting stock:', error);
+			} else {
+				watchlistItems = watchlistItems.filter((i) => i.id !== item.id);
+			}
 		}
 	}
 
@@ -94,8 +88,8 @@
 		}
 	}
 
-	export function toggleAddForm() {
-		showAddForm = !showAddForm;
+	export function addStock(newStock) {
+		watchlistItems = [newStock, ...watchlistItems];
 	}
 </script>
 

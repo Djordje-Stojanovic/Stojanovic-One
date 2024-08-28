@@ -3,12 +3,25 @@
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 	import Watchlist from '$lib/components/Watchlist.svelte';
 	import DueDiligence from '$lib/components/DueDiligence.svelte';
+	import AddStockForm from '$lib/components/AddStockForm.svelte';
 
 	let activeSection = 'watchlist';
 	let watchlistComponent;
+	let showAddForm = false;
 
 	function setActiveSection(section: string) {
 		activeSection = section;
+	}
+
+	function toggleAddForm() {
+		showAddForm = !showAddForm;
+	}
+
+	function handleStockAdded(event) {
+		if (watchlistComponent) {
+			watchlistComponent.addStock(event.detail);
+		}
+		showAddForm = false;
 	}
 </script>
 
@@ -112,16 +125,15 @@
 					<h2 class="mb-4 text-2xl font-semibold text-gray-800 dark:text-gray-200">Watchlist</h2>
 					<div class="mb-4">
 						<button
-							on:click={() => {
-								if (typeof watchlistComponent?.toggleAddForm === 'function') {
-									watchlistComponent.toggleAddForm();
-								}
-							}}
+							on:click={toggleAddForm}
 							class="rounded bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600"
 						>
-							Add New Stock
+							{showAddForm ? 'Cancel' : 'Add New Stock'}
 						</button>
 					</div>
+					{#if showAddForm}
+						<AddStockForm on:stockAdded={handleStockAdded} />
+					{/if}
 					<Watchlist bind:this={watchlistComponent} />
 				{:else if activeSection === 'due-diligence'}
 					<DueDiligence />
