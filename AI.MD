@@ -4,9 +4,12 @@
 
 This project is a SvelteKit Full-Stack Solution, focusing on best practices in software development, including Test-Driven Development (TDD) and continuous integration. It features a dark mode implementation and uses Supabase for authentication and database management.
 
-## Full File Paths:
+## Full File Paths
 
-Always provide it in a format like this: edit this file now: E:\Stojanovic-One\src\routes\Home.svelte or create this file in this path: E:\Stojanovic-One\src\routes\Home.svelte
+Always provide file paths in this format:
+
+- Edit this file: E:\Stojanovic-One\src\routes\+page.svelte
+- Create this file: E:\Stojanovic-One\src\components\NewComponent.svelte
 
 ## Technology Stack
 
@@ -34,12 +37,20 @@ E:\Stojanovic-One\
 │ ├── app.html
 │ ├── lib\
 │ │ ├── components\
+│ │ │ ├── ClothingGallery.svelte
+│ │ │ ├── ClothingItemUpload.svelte
 │ │ │ ├── ErrorMessage.svelte
 │ │ │ ├── LoadingSpinner.svelte
+│ │ │ ├── OutfitCreator.svelte
 │ │ │ ├── SubprojectCard.svelte
 │ │ │ └── ThemeToggle.svelte
 │ │ ├── stores\
 │ │ │ └── sessionStore.ts
+│ │ ├── types\
+│ │ │ └── index.ts
+│ │ ├── utils\
+│ │ │ └── imageCompression.ts
+│ │ ├── index.ts
 │ │ └── supabaseClient.ts
 │ └── routes\
 │ ├── +layout.svelte
@@ -55,7 +66,8 @@ E:\Stojanovic-One\
 │ └── clothing-outfit-calculator\
 │ └── +page.svelte
 ├── static\
-│ └── favicon.png
+│ ├── favicon.png
+│ └── google-logo.svg
 ├── svelte.config.js
 ├── tailwind.config.ts
 ├── tsconfig.json
@@ -90,39 +102,11 @@ Apply these principles throughout the development process:
 
 ## Design and User Experience Guidelines
 
-1. Dark Mode Compatibility:
-
-   - Ensure all components and pages support dark mode
-   - Use Tailwind CSS classes for dark mode styling (e.g., dark:bg-gray-800)
-   - Test all features in both light and dark modes
-
-2. Mobile-Friendly and Responsive Design:
-
-   - Design for mobile-first, then scale up for larger screens
-   - Use responsive Tailwind CSS classes (e.g., sm:, md:, lg:)
-   - Test on various device sizes and orientations
-
-3. Performance Optimization:
-
-   - Minimize unnecessary re-renders
-   - Optimize images and assets
-   - Use lazy loading for images and components when appropriate
-   - Implement code splitting for better initial load times
-
-4. Modern and Beautiful UI:
-
-   - Use consistent color schemes and typography
-   - Implement smooth transitions and animations
-   - Ensure proper spacing and alignment of elements
-   - Use modern UI components and design patterns
-
-5. Accessibility:
-   - Ensure proper color contrast ratios
-   - Use semantic HTML elements
-   - Implement proper ARIA attributes where necessary
-   - Test with screen readers and keyboard navigation
-
-Always consider these guidelines when developing new features or updating existing ones.
+1. Dark Mode Compatibility
+2. Mobile-Friendly and Responsive Design
+3. Performance Optimization
+4. Modern and Beautiful UI
+5. Accessibility
 
 ## Development Workflow
 
@@ -138,9 +122,8 @@ Always consider these guidelines when developing new features or updating existi
    - Choose an issue to work on
    - Create a feature branch: `git checkout -b feature/issue-description`
    - Apply Test-Driven Development (TDD):
-     a. Write failing tests
-     b. Implement minimum code to pass tests
-     c. Refactor while maintaining passing tests
+     A. Implement minimum code to pass tests
+     B. Refactor while maintaining passing tests
    - Push changes regularly: `git push origin feature/issue-description`
 
 3. **Code Review and Merging**
@@ -150,63 +133,43 @@ Always consider these guidelines when developing new features or updating existi
    - Merge into main when ready
    - Delete the feature branch
 
-4. **Testing**
-
-   - Write unit tests for all new functionality
-   - Aim for high test coverage (e.g., 80% or higher)
-   - Run the full test suite before pushing changes
-
-5. **Continuous Deployment**
+4. **Continuous Deployment**
 
    - Utilize Vercel's built-in deployment features
    - Automatic deployments triggered by pushes to the main branch
    - Monitor deployments through Vercel dashboard
 
-6. **Documentation**
+5. **Documentation**
 
    - Keep README.md up-to-date
    - Use JSDoc comments for all functions, classes, and modules
    - Update this AI.MD with any process changes
 
-7. **Code Quality**
+6. **Code Quality**
 
    - Use ESLint and Prettier for code formatting and linting
    - Implement static type checking with TypeScript
    - Set up pre-commit hooks for automated checks
 
-8. **Dependency Management**
+7. **Dependency Management**
 
    - Regularly update dependencies
    - Use npm audit to manage dependencies and check for security vulnerabilities
 
-9. **Version Control**
+8. **Version Control**
 
    - Use meaningful commit messages
    - Keep commits small and focused
 
-10. **Deployment**
-    - Use Vercel for automatic deployments
-    - Set up staging and production environments
+9. **Deployment**
+   - Use Vercel for automatic deployments
+   - Set up staging and production environments
 
 ## Continuous Improvement
 
 This document and our workflow are adaptable. As the project evolves, we may adjust our processes and practices. Always look for ways to simplify, optimize, and accelerate our development cycle without compromising quality.
 
-## Recent Updates
-
-1. Dark Mode Implementation:
-
-   - Tailwind CSS configured for dark mode
-   - ThemeToggle component created
-   - Dark mode styles applied to existing pages
-   - User preference persistence implemented
-
-2. Layout Update:
-   - Fixed issue with missing `<slot />` in +layout.svelte
-
 Remember to apply Elon Musk's efficiency principles throughout the development process.
-
-Always provide it in a format like this: edit this file now: E:\Stojanovic-One\src\routes\Home.svelte or create this file in this path: E:\Stojanovic-One\src\routes\Home.svelte
 
 ## File Path Importance
 
