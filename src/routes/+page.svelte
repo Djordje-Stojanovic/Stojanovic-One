@@ -11,6 +11,12 @@
 			title: 'Clothing Outfit Calculator',
 			description: 'Mix and match your clothing items to create perfect outfits.',
 			route: '/subprojects/clothing-outfit-calculator'
+		},
+		{
+			id: 'investment-analysis-platform',
+			title: 'Investment Analysis Platform',
+			description: 'Analyze investments, manage watchlists, and make informed decisions.',
+			route: '/subprojects/investment-analysis-platform'
 		}
 	];
 	let loading = true;

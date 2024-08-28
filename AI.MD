@@ -63,7 +63,9 @@ E:\Stojanovic-One\
 │ ├── register\
 │ │ └── +page.svelte
 │ └── subprojects\
-│ └── clothing-outfit-calculator\
+│ ├── clothing-outfit-calculator\
+│ │ └── +page.svelte
+│ └── investment-analysis-platform\
 │ └── +page.svelte
 ├── static\
 │ ├── favicon.png
@@ -187,6 +189,7 @@ This ensures clarity and prevents confusion when working with multiple files acr
 - Register: E:\Stojanovic-One\src\routes\register\+page.svelte
 - Profile: E:\Stojanovic-One\src\routes\profile\+page.svelte
 - Clothing Outfit Calculator: E:\Stojanovic-One\src\routes\subprojects\clothing-outfit-calculator\+page.svelte
+- Investment Analysis Platform: E:\Stojanovic-One\src\routes\subprojects\investment-analysis-platform\+page.svelte
 
 Components:
 
