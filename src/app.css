@@ -10,23 +10,29 @@
 @layer base {
   body {
     @apply bg-secondary-50 text-secondary-900 dark:bg-secondary-900 dark:text-secondary-50;
+    transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
   }
 }
 
 @layer components {
   .btn-primary {
     @apply bg-primary-600 text-white hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:bg-primary-500 dark:hover:bg-primary-600;
+    transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
   }
   .btn-secondary {
     @apply bg-secondary-200 text-secondary-900 hover:bg-secondary-300 focus:ring-2 focus:ring-secondary-400 focus:ring-offset-2 dark:bg-secondary-700 dark:text-secondary-100 dark:hover:bg-secondary-600;
+    transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
   }
   .input-field {
     @apply rounded-md border border-secondary-300 bg-white px-3 py-2 text-secondary-900 placeholder-secondary-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-secondary-600 dark:bg-secondary-800 dark:text-secondary-100 dark:placeholder-secondary-500;
+    transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out, border-color 0.3s ease-in-out;
   }
   .bg-content-light {
     @apply bg-secondary-100 text-secondary-900;
+    transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
   }
   .bg-content-dark {
     @apply bg-secondary-800 text-secondary-50;
+    transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
   }
 }

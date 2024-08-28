@@ -78,19 +78,19 @@
 
 <form
 	on:submit={handleSubmit}
-	class="space-y-6 rounded-lg bg-white p-6 shadow-md dark:bg-secondary-700"
+	class="space-y-6 rounded-lg bg-secondary-100 p-6 shadow-md dark:bg-secondary-800"
 >
 	<div>
 		<label
 			for="name"
-			class="mb-1 block text-sm font-medium text-secondary-700 dark:text-secondary-100"
+			class="mb-1 block text-sm font-medium text-secondary-700 dark:text-secondary-200"
 			>Item Name</label
 		>
 		<input
 			type="text"
 			id="name"
 			bind:value={name}
-			class="input-field w-full bg-secondary-100 dark:bg-secondary-600"
+			class="input-field w-full bg-secondary-50 dark:bg-secondary-700"
 			required
 		/>
 	</div>
@@ -98,13 +98,13 @@
 	<div>
 		<label
 			for="category"
-			class="mb-1 block text-sm font-medium text-secondary-700 dark:text-secondary-100"
+			class="mb-1 block text-sm font-medium text-secondary-700 dark:text-secondary-200"
 			>Category</label
 		>
 		<select
 			id="category"
 			bind:value={category}
-			class="input-field w-full bg-secondary-100 dark:bg-secondary-600"
+			class="input-field w-full bg-secondary-50 dark:bg-secondary-700"
 			required
 		>
 			<option value="">Select a category</option>
@@ -117,14 +117,14 @@
 	<div>
 		<label
 			for="image"
-			class="mb-1 block text-sm font-medium text-secondary-700 dark:text-secondary-100">Image</label
+			class="mb-1 block text-sm font-medium text-secondary-700 dark:text-secondary-200">Image</label
 		>
 		<input
 			type="file"
 			id="image"
 			accept="image/*"
 			on:change={(e) => (file = e.target.files[0])}
-			class="input-field w-full bg-secondary-100 dark:bg-secondary-600"
+			class="input-field w-full bg-secondary-50 dark:bg-secondary-700"
 			required
 		/>
 	</div>
