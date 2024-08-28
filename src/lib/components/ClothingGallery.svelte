@@ -105,15 +105,17 @@
 				const { error: outfitUpdateError } = await supabase
 					.from('outfits')
 					.update({
-						top_id: supabase.rpc('nullif_equals', { value: id }),
-						bottom_id: supabase.rpc('nullif_equals', { value: id }),
-						dress_id: supabase.rpc('nullif_equals', { value: id }),
-						shoes_id: supabase.rpc('nullif_equals', { value: id }),
-						accessory1_id: supabase.rpc('nullif_equals', { value: id }),
-						accessory2_id: supabase.rpc('nullif_equals', { value: id }),
-						accessory3_id: supabase.rpc('nullif_equals', { value: id })
+						top_id: null,
+						bottom_id: null,
+						dress_id: null,
+						shoes_id: null,
+						accessory1_id: null,
+						accessory2_id: null,
+						accessory3_id: null
 					})
-					.neq('id', 'no_match'); // This condition ensures all rows are updated
+					.or(
+						`top_id.eq.${id},bottom_id.eq.${id},dress_id.eq.${id},shoes_id.eq.${id},accessory1_id.eq.${id},accessory2_id.eq.${id},accessory3_id.eq.${id}`
+					);
 
 				if (outfitUpdateError) throw outfitUpdateError;
 
