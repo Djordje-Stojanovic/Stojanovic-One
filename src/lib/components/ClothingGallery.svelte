@@ -101,6 +101,22 @@
 	async function deleteItem(id: string, imagePath: string) {
 		if (confirm('Are you sure you want to delete this item?')) {
 			try {
+				// Remove the item from any outfits it's part of
+				const { error: outfitUpdateError } = await supabase
+					.from('outfits')
+					.update({
+						top_id: supabase.rpc('nullif_equals', { value: id }),
+						bottom_id: supabase.rpc('nullif_equals', { value: id }),
+						dress_id: supabase.rpc('nullif_equals', { value: id }),
+						shoes_id: supabase.rpc('nullif_equals', { value: id }),
+						accessory1_id: supabase.rpc('nullif_equals', { value: id }),
+						accessory2_id: supabase.rpc('nullif_equals', { value: id }),
+						accessory3_id: supabase.rpc('nullif_equals', { value: id })
+					})
+					.neq('id', 'no_match'); // This condition ensures all rows are updated
+
+				if (outfitUpdateError) throw outfitUpdateError;
+
 				// Delete the item from the clothing_items table
 				const { error: dbError } = await supabase.from('clothing_items').delete().eq('id', id);
 
