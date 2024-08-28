@@ -129,21 +129,23 @@
 	}
 </script>
 
-<div class="space-y-6">
+<div class="space-y-6 bg-white p-4 text-gray-900 dark:bg-gray-900 dark:text-gray-100">
 	<div class="flex flex-col space-y-4 sm:flex-row sm:space-x-4 sm:space-y-0">
 		<input
 			type="text"
 			bind:value={searchQuery}
 			on:input={filterItems}
 			placeholder="Search items..."
-			class="w-full rounded-md border border-gray-300 p-2 dark:border-gray-700 dark:bg-gray-800"
+			class="w-full rounded-lg border border-gray-300 bg-white p-2 text-gray-900 placeholder-gray-500 focus:border-primary-500 focus:ring focus:ring-primary-500 focus:ring-opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400"
 		/>
 		<div class="flex flex-wrap gap-2">
 			{#each categories as category}
 				<button
-					class="rounded-full px-3 py-1 text-sm {selectedCategories.includes(category)
+					class="rounded-full px-3 py-1 text-sm transition-colors duration-200 {selectedCategories.includes(
+						category
+					)
 						? 'bg-primary-500 text-white'
-						: 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300'}"
+						: 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'}"
 					on:click={() => toggleCategory(category)}
 				>
 					{category}
@@ -152,7 +154,7 @@
 		</div>
 		<button
 			on:click={clearFilters}
-			class="rounded-full bg-secondary-500 px-3 py-1 text-sm text-white hover:bg-secondary-600"
+			class="rounded-full bg-secondary-500 px-3 py-1 text-sm text-white transition-colors duration-200 hover:bg-secondary-600"
 		>
 			Clear Filters
 		</button>
@@ -163,11 +165,9 @@
 	{:else if error}
 		<p class="text-red-500">{error}</p>
 	{:else if filteredItems.length === 0}
-		<p class="text-center text-secondary-700 dark:text-secondary-200">
-			No clothing items found. Start by uploading some items!
-		</p>
+		<p class="text-center text-gray-400">No clothing items found. Start by uploading some items!</p>
 	{:else}
-		<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+		<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
 			{#each filteredItems as item (item.id)}
 				<div
 					class="relative overflow-hidden rounded-lg bg-white shadow-lg transition-transform hover:scale-105 dark:bg-gray-800"
@@ -182,8 +182,8 @@
 						}}
 					/>
 					<div class="p-4">
-						<h3 class="mb-1 text-lg font-semibold text-gray-800 dark:text-gray-200">{item.name}</h3>
-						<p class="text-sm text-gray-600 dark:text-gray-400">{item.category}</p>
+						<h3 class="mb-1 text-lg font-semibold text-gray-100">{item.name}</h3>
+						<p class="text-sm text-gray-400">{item.category}</p>
 					</div>
 					<button
 						on:click={() => deleteItem(item.id, item.image_path)}
