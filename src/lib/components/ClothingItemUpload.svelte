@@ -31,19 +31,25 @@
 
 	async function handleSubmit(event: Event) {
 		event.preventDefault();
+		console.log('Submit button clicked');
 		if (!$session || !$session.user) {
+			console.error('Session or user not available');
 			errorMessage =
 				'You must be logged in to upload items. Please refresh the page and try again.';
 			return;
 		}
 
+		console.log('Session user:', $session.user);
+
 		if (!file || !name || !category) {
+			console.error('Missing required fields');
 			errorMessage = 'Please fill in all fields and select an image.';
 			return;
 		}
 
 		const canUpload = await checkItemCount();
 		if (!canUpload) {
+			console.error('Item limit reached');
 			errorMessage =
 				'You have reached the maximum limit of 100 items. Please delete some items before uploading new ones.';
 			return;
@@ -53,9 +59,11 @@
 		errorMessage = '';
 
 		try {
+			console.log('Starting file compression');
 			const compressedFile = await compressImage(file);
 			const fileName = `${Date.now()}_${file.name}`;
 			const filePath = `${$session.user.id}/${fileName}`;
+			console.log('Uploading file:', filePath);
 			const { data, error } = await supabase.storage
 				.from('clothing-items')
 				.upload(filePath, compressedFile);
@@ -70,6 +78,7 @@
 
 			if (publicUrlError) throw publicUrlError;
 
+			console.log('Inserting item into database');
 			const { data: insertData, error: insertError } = await supabase
 				.from('clothing_items')
 				.insert({
@@ -81,6 +90,7 @@
 
 			if (insertError) throw insertError;
 
+			console.log('Item uploaded successfully');
 			file = null;
 			name = '';
 			category = '';
@@ -99,7 +109,7 @@
 </script>
 
 <form
-	on:submit={handleSubmit}
+	on:submit|preventDefault={handleSubmit}
 	class="space-y-6 rounded-lg bg-secondary-100 p-6 shadow-md dark:bg-secondary-800"
 >
 	<div>
