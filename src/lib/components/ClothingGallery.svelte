@@ -19,25 +19,43 @@
 		await loadItems();
 	});
 
+	async function getSignedUrl(path: string) {
+		const { data, error } = await supabase.storage
+			.from('clothing-items')
+			.createSignedUrl(path, 3600); // URL valid for 1 hour
+
+		if (error) {
+			console.error('Error creating signed URL:', error);
+			return null;
+		}
+
+		return data.signedUrl;
+	}
+
 	async function loadItems() {
-		if ($session) {
-			const { data, error: fetchError } = await supabase
+		loading = true;
+		error = null;
+		try {
+			let { data, error: fetchError } = await supabase
 				.from('clothing_items')
 				.select('*')
 				.eq('user_id', $session.user.id);
 
-			if (fetchError) {
-				error = fetchError.message;
-				console.error('Error fetching clothing items:', fetchError);
-			} else if (data) {
-				clothingItems = data;
-				filteredItems = clothingItems;
-			} else {
-				console.log('No data returned from the query');
-			}
+			if (fetchError) throw fetchError;
+
+			clothingItems = await Promise.all(
+				data.map(async (item) => ({
+					...item,
+					imageUrl: await getSignedUrl(item.image_path)
+				}))
+			);
+			filteredItems = clothingItems;
+			console.log('Fetched clothing items:', clothingItems);
+		} catch (e) {
+			console.error('Error fetching clothing items:', e);
+			error = e.message;
+		} finally {
 			loading = false;
-		} else {
-			console.log('No active session');
 		}
 	}
 
@@ -98,11 +116,11 @@
 		{#each filteredItems as item (item.id)}
 			<div class="rounded-lg bg-white p-2 shadow-md dark:bg-gray-800">
 				<img
-					src={item.public_url}
+					src={item.imageUrl}
 					alt={item.name}
 					class="h-40 w-full object-cover"
 					on:error={(e) => {
-						console.error(`Failed to load image: ${item.public_url}`);
+						console.error(`Failed to load image: ${item.image_path}`);
 						e.target.src = 'https://via.placeholder.com/150?text=Image+Not+Found';
 					}}
 				/>

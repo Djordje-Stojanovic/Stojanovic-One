@@ -40,9 +40,11 @@
 
 			if (error) throw error;
 
+			console.log('Uploaded file:', data);
+
 			const { data: publicUrlData, error: publicUrlError } = supabase.storage
 				.from('clothing-items')
-				.getPublicUrl(data.path);
+				.getPublicUrl(filePath);
 
 			if (publicUrlError) throw publicUrlError;
 
@@ -52,8 +54,7 @@
 					user_id: $session.user.id,
 					name,
 					category,
-					image_path: data.path,
-					public_url: publicUrlData.publicUrl
+					image_path: filePath
 				});
 
 			if (insertError) throw insertError;
