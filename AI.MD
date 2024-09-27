@@ -283,7 +283,7 @@ The project uses Supabase for authentication, including Google Sign-In. Ensure t
 
 ## Deployment
 
-The project is deployed on Vercel. The production URL is https://stojanovic-one.vercel.app. Preview deployments are created for each pull request and commit.
+The project is deployed on Vercel. The production URL is https://stojanovic-one.vercel.app. 
 
 ## Performance Considerations
 
