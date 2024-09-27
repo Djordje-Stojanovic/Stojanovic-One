@@ -1,0 +1,189 @@
+# Ignore virtual environments
+venv/
+env/
+.venv/
+
+# Ignore Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore node_modules for frontend
+node_modules/
+
+# Ignore build directories
+dist/
+build/
+frontend/build/
+
+# Ignore coverage reports
+.coverage
+coverage/
+
+# Ignore logs
+*.log
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+# Ignore IDE specific files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Ignore environment variable files
+.env
+
+
+# Ignore public folder contents except index.html
+frontend/public/*
+!frontend/public/index.html
+
+# Ignore Pytest cache
+.pytest_cache/
+
+# Ignore mypy cache
+.mypy_cache/
+
+# Ignore Tailwind CSS generated file
+frontend/src/styles/tailwind.css
+
+# Ignore package manager lock files
+package-lock.json
+yarn.lock
+poetry.lock
+
+# Ignore database files
+*.sqlite
+*.db
+
+# Ignore compiled Python files
+*.pyc
+__pycache__/
+
+# Ignore coverage reports
+.coverage
+coverage/
+
+# Ignore Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Ignore any auto-generated files
+*.auto.tfvars
+*.auto.tfvars.json
+*.tfstate
+*.tfstate.*
+
+# Ignore any backup files
+*.bak
+*.swp
+*~
+
+# Ignore any log files
+*.log
+
+# Ignore most Alembic migration files, keep only the latest
+backend/alembic/versions/*
+!backend/alembic/versions/.gitkeep
+
+# Ignore temporary files
+*.tmp
+*.swp
+*~
+*.bak
+
+# Ignore large data files
+*.csv
+*.json
+*.xml
+
+# Ignore local configuration files
+*.local
+
+# Ignore any files in a 'temp' directory
+**/temp/
+
+# Ignore any files in a 'data' directory
+**/data/
+
+# Ignore any files in a 'logs' directory
+**/logs/
+
+# Ignore any files in a 'cache' directory
+**/cache/
+
+# Ignore test files
+backend/tests/**/*.py
+backend/.pytest_cache/
+backend/alembic/versions/*
+!backend/alembic/versions/.gitkeep
+frontend/src/**/*.test.tsx
+frontend/src/**/*.test.ts
+*.pyc
+__pycache__/
+.coverage
+htmlcov/
+
+# SQLite database files
+*.db
+
+# Alembic version files (keep only .gitkeep)
+backend/alembic/versions/*
+!backend/alembic/versions/.gitkeep
+
+# SvelteKit
+/.svelte-kit
+/build
+
+# Supabase
+.env.local
+
+# Large files and directories
+*.zip
+*.tar.gz
+*.mp4
+*.mov
+
+# Ignore static assets
+static/google-logo.svg
+static/favicon.png
+
+# Ignore configuration files that don't change frequently
+svelte.config.js
+vite.config.ts
+postcss.config.js
+tailwind.config.ts
+tsconfig.json
+
+# Dependencies
+node_modules
+
+# Build output
+build
+dist
+
+# Svelte
+.svelte-kit
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+
+# Editor files
+.vscode
+.idea
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
