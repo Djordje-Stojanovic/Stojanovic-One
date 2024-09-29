@@ -172,6 +172,21 @@
     function handleFullPage(item: StockItem) {
         goto(`/subprojects/investment-analysis-platform/${encodeURIComponent(item.list_name.toLowerCase())}/${encodeURIComponent(item.symbol.toLowerCase())}`);
     }
+
+    function handleSort(column) {
+        if (sortColumn === column) {
+            sortDirection *= -1;
+        } else {
+            sortColumn = column;
+            sortDirection = 1;
+        }
+    }
+
+    function handleDelete(itemId) {
+        if (confirm('Are you sure you want to delete this item?')) {
+            deleteItem(itemId);
+        }
+    }
 </script>
 
 <svelte:head>
@@ -193,13 +208,13 @@
                             Add New Stock
                         </button>
                     {/if}
-                    <div class="flex items-center space-x-4">
-                        <span class="text-sm text-gray-700 dark:text-gray-300">Grid View</span>
-                        <label class="toggle-switch">
-                            <input type="checkbox" bind:checked={tableView}>
-                            <span class="toggle-slider"></span>
+                    <div class="flex items-center justify-end mb-4">
+                        <span class="text-sm font-medium text-gray-400 dark:text-gray-300 mr-3">Grid View</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" bind:checked={tableView} class="sr-only peer">
+                            <div class="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
                         </label>
-                        <span class="text-sm text-gray-700 dark:text-gray-300">Table View</span>
+                        <span class="text-sm font-medium text-gray-400 dark:text-gray-300 ml-3">Table View</span>
                     </div>
                 </div>
             </div>
@@ -213,70 +228,48 @@
                         <p class="text-center text-gray-500 dark:text-gray-400">No items in this list.</p>
                     {:else}
                         {#if tableView}
-                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                                <thead class="bg-gray-50 dark:bg-gray-700">
-                                    <tr>
-                                        {#each ['Symbol', 'Company Name', 'Sector', 'Current Price', 'Target Price', 'Notes'] as header, index}
-                                            <th 
-                                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
-                                                on:click={() => {
-                                                    if (sortColumn === header) {
-                                                        sortDirection *= -1;
-                                                    } else {
-                                                        sortColumn = header;
-                                                        sortDirection = 1;
-                                                    }
-                                                }}
-                                            >
-                                                {header}
-                                                {#if sortColumn === header}
-                                                    {sortDirection === 1 ? '▲' : '▼'}
-                                                {/if}
-                                            </th>
-                                        {/each}
-                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                                    {#each sortedItems as item (item.id)}
+                            <div class="overflow-x-auto shadow-md sm:rounded-lg">
+                                <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                                         <tr>
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <div class="flex items-center">
-                                                    <img src={`https://assets.parqet.com/logos/symbol/${item.symbol}?format=png`} 
-                                                         alt={`${item.symbol} logo`} 
-                                                         class="mr-3 h-8 w-8"
-                                                         on:error={(e) => {
-                                                             if (e.target instanceof HTMLImageElement) {
-                                                                 e.target.style.display = 'none';
-                                                             }
-                                                         }}
-                                                    >
-                                                    <span class="text-sm text-gray-900 dark:text-gray-100">{item.symbol}</span>
-                                                </div>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{item.company_name}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{item.sector}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900 dark:text-gray-100">${item.current_price}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900 dark:text-gray-100">${item.target_price}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{item.notes}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                <button
-                                                    on:click={() => handleFullPage(item)}
-                                                    class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-2"
-                                                >
-                                                    Full Page
-                                                </button>
-                                                <button
-                                                    on:click={() => deleteItem(new CustomEvent('deleteItem', { detail: item.id }))}
-                                                    class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                                                >
-                                                    Delete
-                                                </button>
-                                            </td>
+                                            {#each ['Symbol', 'Company Name', 'Sector', 'Current Price', 'Target Price', 'Notes'] as header, index}
+                                                <th scope="col" class="px-6 py-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600" on:click={() => handleSort(header)}>
+                                                    <div class="flex items-center justify-between">
+                                                        {header}
+                                                        {#if sortColumn === header}
+                                                            <span class="ml-1">{sortDirection === 1 ? '▲' : '▼'}</span>
+                                                        {/if}
+                                                    </div>
+                                                </th>
+                                            {/each}
+                                            <th scope="col" class="px-6 py-3">
+                                                <span class="sr-only">Actions</span>
+                                            </th>
                                         </tr>
-                                    {/each}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        {#each sortedItems as item (item.id)}
+                                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                                <td class="px-6 py-4 whitespace-nowrap">
+                                                    <div class="flex items-center">
+                                                        <img src="https://assets.parqet.com/logos/symbol/{item.symbol}?format=png" alt="{item.symbol} logo" class="w-8 h-8 mr-3 rounded-full">
+                                                        <span class="font-medium text-gray-900 dark:text-white">{item.symbol}</span>
+                                                    </div>
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap">{item.company_name}</td>
+                                                <td class="px-6 py-4 whitespace-nowrap">{item.sector}</td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-right">${item.current_price}</td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-right">${item.target_price}</td>
+                                                <td class="px-6 py-4">{item.notes}</td>
+                                                <td class="px-6 py-4 text-right">
+                                                    <button on:click={() => handleFullPage(item)} class="font-medium text-blue-600 dark:text-blue-500 hover:underline mr-2">Full Page</button>
+                                                    <button on:click={() => handleDelete(item.id)} class="font-medium text-red-600 dark:text-red-500 hover:underline">Delete</button>
+                                                </td>
+                                            </tr>
+                                        {/each}
+                                    </tbody>
+                                </table>
+                            </div>
                         {:else}
                             <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                                 {#each filteredItems as item (item.id)}
@@ -317,4 +310,3 @@
         </div>
     </div>
 {/if}
-
