@@ -294,22 +294,3 @@
     </div>
 {/if}
 
-<nav>
-    <ul>
-        {#each listNames as list}
-            <li class="mb-2">
-                <button
-                    class="w-full rounded-lg px-4 py-2 text-left transition-colors 
-                        {activeSection === list ? 'bg-primary-100 text-primary-900 dark:bg-primary-900 dark:text-primary-100' : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'}"
-                    on:click={() => {
-                        activeList = list;
-                        activeSection = list;
-                        goto(`/subprojects/investment-analysis-platform?list=${encodeURIComponent(list)}`);
-                    }}
-                >
-                    {list}
-                </button>
-            </li>
-        {/each}
-    </ul>
-</nav>
