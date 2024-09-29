@@ -11,6 +11,7 @@
     import Sidebar from '$lib/components/Sidebar.svelte';
     import StockItem from '$lib/components/StockItem.svelte';
     import { listNames } from '$lib/constants/listNames';
+    import '../../../app.css';
 
     interface StockItem {
         id: string;
@@ -33,6 +34,9 @@
     let lists = listNames;
     let tableView = false;
 
+    let sortColumn = '';
+    let sortDirection = 1; // 1 for ascending, -1 for descending
+
     $: {
         if (browser) {
             const url = new URL(window.location.href);
@@ -50,6 +54,12 @@
     }
 
     $: filteredItems = items.filter(item => item.list_name === activeSection);
+
+    $: sortedItems = filteredItems.sort((a, b) => {
+        const aValue = a[sortColumn.toLowerCase().replace(' ', '_')] || '';
+        const bValue = b[sortColumn.toLowerCase().replace(' ', '_')] || '';
+        return sortDirection * (aValue > bValue ? 1 : -1);
+    });
 
     onMount(async () => {
         await loadItems();
@@ -183,12 +193,14 @@
                             Add New Stock
                         </button>
                     {/if}
-                    <button
-                        on:click={() => tableView = !tableView}
-                        class="rounded bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
-                    >
-                        {tableView ? 'Grid View' : 'Table View'}
-                    </button>
+                    <div class="flex items-center space-x-4">
+                        <span class="text-sm text-gray-700 dark:text-gray-300">Grid View</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" bind:checked={tableView}>
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span class="text-sm text-gray-700 dark:text-gray-300">Table View</span>
+                    </div>
                 </div>
             </div>
             <main>
@@ -204,17 +216,29 @@
                             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                                 <thead class="bg-gray-50 dark:bg-gray-700">
                                     <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Symbol</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Company Name</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Sector</th>
-                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Current Price</th>
-                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Target Price</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Notes</th>
+                                        {#each ['Symbol', 'Company Name', 'Sector', 'Current Price', 'Target Price', 'Notes'] as header, index}
+                                            <th 
+                                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
+                                                on:click={() => {
+                                                    if (sortColumn === header) {
+                                                        sortDirection *= -1;
+                                                    } else {
+                                                        sortColumn = header;
+                                                        sortDirection = 1;
+                                                    }
+                                                }}
+                                            >
+                                                {header}
+                                                {#if sortColumn === header}
+                                                    {sortDirection === 1 ? '▲' : '▼'}
+                                                {/if}
+                                            </th>
+                                        {/each}
                                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                                    {#each filteredItems as item (item.id)}
+                                    {#each sortedItems as item (item.id)}
                                         <tr>
                                             <td class="px-6 py-4 whitespace-nowrap">
                                                 <div class="flex items-center">
