@@ -58,31 +58,19 @@
         return;
       }
 
-      // Fetch stockItem
-      const { data: stockData, error: stockError } = await supabase
-        .from('stock_items')
-        .select('*')
+      // Fetch user_stocks and stock_metadata
+      const { data: userStockData, error: userStockError } = await supabase
+        .from('user_stocks')
+        .select('*, stock_metadata(*)')
         .eq('user_id', session.user.id)
         .ilike('list_name', listNameParam)
-        .ilike('symbol', symbolParam)
-        .maybeSingle();
+        .eq('stock_metadata.symbol', symbolParam)
+        .single();
 
-      if (stockError) throw stockError;
-      if (!stockData) {
-        error = 'Stock item not found';
-        loading = false;
-        return;
-      }
-      stockItem = stockData;
+      if (userStockError) throw userStockError;
+      if (!userStockData) throw new Error('Stock not found');
 
-      // Fetch companyInfo
-      const { data: companyData, error: companyError } = await supabase
-        .from('company_info')
-        .select('*')
-        .eq('stock_item_id', stockItem.id)
-        .maybeSingle();
-      if (companyError) throw companyError;
-      companyInfo = companyData || {};
+      stockItem = { ...userStockData.stock_metadata, notes: userStockData.notes };
 
       // Fetch questions
       const { data: questionsData, error: questionsError } = await supabase
