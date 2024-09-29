@@ -136,7 +136,7 @@
     }
 
     function handleFullPage(userStock: UserStock, stockMetadata: StockMetadata) {
-        goto(`/subprojects/investment-analysis-platform/${userStock.list_name.toLowerCase()}/${stockMetadata.symbol.toLowerCase()}`);
+        goto(`/subprojects/investment-analysis-platform/${encodeURIComponent(userStock.list_name.toLowerCase())}/${encodeURIComponent(stockMetadata.symbol.toLowerCase())}`);
     }
 </script>
 
@@ -227,7 +227,9 @@
                                                 <td class="px-6 py-4 whitespace-nowrap">${stockMetadata.market_cap.toLocaleString()}</td>
                                                 <td class="px-6 py-4 whitespace-nowrap">{stockMetadata.exchange}</td>
                                                 <td class="px-6 py-4 text-right">
-                                                    <button on:click={() => handleFullPage(userStock, stockMetadata)} class="font-medium text-blue-600 dark:text-blue-500 hover:underline mr-2">Full Page</button>
+                                                    <button on:click={() => handleFullPage(userStock, stockMetadata)} class="rounded bg-blue-600 px-3 py-2 text-sm text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
+                                                        Full Page
+                                                    </button>
                                                     <button on:click={() => deleteItem(userStock.id)} class="font-medium text-red-600 dark:text-red-500 hover:underline">Delete</button>
                                                 </td>
                                             </tr>

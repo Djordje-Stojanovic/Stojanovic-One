@@ -297,4 +297,28 @@ The project is deployed on Vercel. The production URL is https://stojanovic-one.
 2. Use Supabase Row Level Security (RLS) policies to protect data
 3. Keep all dependencies up-to-date and regularly check for vulnerabilities
 
+## Recent Updates
+
+### Database and API Changes
+
+The project has undergone significant changes in its database structure and API integration:
+
+1. The `stock_items` table has been replaced with `stock_metadata` and `user_stocks` tables.
+2. The Finnhub API is now used to fetch stock data when adding new stocks.
+3. The Parqet API is used to fetch stock logos.
+4. The `company_info` table has been added to store additional company information.
+5. The `questions` and `answers` tables have been implemented for the investment analysis process.
+
+These changes require updates to the data fetching and manipulation logic throughout the application, particularly in the Investment Analysis Platform subproject.
+
+### API Endpoints
+
+New API endpoints have been added to handle stock data fetching and validation:
+
+- `E:\Stojanovic-One\src\routes\api\fetch-stock-data\+server.ts`: Handles fetching and storing new stock data.
+- `E:\Stojanovic-One\src\routes\api\check-isin\+server.ts`: Validates ISIN numbers.
+- `E:\Stojanovic-One\src\routes\api\check-symbol\+server.ts`: Validates stock symbols.
+
+Ensure that these endpoints are properly secured and follow best practices for error handling and data validation.
+
 Remember to update this AI.MD file as the project evolves and new features or best practices are implemented.

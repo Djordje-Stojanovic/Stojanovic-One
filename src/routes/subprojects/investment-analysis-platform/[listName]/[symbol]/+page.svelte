@@ -58,54 +58,60 @@
         return;
       }
 
-      // Fetch user_stocks and stock_metadata
+      console.log('Fetching user_stocks and stock_metadata');
       const { data: userStockData, error: userStockError } = await supabase
         .from('user_stocks')
-        .select('*, stock_metadata(*)')
+        .select(`
+          *,
+          stock_metadata (*)
+        `)
         .eq('user_id', session.user.id)
         .ilike('list_name', listNameParam)
-        .eq('stock_metadata.symbol', symbolParam)
-        .single();
+        .eq('stock_metadata.symbol', symbolParam.toUpperCase());
 
       if (userStockError) throw userStockError;
-      if (!userStockData) throw new Error('Stock not found');
+      if (!userStockData || userStockData.length === 0) throw new Error('Stock not found');
 
-      stockItem = { ...userStockData.stock_metadata, notes: userStockData.notes };
+      console.log('User stock data:', userStockData);
 
-      // Fetch questions
+      const firstUserStock = userStockData[0];
+      stockItem = { ...firstUserStock.stock_metadata, notes: firstUserStock.notes, list_name: firstUserStock.list_name };
+
+      console.log('Stock item:', stockItem);
+
+      // Fetch questions (commented out for now)
+      /*
+      console.log('Fetching questions');
       const { data: questionsData, error: questionsError } = await supabase
-        .from('meta_questions')
+        .from('questions')
         .select('*')
-        .eq('user_id', session.user.id)
-        .ilike('list_name', listNameParam)
-        .order('order_index', { ascending: true });
+        .eq('list_name', listNameParam)
+        .order('order_index');
 
       if (questionsError) throw questionsError;
       questions = questionsData || [];
+      console.log('Questions:', questions);
 
       // Fetch answers
+      console.log('Fetching answers');
       const { data: answersData, error: answersError } = await supabase
-        .from('stock_answers')
+        .from('answers')
         .select('*')
-        .eq('stock_item_id', stockItem.id)
-        .eq('user_id', session.user.id);
+        .eq('user_stock_id', firstUserStock.id);
 
       if (answersError) throw answersError;
-      answers = {};
-      if (answersData) {
-        answersData.forEach(answer => {
-          answers[answer.question_id] = {
-            answer: answer.answer,
-            text_answer: answer.text_answer,
-          };
-        });
-      }
+      answers = answersData?.reduce((acc, answer) => {
+        acc[answer.question_id] = { answer: answer.answer, text_answer: answer.text_answer };
+        return acc;
+      }, {}) || {};
+      console.log('Answers:', answers);
+      */
 
       loading = false;
-    } catch (e: any) {
-      console.error('Error loading data:', e);
-      error = e.message || 'Failed to load data';
+    } catch (error) {
+      console.error('Error loading data:', error);
       loading = false;
+      error = error instanceof Error ? error.message : 'An unknown error occurred';
     }
   }
 
@@ -254,9 +260,6 @@
     />
 
     <!-- Company Info -->
-    <CompanyInfo
-      {companyInfo}
-      on:updateCompanyInfo={e => updateCompanyInfo(e.detail)}
-    />
+    <CompanyInfo stockMetadata={stockItem} />
   </div>
 {/if}
