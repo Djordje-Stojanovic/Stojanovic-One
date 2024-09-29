@@ -4,8 +4,8 @@ import { env } from '$env/dynamic/private';
 
 // Initialize Supabase Admin Client with Service Role Key
 const supabaseAdmin = createClient(
-  env.VITE_PUBLIC_SUPABASE_URL,
-  env.SUPABASE_SERVICE_ROLE_KEY
+  env.VITE_PUBLIC_SUPABASE_URL!,
+  env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
 export async function POST({ request }) {

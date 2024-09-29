@@ -2,13 +2,14 @@
     import { supabase } from '$lib/supabaseClient';
     import { session } from '$lib/stores/sessionStore';
     import { createEventDispatcher } from 'svelte';
+    import type { ListName } from '$lib/constants/listNames';
 
     const dispatch = createEventDispatcher();
 
     let identifier = '';
     let identifierType = 'symbol';
     let notes = '';
-    let activeList = 'Watchlist';
+    export let activeList: ListName;
     let isValid = false;
     let errorMessage = '';
     let isLoading = false;

@@ -6,9 +6,10 @@
     import { browser } from '$app/environment';
     import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
     import AddStockForm from '$lib/components/AddStockForm.svelte';
+    import Company from '$lib/components/CompanyInfoCard.svelte';
     import Sidebar from '$lib/components/Sidebar.svelte';
     import StockItem from '$lib/components/StockItem.svelte';
-    import { listNames } from '$lib/constants/listNames';
+    import { listNames, type ListName } from '$lib/constants/listNames';
     import '../../../app.css';
 
     interface StockMetadata {
@@ -26,7 +27,7 @@
         id: string;
         user_id: string;
         notes: string;
-        list_name: string;
+        list_name: ListName;
     }
 
     interface StockItem {
@@ -40,7 +41,7 @@
     let showAddStockForm = false;
     let selectedStockId: string | null = null;
 
-    let activeList = listNames[0];
+    let activeList: string = listNames[0];
     let lists = listNames;
     let tableView = false;
 
@@ -252,7 +253,7 @@
             </main>
             {#if showAddStockForm && activeSection === 'Watchlist'}
                 <AddStockForm
-                    activeList={activeList}
+                    activeList={activeSection}
                     on:stockAdded={handleStockAdded}
                     on:close={() => (showAddStockForm = false)}
                 />
@@ -263,7 +264,7 @@
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div class="w-full max-w-2xl rounded-lg bg-white p-6 dark:bg-gray-800">
                 {#if selectedStockId}
-                    {#await import('./CompanyInfoCard.svelte') then module}
+                    {#await import('$lib/components/CompanyInfoCard.svelte') then module}
                         <svelte:component this={module.default} stockItemId={selectedStockId} />
                     {/await}
                 {/if}
