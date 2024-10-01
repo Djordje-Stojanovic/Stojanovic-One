@@ -17,6 +17,12 @@
     function handleFullPage() {
         goto(`/subprojects/investment-analysis-platform/${userStock.list_name.toLowerCase()}/${item.symbol.toLowerCase()}`);
     }
+    
+    function handleDelete() {
+        if (confirm('Are you sure you want to delete this stock item?')) {
+            dispatch('deleteItem', userStock.id);
+        }
+    }
 </script>
 
 <div class="rounded-lg border bg-white p-6 shadow-md transition-all duration-300 hover:shadow-lg dark:border-gray-700 dark:bg-gray-800">
@@ -49,11 +55,7 @@
         <button on:click={handleFullPage} class="rounded bg-blue-600 px-3 py-2 text-sm text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
             Full Page
         </button>
-        <button on:click={() => {
-            if (confirm('Are you sure you want to delete this stock item?')) {
-                dispatch('deleteItem', userStock.id);
-            }
-        }} class="rounded bg-red-600 px-3 py-2 text-sm text-white transition-colors hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
+        <button on:click={handleDelete} class="rounded bg-red-600 px-3 py-2 text-sm text-white transition-colors hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
             Delete
         </button>
     </div>

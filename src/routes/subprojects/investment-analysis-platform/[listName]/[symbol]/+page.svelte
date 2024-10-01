@@ -64,12 +64,10 @@
       console.log('Fetching user_stocks and stock_metadata');
       const { data: userStockData, error: userStockError } = await supabase
         .from('user_stocks')
-        .select(
-          `
+        .select(`
           *,
           stock_metadata!inner(*)
-        `
-        )
+        `)
         .eq('user_id', session.user.id)
         .eq('list_name', listNameParam)
         .eq('stock_metadata.symbol', symbolParam.toUpperCase())
@@ -83,7 +81,8 @@
       stockItem = {
         ...userStockData.stock_metadata,
         notes: userStockData.notes,
-        list_name: userStockData.list_name
+        list_name: userStockData.list_name,
+        id: userStockData.id  // Include the user_stocks id
       };
 
       console.log('Stock item:', stockItem);
@@ -141,26 +140,18 @@
     if (!newListName) return;
 
     try {
-      // Update the stock item
-      const { data: updatedStockItem, error } = await supabase
-        .from('stock_items')
+      // Update the user_stocks table
+      const { data, error } = await supabase
+        .from('user_stocks')
         .update({ list_name: newListName })
-        .eq('id', item.id)
-        .select()
-        .single();
+        .eq('id', item.id);
 
       if (error) throw error;
-      stockItem = updatedStockItem;
 
-      // Update the list_name in stock_answers
-      const { error: answersError } = await supabase
-        .from('stock_answers')
-        .update({ list_name: newListName })
-        .eq('stock_item_id', item.id);
+      // Update the local stockItem's list_name
+      stockItem.list_name = newListName;
 
-      if (answersError) throw answersError;
-
-      // Navigate to the new route
+      // Navigate to the new route corresponding to the new list
       goto(
         `/subprojects/investment-analysis-platform/${encodeURIComponent(newListName)}/${encodeURIComponent(
           stockItem.symbol.toLowerCase()

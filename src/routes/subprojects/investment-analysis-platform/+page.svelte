@@ -10,6 +10,7 @@
     import Sidebar from '$lib/components/Sidebar.svelte';
     import StockItem from '$lib/components/StockItem.svelte';
     import { listNames, type ListName } from '$lib/constants/listNames';
+    import { allowedMoves } from '$lib/utils/stockMoves';
     import '../../../app.css';
 
     interface StockMetadata {
@@ -122,12 +123,51 @@
         }
     }
 
-    function moveItem(event) {
-        // Implementation for moving the item to a different list
+    // Implement the moveItem function
+    async function moveItem(event) {
+        const { userStock, newListName } = event.detail;
+        try {
+            const { data, error } = await supabase
+                .from('user_stocks')
+                .update({ list_name: newListName })
+                .eq('id', userStock.id);
+
+            if (error) throw error;
+
+            // Update the local items array
+            items = items.map(item => {
+                if (item.userStock.id === userStock.id) {
+                    return {
+                        ...item,
+                        userStock: { ...item.userStock, list_name: newListName }
+                    };
+                }
+                return item;
+            });
+
+            // Optionally, you can also update the UI to reflect the move
+            // For example, you might want to remove the item from the current list
+        } catch (error) {
+            console.error('Error moving item:', error);
+        }
     }
 
-    function deleteItem(event) {
-        // Implementation for deleting the item
+    // Implement the deleteItem function
+    async function deleteItem(event) {
+        const userStockId = event.detail;
+        try {
+            const { data, error } = await supabase
+                .from('user_stocks')
+                .delete()
+                .eq('id', userStockId);
+
+            if (error) throw error;
+
+            // Remove the item from the local items array
+            items = items.filter(item => item.userStock.id !== userStockId);
+        } catch (error) {
+            console.error('Error deleting item:', error);
+        }
     }
 
     function handleStockAdded() {
@@ -245,7 +285,7 @@
                                         {userStock}
                                         item={stockMetadata}
                                         on:moveItem={moveItem}
-                                        on:deleteItem={() => deleteItem(userStock.id)}
+                                        on:deleteItem={deleteItem}
                                     />
                                 {/each}
                             </div>
