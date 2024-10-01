@@ -61,7 +61,7 @@
         return;
       }
 
-      console.log('Fetching user_stocks and stock_metadata');
+      // Fetch user_stocks and stock_metadata
       const { data: userStockData, error: userStockError } = await supabase
         .from('user_stocks')
         .select(`
@@ -76,16 +76,42 @@
       if (userStockError) throw userStockError;
       if (!userStockData) throw new Error('Stock not found');
 
-      console.log('User stock data:', userStockData);
-
       stockItem = {
         ...userStockData.stock_metadata,
         notes: userStockData.notes,
         list_name: userStockData.list_name,
-        id: userStockData.id  // Include the user_stocks id
+        id: userStockData.id // Include the user_stocks id
       };
 
-      console.log('Stock item:', stockItem);
+      // **Fetch meta questions for the current list**
+      const { data: questionsData, error: questionsError } = await supabase
+        .from('meta_questions')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .eq('list_name', listNameParam)
+        .order('order_index', { ascending: true });
+
+      if (questionsError) throw questionsError;
+
+      questions = questionsData;
+
+      // **Fetch existing answers for this stock**
+      const { data: answersData, error: answersError } = await supabase
+        .from('stock_answers')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .eq('stock_item_id', userStockData.id);
+
+      if (answersError) throw answersError;
+
+      // Map answers to a dictionary
+      answers = {};
+      for (const answer of answersData) {
+        answers[answer.question_id] = {
+          answer: answer.answer,
+          text_answer: answer.text_answer,
+        };
+      }
 
       loading = false;
     } catch (error) {
