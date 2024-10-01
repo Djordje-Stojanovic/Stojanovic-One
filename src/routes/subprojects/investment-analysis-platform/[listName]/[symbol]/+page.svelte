@@ -49,7 +49,10 @@
     loading = true;
     error = null;
     try {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      const {
+        data: { session },
+        error: sessionError
+      } = await supabase.auth.getSession();
       if (sessionError) throw sessionError;
       if (!session) {
         if (typeof window !== 'undefined') {
@@ -61,57 +64,36 @@
       console.log('Fetching user_stocks and stock_metadata');
       const { data: userStockData, error: userStockError } = await supabase
         .from('user_stocks')
-        .select(`
+        .select(
+          `
           *,
-          stock_metadata (*)
-        `)
+          stock_metadata!inner(*)
+        `
+        )
         .eq('user_id', session.user.id)
-        .ilike('list_name', listNameParam)
-        .eq('stock_metadata.symbol', symbolParam.toUpperCase());
+        .eq('list_name', listNameParam)
+        .eq('stock_metadata.symbol', symbolParam.toUpperCase())
+        .single();
 
       if (userStockError) throw userStockError;
-      if (!userStockData || userStockData.length === 0) throw new Error('Stock not found');
+      if (!userStockData) throw new Error('Stock not found');
 
       console.log('User stock data:', userStockData);
 
-      const firstUserStock = userStockData[0];
-      stockItem = { ...firstUserStock.stock_metadata, notes: firstUserStock.notes, list_name: firstUserStock.list_name };
+      stockItem = {
+        ...userStockData.stock_metadata,
+        notes: userStockData.notes,
+        list_name: userStockData.list_name
+      };
 
       console.log('Stock item:', stockItem);
-
-      // Fetch questions (commented out for now)
-      /*
-      console.log('Fetching questions');
-      const { data: questionsData, error: questionsError } = await supabase
-        .from('questions')
-        .select('*')
-        .eq('list_name', listNameParam)
-        .order('order_index');
-
-      if (questionsError) throw questionsError;
-      questions = questionsData || [];
-      console.log('Questions:', questions);
-
-      // Fetch answers
-      console.log('Fetching answers');
-      const { data: answersData, error: answersError } = await supabase
-        .from('answers')
-        .select('*')
-        .eq('user_stock_id', firstUserStock.id);
-
-      if (answersError) throw answersError;
-      answers = answersData?.reduce((acc, answer) => {
-        acc[answer.question_id] = { answer: answer.answer, text_answer: answer.text_answer };
-        return acc;
-      }, {}) || {};
-      console.log('Answers:', answers);
-      */
 
       loading = false;
     } catch (error) {
       console.error('Error loading data:', error);
       loading = false;
-      error = error instanceof Error ? error.message : 'An unknown error occurred';
+      error =
+        error instanceof Error ? error.message : 'An unknown error occurred';
     }
   }
 
