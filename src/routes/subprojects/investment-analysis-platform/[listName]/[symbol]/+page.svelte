@@ -18,6 +18,7 @@
     order_index: number;
   }
 
+  // interface for the answer data
   interface AnswerData {
     answer: boolean;
     text_answer?: string;
