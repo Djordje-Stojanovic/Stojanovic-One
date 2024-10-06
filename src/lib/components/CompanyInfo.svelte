@@ -8,14 +8,15 @@
         {#if stockMetadata}
             <div><span class="font-semibold">Symbol:</span> {stockMetadata.symbol || 'N/A'}</div>
             <div><span class="font-semibold">Company Name:</span> {stockMetadata.company_name || 'N/A'}</div>
-            <div><span class="font-semibold">ISIN:</span> {stockMetadata.isin || 'N/A'}</div>
             <div><span class="font-semibold">Sector:</span> {stockMetadata.sector || 'N/A'}</div>
-            <div><span class="font-semibold">Market Cap:</span> {stockMetadata.market_cap || 'N/A'}</div>
-            <div><span class="font-semibold">Shares Outstanding:</span> {stockMetadata.share_outstanding || 'N/A'}</div>
+            <div><span class="font-semibold">Market Cap:</span> {stockMetadata.market_cap ? `$${stockMetadata.market_cap.toLocaleString()}` : 'N/A'}</div>
+            <div><span class="font-semibold">Shares Outstanding:</span> {stockMetadata.share_outstanding ? stockMetadata.share_outstanding.toLocaleString() : 'N/A'}</div>
             <div><span class="font-semibold">Country:</span> {stockMetadata.country || 'N/A'}</div>
             <div><span class="font-semibold">Currency:</span> {stockMetadata.currency || 'N/A'}</div>
+            <div><span class="font-semibold">Estimate Currency:</span> {stockMetadata.estimate_currency || 'N/A'}</div>
             <div><span class="font-semibold">Exchange:</span> {stockMetadata.exchange || 'N/A'}</div>
             <div><span class="font-semibold">IPO Date:</span> {stockMetadata.ipo || 'N/A'}</div>
+            <div><span class="font-semibold">Phone:</span> {stockMetadata.phone || 'N/A'}</div>
             <div><span class="font-semibold">Website:</span> 
                 {#if stockMetadata.weburl}
                     <a href={stockMetadata.weburl} target="_blank" rel="noopener noreferrer">{stockMetadata.weburl}</a>

@@ -1,13 +1,17 @@
 import { json } from '@sveltejs/kit';
 import { createClient } from '@supabase/supabase-js';
-import { VITE_PUBLIC_SUPABASE_URL, VITE_PUBLIC_SUPABASE_ANON_KEY, FINNHUB_API_KEY } from '$env/static/private';
+import {
+  VITE_PUBLIC_SUPABASE_URL,
+  SUPABASE_SERVICE_ROLE_KEY,
+  FINNHUB_API_KEY
+} from '$env/static/private';
 
-if (!VITE_PUBLIC_SUPABASE_URL || !VITE_PUBLIC_SUPABASE_ANON_KEY || !FINNHUB_API_KEY) {
+if (!VITE_PUBLIC_SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !FINNHUB_API_KEY) {
   throw new Error('Missing required environment variables');
 }
 
-// Initialize Supabase client
-const supabase = createClient(VITE_PUBLIC_SUPABASE_URL, VITE_PUBLIC_SUPABASE_ANON_KEY);
+// Initialize Supabase client with the service role key
+const supabase = createClient(VITE_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 export async function POST({ request }) {
   try {
@@ -34,7 +38,7 @@ export async function POST({ request }) {
       return json({ error: 'Invalid stock data received from Finnhub' }, { status: 500 });
     }
 
-    // Insert stock metadata into Supabase
+    // Insert or update stock metadata in Supabase
     const { data: stockMetadata, error: metadataError } = await supabase
       .from('stock_metadata')
       .upsert({
@@ -44,30 +48,72 @@ export async function POST({ request }) {
         market_cap: stockData.marketCapitalization,
         exchange: stockData.exchange,
         logo_url: stockData.logo,
-      })
+        country: stockData.country,
+        currency: stockData.currency,
+        estimate_currency: stockData.estimateCurrency,
+        ipo: stockData.ipo,
+        phone: stockData.phone,
+        weburl: stockData.weburl,
+        share_outstanding: stockData.shareOutstanding,
+      }, { onConflict: 'symbol' })
       .select()
       .single();
 
     if (metadataError) {
-      console.error('Error inserting stock metadata:', metadataError);
-      return json({ error: 'Failed to insert stock metadata' }, { status: 500 });
+      console.error('Error upserting stock metadata:', metadataError);
+      return json({ error: 'Failed to upsert stock metadata' }, { status: 500 });
     }
 
-    // Insert into user_stocks table
-    const { data: userStock, error: userStockError } = await supabase
+    // Check if the user already has this stock in their list
+    const { data: existingUserStock, error: existingStockError } = await supabase
       .from('user_stocks')
-      .insert({
-        user_id: userId,
-        stock_metadata_id: stockMetadata.id,
-        notes,
-        list_name: listName,
-      })
       .select()
+      .eq('user_id', userId)
+      .eq('stock_metadata_id', stockMetadata.id)
+      .eq('list_name', listName)
       .single();
 
-    if (userStockError) {
-      console.error('Error inserting user stock:', userStockError);
-      return json({ error: 'Failed to insert user stock' }, { status: 500 });
+    if (existingStockError && existingStockError.code !== 'PGRST116') {
+      console.error('Error checking existing user stock:', existingStockError);
+      return json({ error: 'Failed to check existing user stock' }, { status: 500 });
+    }
+
+    let userStock;
+
+    if (existingUserStock) {
+      // Update existing user stock
+      const { data: updatedStock, error: updateError } = await supabase
+        .from('user_stocks')
+        .update({ notes })
+        .eq('id', existingUserStock.id)
+        .select()
+        .single();
+
+      if (updateError) {
+        console.error('Error updating user stock:', updateError);
+        return json({ error: 'Failed to update user stock' }, { status: 500 });
+      }
+
+      userStock = updatedStock;
+    } else {
+      // Insert new user stock
+      const { data: newStock, error: insertError } = await supabase
+        .from('user_stocks')
+        .insert({
+          user_id: userId,
+          stock_metadata_id: stockMetadata.id,
+          notes,
+          list_name: listName,
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error('Error inserting user stock:', insertError);
+        return json({ error: 'Failed to insert user stock' }, { status: 500 });
+      }
+
+      userStock = newStock;
     }
 
     return json({ success: true, data: userStock });
