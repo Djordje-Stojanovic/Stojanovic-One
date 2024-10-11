@@ -3,9 +3,7 @@
 	import { session } from '$lib/stores/sessionStore';
 	import { createEventDispatcher } from 'svelte';
 
-	export let stockItemId: string;
-	export let fileType: 'graph' | 'document' | 'note';
-
+	export let symbol: string;
 	const dispatch = createEventDispatcher();
 
 	let file: File | null = null;
@@ -18,25 +16,45 @@
 		uploading = true;
 		error = '';
 
+		if (!$session) {
+			error = 'You must be logged in to upload files.';
+			uploading = false;
+			return;
+		}
+
+		const user = $session.user;
+		if (!user) {
+			error = 'User information is missing. Please try logging in again.';
+			uploading = false;
+			return;
+		}
+
 		const fileExt = file.name.split('.').pop();
 		const fileName = `${Date.now()}.${fileExt}`;
-		const filePath = `${$session.user.id}/${stockItemId}/${fileType}/${fileName}`;
+		const filePath = `${symbol}/${fileName}`;
 
 		const { error: uploadError } = await supabase.storage
-			.from('company-files')
+			.from('company-documents')
 			.upload(filePath, file);
 
 		if (uploadError) {
 			error = uploadError.message;
 		} else {
-			const { data: urlData, error: urlError } = await supabase.storage
-				.from('company-files')
+			const { data: urlData } = await supabase.storage
+				.from('company-documents')
 				.getPublicUrl(filePath);
 
-			if (urlError) {
-				error = urlError.message;
+			// Save file metadata
+			const { error: dbError } = await supabase.from('company_files').insert({
+				symbol,
+				file_path: filePath,
+				user_id: user.id,
+			});
+
+			if (dbError) {
+				error = dbError.message;
 			} else {
-				dispatch('fileUploaded', { type: fileType, url: urlData.publicUrl });
+				dispatch('fileUploaded', { url: urlData.publicUrl });
 			}
 		}
 
@@ -45,20 +63,23 @@
 	}
 </script>
 
-<div class="mt-4">
-	<input
-		type="file"
-		accept={fileType === 'graph' ? 'image/*' : fileType === 'document' ? '.pdf,.doc,.docx' : '.txt'}
-		on:change={(e) => (file = e.target.files[0])}
-	/>
-	<button
-		on:click={uploadFile}
-		disabled={!file || uploading}
-		class="mt-2 rounded-md bg-primary-600 px-4 py-2 text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50"
-	>
-		{uploading ? 'Uploading...' : 'Upload'}
-	</button>
+<div class="my-4">
+	<h3 class="text-lg font-semibold">Upload Documents</h3>
+	<input type="file" on:change={(e) => {
+		const target = e.currentTarget;
+		file = target.files ? target.files[0] : null;
+	}} />
+	{#if file}
+		<p>Selected file: {file.name}</p>
+		<button
+			on:click={uploadFile}
+			disabled={uploading}
+			class="mt-2 px-4 py-2 bg-blue-600 text-white rounded"
+		>
+			{uploading ? 'Uploading...' : 'Upload'}
+		</button>
+	{/if}
 	{#if error}
-		<p class="mt-2 text-red-600">{error}</p>
+		<div class="text-red-500">{error}</div>
 	{/if}
 </div>

@@ -82,7 +82,7 @@
     });
 
   function viewDetails(stock: StockMetadata) {
-    goto(`/subprojects/investment-analysis-platform/global-company/${encodeURIComponent(stock.symbol.toLowerCase())}`);
+    goto(`/subprojects/investment-analysis-platform/company/${encodeURIComponent(stock.symbol)}`);
   }
 </script>
 
@@ -196,7 +196,7 @@
                 <td class="py-3 px-6">
                   <button
                     class="text-blue-600 hover:underline dark:text-blue-400"
-                    on:click={() => viewDetails(stock)}
+                    on:click={() => goto(`/subprojects/investment-analysis-platform/company/${encodeURIComponent(stock.symbol)}`)}
                   >
                     View Details
                   </button>
