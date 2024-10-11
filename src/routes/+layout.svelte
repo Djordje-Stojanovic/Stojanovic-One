@@ -53,6 +53,7 @@
 				<button on:click={handleLogout} class="hover:text-primary-300">Logout</button>
 				{#if isMainIAPRoute}
 					<a href="/subprojects/investment-analysis-platform/meta-questions" class="hover:text-primary-300">Meta Questions</a>
+					<a href="/subprojects/investment-analysis-platform/global-lookup" class="hover:text-primary-300">Global Stock Lookup</a>
 				{:else}
 					<a href="/subprojects/investment-analysis-platform" class="hover:text-primary-300">IAP</a>
 				{/if}
