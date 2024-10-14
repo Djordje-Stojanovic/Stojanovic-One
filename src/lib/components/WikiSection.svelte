@@ -18,7 +18,6 @@
         content: string;
         updated_at: string;
         user_id: string;
-        users: { username: string };
     }
 
     async function loadContent() {
@@ -26,7 +25,7 @@
         try {
             const { data, error: supabaseError } = await supabase
                 .from('company_wiki')
-                .select('content, updated_at, user_id, users(username)')
+                .select('content, updated_at, user_id')
                 .eq('symbol', symbol)
                 .eq('section', section)
                 .single<WikiData>();
@@ -37,7 +36,17 @@
             }
 
             content = data ? data.content : '';
-            lastUpdatedBy = data ? data.users.username : null;
+            
+            if (data && data.user_id) {
+                const { data: userData, error: userError } = await supabase
+                    .from('users')
+                    .select('username')
+                    .eq('id', data.user_id)
+                    .single();
+
+                if (userError) throw userError;
+                lastUpdatedBy = userData ? userData.username : null;
+            }
         } catch (err) {
             error = (err as Error).message;
         } finally {
