@@ -6,6 +6,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores'; // Import the page store
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
+	import 'quill/dist/quill.snow.css';
 
 	let isMenuOpen = false;
 
