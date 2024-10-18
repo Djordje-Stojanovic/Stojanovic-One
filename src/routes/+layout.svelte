@@ -14,21 +14,14 @@
 	$: isMainIAPRoute = $page.url.pathname === '/subprojects/investment-analysis-platform';
 
 	onMount(() => {
-		supabase.auth.getSession().then(({ data: { session } }) => {
-			$session = session;
+		supabase.auth.getSession().then(({ data: { session: supaSession } }) => {
+			session.set(supaSession);
 		});
 
 		const {
 			data: { subscription }
-		} = supabase.auth.onAuthStateChange((_event, session) => {
-			if ($session === null && session) {
-				// User has just logged in
-				goto('/');
-			} else if ($session && !session) {
-				// User has just logged out
-				goto('/login');
-			}
-			$session = session;
+		} = supabase.auth.onAuthStateChange((_event, supaSession) => {
+			session.set(supaSession);
 		});
 
 		return () => subscription.unsubscribe();
