@@ -42,8 +42,11 @@
 
             if (supabaseError) throw supabaseError;
 
+            console.log('Loaded data:', data); // Add this line
+
             if (data) {
                 content = data.content;
+                console.log('Content loaded:', content); // Add this line
                 console.log('Content loaded from database:', content);
 
                 // Fetch user information
@@ -59,6 +62,9 @@
                 } else {
                     lastUpdatedBy = userData?.full_name || 'Unknown';
                 }
+            } else {
+                content = '';
+                console.log('No content found, setting empty string'); // Add this line
             }
         } catch (err) {
             error = (err as Error).message;
@@ -102,8 +108,7 @@
         // Force a re-render of the Quill editor
         setTimeout(() => {
             if (quillInstance) {
-                const delta = quillInstance.clipboard.convert(content);
-                quillInstance.setContents(delta);
+                quillInstance.root.innerHTML = content;
                 console.log('Content loaded into editor after timeout');
             }
         }, 0);
@@ -115,8 +120,7 @@
         console.log('Quill Instance:', quillInstance);
         console.log('Content to Load:', content);
         if (quillInstance && content) {
-            const delta = quillInstance.clipboard.convert(content);
-            quillInstance.setContents(delta);
+            quillInstance.root.innerHTML = content;
             console.log('Content loaded into editor');
         } else {
             console.log('Failed to load content: ', quillInstance ? 'No content' : 'No Quill instance');
@@ -125,8 +129,7 @@
 
     $: if (quillInstance && content && editing) {
         console.log('Reactive content update detected');
-        const delta = quillInstance.clipboard.convert(content);
-        quillInstance.setContents(delta);
+        quillInstance.root.innerHTML = content;
     }
 </script>
 
@@ -182,9 +185,12 @@
                             }
                         }
                     }}
-                    on:text-change={(e) => content = e.detail.html}
+                    on:text-change={(e) => {
+                        content = e.detail.html;
+                        console.log('Text changed:', content);
+                    }}
                     on:quill-ready={handleQuillReady}
-                >{content}</div>
+                >{@html content}</div>
             </div>
             <button on:click={saveContent} class="mr-2 px-4 py-2 bg-green-600 text-white rounded">Save</button>
             <button on:click={() => editing = false} class="px-4 py-2 bg-gray-600 text-white rounded">Cancel</button>
