@@ -12,7 +12,6 @@
     let editing = false;
     let error: string | null = null;
     let lastUpdatedBy: string | null = null;
-    let quillInstance: any;
 
     const quillOptions = {
         modules: {
@@ -42,11 +41,8 @@
 
             if (supabaseError) throw supabaseError;
 
-            console.log('Loaded data:', data); // Add this line
-
             if (data) {
                 content = data.content;
-                console.log('Content loaded:', content); // Add this line
                 console.log('Content loaded from database:', content);
 
                 // Fetch user information
@@ -64,7 +60,7 @@
                 }
             } else {
                 content = '';
-                console.log('No content found, setting empty string'); // Add this line
+                console.log('No content found, setting empty string');
             }
         } catch (err) {
             error = (err as Error).message;
@@ -77,7 +73,7 @@
     async function saveContent() {
         error = null;
         try {
-            const newContent = quillInstance.root.innerHTML;
+            const newContent = content;
             console.log('Saving content:', newContent);
             const { error: updateError } = await supabase
                 .from('company_wiki')
@@ -93,7 +89,6 @@
 
             if (updateError) throw updateError;
 
-            content = newContent; // Update local content
             editing = false;
             console.log('Content saved successfully');
         } catch (err) {
@@ -105,31 +100,11 @@
     function startEditing() {
         console.log('Starting edit mode. Current content:', content);
         editing = true;
-        // Force a re-render of the Quill editor
-        setTimeout(() => {
-            if (quillInstance) {
-                quillInstance.root.innerHTML = content;
-                console.log('Content loaded into editor after timeout');
-            }
-        }, 0);
     }
 
     function handleQuillReady(e: CustomEvent) {
         console.log('Quill Ready event fired');
-        quillInstance = e.detail;
-        console.log('Quill Instance:', quillInstance);
-        console.log('Content to Load:', content);
-        if (quillInstance && content) {
-            quillInstance.root.innerHTML = content;
-            console.log('Content loaded into editor');
-        } else {
-            console.log('Failed to load content: ', quillInstance ? 'No content' : 'No Quill instance');
-        }
-    }
-
-    $: if (quillInstance && content && editing) {
-        console.log('Reactive content update detected');
-        quillInstance.root.innerHTML = content;
+        // No longer need quillInstance
     }
 </script>
 
