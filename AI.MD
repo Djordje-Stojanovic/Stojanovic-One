@@ -8,22 +8,24 @@ This project is a SvelteKit Full-Stack Solution, focusing on best practices in s
 
 Always provide file paths in this format:
 
-- Edit this file: E:\Stojanovic-One\src\routes\+page.svelte
-- Create this file: E:\Stojanovic-One\src\components\NewComponent.svelte
+- Edit this file: `E:\Stojanovic-One\src\routes\+page.svelte`
+- Create this file: `E:\Stojanovic-One\src\components\NewComponent.svelte`
 
 ## Technology Stack
 
-- Frontend & Backend: SvelteKit
-- Database: PostgreSQL (via Supabase)
-- UI Styling: Tailwind CSS
-- Deployment: Vercel
-- Authentication: Supabase Auth
-- State Management: Svelte stores
-- Image Compression: Custom utility (imageCompression.ts)
-- Drag and Drop: svelte-dnd-action library
+- **Frontend & Backend**: SvelteKit
+- **Database**: PostgreSQL (via Supabase)
+- **UI Styling**: Tailwind CSS
+- **Deployment**: Vercel
+- **Authentication**: Supabase Auth
+- **State Management**: Svelte stores
+- **Image Compression**: Custom utility (`imageCompression.ts`)
+- **Drag and Drop**: `svelte-dnd-action` library
+- **Rich Text Editor**: Quill via `svelte-quill`
 
 ## Project Structure
 
+```
 E:\Stojanovic-One\
 ├── .gitignore
 ├── .npmrc
@@ -35,72 +37,79 @@ E:\Stojanovic-One\
 ├── package.json
 ├── postcss.config.js
 ├── src\
-│ ├── app.css
-│ ├── app.d.ts
-│ ├── app.html
-│ ├── lib\
-│ │ ├── components\
-│ │ │ ├── AddStockForm.svelte
-│ │ │ ├── BuyReadyComponent.svelte
-│ │ │ ├── ClothingGallery.svelte
-│ │ │ ├── ClothingItemUpload.svelte
-│ │ │ ├── CompanyInfo.svelte
-│ │ │ ├── CompanyInfoCard.svelte
-│ │ │ ├── DueDiligenceComponent.svelte
-│ │ │ ├── ErrorMessage.svelte
-│ │ │ ├── FileUploader.svelte
-│ │ │ ├── LoadingSpinner.svelte
-│ │ │ ├── OutfitCreator.svelte
-│ │ │ ├── ProgressBar.svelte
-│ │ │ ├── QuestionList.svelte
-│ │ │ ├── Sidebar.svelte
-│ │ │ ├── StockItem.svelte
-│ │ │ ├── SubprojectCard.svelte
-│ │ │ ├── ThemeToggle.svelte
-│ │ │ ├── TooExpensiveComponent.svelte
-│ │ │ └── WatchlistComponent.svelte
-│ │ ├── constants\
-│ │ │ └── listNames.ts
-│ │ ├── stores\
-│ │ │ └── sessionStore.ts
-│ │ ├── types\
-│ │ │ └── index.ts
-│ │ ├── utils\
-│ │ │ ├── imageCompression.ts
-│ │ │ └── stockMoves.ts
-│ │ ├── index.ts
-│ │ └── supabaseClient.ts
-│ └── routes\
-│ ├── +layout.svelte
-│ ├── +layout.ts
-│ ├── +page.svelte
-│ ├── auth\
-│ │ └── callback\
-│ │ └── +server.ts
-│ ├── login\
-│ │ └── +page.svelte
-│ ├── profile\
-│ │ └── +page.svelte
-│ ├── register\
-│ │ └── +page.svelte
-│ └── subprojects\
-│ ├── clothing-outfit-calculator\
-│ │ └── +page.svelte
-│ └── investment-analysis-platform\
-│ ├── +page.svelte
-│ ├── meta-questions\
-│ │ └── +page.svelte
-│ └── [listName]\
-│ └── [symbol]\
-│ └── +page.svelte
+│   ├── app.css
+│   ├── app.d.ts
+│   ├── app.html
+│   ├── lib\
+│   │   ├── components\
+│   │   │   ├── AddStockForm.svelte
+│   │   │   ├── BuyReadyComponent.svelte
+│   │   │   ├── ClothingGallery.svelte
+│   │   │   ├── ClothingItemUpload.svelte
+│   │   │   ├── CompanyInfo.svelte
+│   │   │   ├── CompanyInfoCard.svelte
+│   │   │   ├── DueDiligenceComponent.svelte
+│   │   │   ├── ErrorMessage.svelte
+│   │   │   ├── FileUploader.svelte
+│   │   │   ├── **WikiSection.svelte**
+│   │   │   ├── LoadingSpinner.svelte
+│   │   │   ├── OutfitCreator.svelte
+│   │   │   ├── ProgressBar.svelte
+│   │   │   ├── QuestionList.svelte
+│   │   │   ├── Sidebar.svelte
+│   │   │   ├── StockItem.svelte
+│   │   │   ├── SubprojectCard.svelte
+│   │   │   ├── ThemeToggle.svelte
+│   │   │   ├── TooExpensiveComponent.svelte
+│   │   │   └── WatchlistComponent.svelte
+│   │   ├── constants\
+│   │   │   └── listNames.ts
+│   │   ├── stores\
+│   │   │   └── sessionStore.ts
+│   │   ├── types\
+│   │   │   └── index.ts
+│   │   ├── utils\
+│   │   │   ├── imageCompression.ts
+│   │   │   └── stockMoves.ts
+│   │   ├── index.ts
+│   │   └── supabaseClient.ts
+│   ├── routes\
+│   │   ├── api\
+│   │   │   ├── check-isin\
+│   │   │   │   └── +server.ts
+│   │   │   ├── check-symbol\
+│   │   │   │   └── +server.ts
+│   │   │   └── fetch-stock-data\
+│   │   │       └── +server.ts
+│   │   ├── auth\
+│   │   │   └── callback\
+│   │   │       └── +server.ts
+│   │   ├── login\
+│   │   │   └── +page.svelte
+│   │   ├── outfit-creator\
+│   │   │   └── +page.svelte
+│   │   ├── profile\
+│   │   │   └── +page.svelte
+│   │   ├── register\
+│   │   │   └── +page.svelte
+│   │   ├── subprojects\
+│   │   │   ├── investment-analysis-platform\
+│   │   │   │   ├── +page.svelte
+│   │   │   │   ├── company\
+│   │   │   │   │   └── [symbol]\
+│   │   │   │   │       └── +page.svelte
+│   │   │   │   ├── global-lookup\
+│   │   │   │   │   └── +page.svelte
+│   │   │   │   └── meta-questions\
+│   │   │   │       └── +page.svelte
+│   │   │   └── outfit-calculator\
+│   │   │       └── +page.svelte
+│   │   └── +layout.svelte
+│   └── supabase\
+│       └── migrations\
 ├── static\
-│ ├── favicon.png
-│ └── google-logo.svg
-├── svelte.config.js
-├── tailwind.config.ts
-├── tsconfig.json
-├── vite.config.ts
-└── .env
+└── svelte.config.js
+```
 
 ## Elon Musk's Algorithm for Efficiency
 
@@ -112,213 +121,201 @@ Apply these principles throughout the development process:
 4. Accelerate cycle time
 5. Automate
 
-## Development Philosophy
-
-1. Produce clear, readable, and efficient Svelte and TypeScript code.
-2. Use the latest stable versions of all technologies in the stack.
-3. Provide accurate, factual, and thoughtful solutions.
-4. Follow user requirements meticulously, applying Elon Musk's principles.
-5. Think step-by-step: describe plans in detailed pseudocode before implementation.
-6. Write correct, up-to-date, bug-free, fully functional, secure, and efficient code.
-7. Prioritize readability over performance, unless explicitly required otherwise.
-8. Fully implement all requested functionality without TODOs or placeholders.
-9. Be concise in explanations while ensuring clarity.
-10. Admit when there's uncertainty rather than guessing.
-11. Always include file paths at the top of each code file and update the Project Structure section.
-
-## Design and User Experience Guidelines
-
-1. Dark Mode Compatibility - always implement dark mode first
-2. Responsive Design - ensure the design is responsive and works well on Desktop
-3. Modern and Beautiful UI - ensure the design is modern and beautiful
-4. Accessibility - ensure the design is usable no matter if you zoom in via CTRL + mouse wheel or not
-
-## Development Workflow
-
-1. **Issue Management**
-
-   - Create GitHub Issues for features, bugs, and improvements
-   - Organize issues into milestones
-   - Question every requirement critically
-   - Break down large issues into smaller, manageable tasks
-
-2. **Development Cycle**
-
-   - Choose an issue to work on
-   - Create a feature branch: `git checkout -b feature/issue-description`
-   - Apply Test-Driven Development (TDD):
-     A. Implement minimum code to pass tests
-     B. Refactor while maintaining passing tests
-   - Push changes regularly: `git push origin feature/issue-description`
-
-3. **Code Review and Merging**
-
-   - Look for potential improvements or missed cases
-   - Ensure all tests pass and update documentation
-   - Merge into main when ready
-   - Delete the feature branch
-
-4. **Continuous Deployment**
-
-   - Utilize Vercel's built-in deployment features
-   - Automatic deployments triggered by pushes to the main branch
-   - Monitor deployments through Vercel dashboard
-
-5. **Documentation**
-
-   - Keep README.md up-to-date
-   - Use JSDoc comments for all functions, classes, and modules
-   - Update this AI.MD with any process changes
-
-6. **Code Quality**
-
-   - Use ESLint and Prettier for code formatting and linting
-   - Implement static type checking with TypeScript
-   - Set up pre-commit hooks for automated checks
-
-7. **Dependency Management**
-
-   - Regularly update dependencies
-   - Use npm audit to manage dependencies and check for security vulnerabilities
-
-8. **Version Control**
-
-   - Use meaningful commit messages
-   - Keep commits small and focused
-
-9. **Deployment**
-   - Use Vercel for automatic deployments
-   - Set up staging and production environments
-
-## Continuous Improvement
-
-This document and our workflow are adaptable. As the project evolves, we may adjust our processes and practices. Always look for ways to simplify, optimize, and accelerate our development cycle without compromising quality.
-
-Remember to apply Elon Musk's efficiency principles throughout the development process.
-
-## File Path Importance
-
-When referencing, editing, or creating files, always use the full file path. For example:
-
-- Edit this file: E:\Stojanovic-One\src\routes\+page.svelte
-- Create this file: E:\Stojanovic-One\src\components\NewComponent.svelte
-
-This ensures clarity and prevents confusion when working with multiple files across the whole project.
-
-## Main Routes and Components
-
-- Home: E:\Stojanovic-One\src\routes\+page.svelte
-- Login: E:\Stojanovic-One\src\routes\login\+page.svelte
-- Register: E:\Stojanovic-One\src\routes\register\+page.svelte
-- Profile: E:\Stojanovic-One\src\routes\profile\+page.svelte
-- Clothing Outfit Calculator: E:\Stojanovic-One\src\routes\subprojects\clothing-outfit-calculator\+page.svelte
-- Investment Analysis Platform: E:\Stojanovic-One\src\routes\subprojects\investment-analysis-platform\+page.svelte
-- Investment Analysis Platform (Stock Detail): E:\Stojanovic-One\src\routes\subprojects\investment-analysis-platform\[listName]\[symbol]\+page.svelte
-- Meta Questions: E:\Stojanovic-One\src\routes\subprojects\investment-analysis-platform\meta-questions\+page.svelte
-
-Components:
-
-- AddStockForm: E:\Stojanovic-One\src\lib\components\AddStockForm.svelte
-- BuyReadyComponent: E:\Stojanovic-One\src\lib\components\BuyReadyComponent.svelte
-- CompanyInfo: E:\Stojanovic-One\src\lib\components\CompanyInfo.svelte
-- CompanyInfoCard: E:\Stojanovic-One\src\lib\components\CompanyInfoCard.svelte
-- DueDiligenceComponent: E:\Stojanovic-One\src\lib\components\DueDiligenceComponent.svelte
-- ErrorMessage: E:\Stojanovic-One\src\lib\components\ErrorMessage.svelte
-- LoadingSpinner: E:\Stojanovic-One\src\lib\components\LoadingSpinner.svelte
-- OutfitCreator: E:\Stojanovic-One\src\lib\components\OutfitCreator.svelte
-- ProgressBar: E:\Stojanovic-One\src\lib\components\ProgressBar.svelte
-- QuestionList: E:\Stojanovic-One\src\lib\components\QuestionList.svelte
-- Sidebar: E:\Stojanovic-One\src\lib\components\Sidebar.svelte
-- StockItem: E:\Stojanovic-One\src\lib\components\StockItem.svelte
-- SubprojectCard: E:\Stojanovic-One\src\lib\components\SubprojectCard.svelte
-- ThemeToggle: E:\Stojanovic-One\src\lib\components\ThemeToggle.svelte
-- TooExpensiveComponent: E:\Stojanovic-One\src\lib\components\TooExpensiveComponent.svelte
-- WatchlistComponent: E:\Stojanovic-One\src\lib\components\WatchlistComponent.svelte
-
-Stores:
-
-- Session Store: E:\Stojanovic-One\src\lib\stores\sessionStore.ts
-
-Utilities:
-
-- Image Compression: E:\Stojanovic-One\src\lib\utils\imageCompression.ts
-- Stock Moves: E:\Stojanovic-One\src\lib\utils\stockMoves.ts
-
-Supabase Client:
-
-- E:\Stojanovic-One\src\lib\supabaseClient.ts
-
-## Drag and Drop Functionality
-
-The project uses the `svelte-dnd-action` library to implement drag and drop functionality. This allows users to reorder items within lists and move items between different lists.
-
-When implementing or modifying drag and drop features, ensure to:
-
-1. Import the `dndzone` action from `svelte-dnd-action`
-2. Use the `use:dndzone` directive on the container element
-3. Implement `consider` and `finalize` event handlers
-4. Update the database when items are reordered or moved
-
-## Investment Analysis Platform
-
 The Investment Analysis Platform is a key feature of this project. It includes:
 
-1. Multiple lists for categorizing stocks (Watchlist, Due Diligence, Buy Ready, etc.)
-2. Detailed stock analysis pages with components for different analysis stages
-3. Meta questions management for customizing analysis criteria
-4. Company information management
+1. **Company Wiki Sections**:
+
+   - **New Feature**: Users can view and edit sections such as "History," "Business Model," "Competitors," and "Risks" for each company.
+   - **Component**: `WikiSection.svelte`
+   - **Functionality**:
+     - Displays content pulled from the `company_wiki` table in the database.
+     - Provides an edit mode where users can modify content using a rich text editor.
+     - Saves updated content back to the database.
+     - Shows who last updated the content.
+   - **Rich Text Editor**:
+     - Integrated Quill editor via the `svelte-quill` library.
+     - Supports text formatting (bold, italic, underline, strike-through).
+     - Supports headers (H1, H2, H3), links, and images.
+     - Custom styling to match the application theme, including adjustments for dark mode.
+   - **Database**:
+     - Table: `company_wiki`
+     - Fields: `symbol`, `section`, `content`, `user_id`, `updated_at`
+   - **Authentication**:
+     - Only authenticated users can edit content.
+     - User ID is stored with each content update to track changes.
+
+2. **Multiple Lists for Categorizing Stocks**:
+
+   - Watchlist, Due Diligence, Buy Ready, etc.
+   - Uses draggable lists with the `svelte-dnd-action` library.
+   - Allows users to reorder items and move stocks between lists.
+   - Changes are persisted to the database.
+
+3. **Detailed Stock Analysis Pages**:
+
+   - Components for different analysis stages.
+   - Integrates with the Finnhub API to fetch real-time stock data.
+   - Displays company information and stock performance.
+
+4. **Meta Questions Management**:
+
+   - Allows users to customize analysis criteria.
+   - Stores questions and answers in the `questions` and `answers` tables.
+   - Dynamic rendering of questions based on categories.
+
+5. **Company Information Management**:
+
+   - Components like `CompanyInfo.svelte` and `CompanyInfoCard.svelte` display detailed company data.
+   - Uses the Parqet API to fetch company logos.
 
 ## Clothing Outfit Calculator
 
-The Clothing Outfit Calculator is another subproject that allows users to:
+The Clothing Outfit Calculator allows users to:
 
-1. Upload and manage clothing items
-2. Create and save outfits
-3. View a gallery of clothing items
-4. Compress images before upload for better performance
+1. **Upload and Manage Clothing Items**:
+
+   - Users can upload images of clothing items.
+   - Images are compressed before upload using a custom utility (`imageCompression.ts`).
+   - Metadata about the clothing item (e.g., type, color) can be stored.
+
+2. **Create and Save Outfits**:
+
+   - Users can mix and match clothing items to create outfits.
+   - Outfits can be saved for future reference.
+
+3. **View a Gallery of Clothing Items**:
+
+   - Displays all uploaded clothing items in a gallery format.
+   - Allows filtering and sorting of items.
+
+## Rich Text Editing with Quill
+
+The project incorporates rich text editing capabilities using Quill via the `svelte-quill` library.
+
+- **Integration**:
+
+  - Imported Quill styles in `src/routes/+layout.svelte`:
+    ```javascript
+    import 'quill/dist/quill.snow.css';
+    ```
+
+- **Usage**:
+
+  - Used in the `WikiSection.svelte` component.
+  - Provides an intuitive interface for editing wiki sections.
+
+- **Customization**:
+
+  - Custom toolbar options are set in `quillOptions`.
+  - History module is configured for undo/redo functionality.
+  - Styling adjustments are made to match the application's theme.
 
 ## Authentication and Authorization
 
-The project uses Supabase for authentication, including Google Sign-In. Ensure that all protected routes check for user authentication before allowing access.
+The project uses Supabase for authentication, including Google Sign-In.
+
+- **Protected Routes**:
+
+  - All protected routes check for user authentication before allowing access.
+  - Example: The `profile` page redirects to `/login` if the user is not authenticated.
+
+- **Session Management**:
+
+  - Session data is managed using Svelte stores (`sessionStore.ts`).
+  - The session is updated on authentication state changes.
 
 ## Deployment
 
-The project is deployed on Vercel. The production URL is https://stojanovic-one.vercel.app. 
+The project is deployed on Vercel.
+
+- **Production URL**: [https://stojanovic-one.vercel.app](https://stojanovic-one.vercel.app)
+
+- **Deployment Process**:
+
+  - Pushes to the main branch trigger automatic deployments.
+  - Environment variables are managed securely.
 
 ## Performance Considerations
 
-1. Use image compression for uploaded images
-2. Implement lazy loading for components and routes where appropriate
-3. Optimize database queries to minimize load times
+1. **Image Compression**:
+
+   - Images are compressed before upload to improve load times.
+   - Utilizes the `imageCompression.ts` utility.
+
+2. **Lazy Loading**:
+
+   - Components and routes are lazy-loaded where appropriate.
+   - Improves initial page load performance.
+
+3. **Database Optimization**:
+
+   - Queries are optimized to minimize load times.
+   - Indexes are used in the database to speed up query performance.
 
 ## Security
 
-1. Implement proper input validation and sanitization
-2. Use Supabase Row Level Security (RLS) policies to protect data
-3. Keep all dependencies up-to-date and regularly check for vulnerabilities
+1. **Input Validation and Sanitization**:
+
+   - User inputs are validated on both client and server sides.
+   - Sanitization prevents injection attacks.
+
+2. **Supabase Row Level Security (RLS) Policies**:
+
+   - RLS policies are implemented to protect data.
+   - Ensures users can only access their own data.
+
+3. **Dependency Management**:
+
+   - Dependencies are kept up-to-date.
+   - Regular checks for vulnerabilities are performed.
 
 ## Recent Updates
 
+### Company Wiki Sections
+
+- **Feature Addition**:
+
+  - Implemented editable wiki sections for companies.
+  - Allows for collaborative input and knowledge sharing.
+
+- **Technical Details**:
+
+  - **Component**: `WikiSection.svelte`
+  - **Database**: Added `company_wiki` table.
+  - **Editor Integration**: Used `svelte-quill` for rich text editing.
+
+- **User Experience**:
+
+  - Users can view and edit company-related information.
+  - Edits are saved to the database and displayed in real-time.
+  - Displays the name of the last user who updated the content.
+
 ### Database and API Changes
 
-The project has undergone significant changes in its database structure and API integration:
+- **Stock Data Management**:
 
-1. The `stock_items` table has been replaced with `stock_metadata` and `user_stocks` tables.
-2. The Finnhub API is now used to fetch stock data when adding new stocks.
-3. The Parqet API is used to fetch stock logos.
-4. The `company_info` table has been added to store additional company information.
-5. The `questions` and `answers` tables have been implemented for the investment analysis process.
+  - Replaced the `stock_items` table with `stock_metadata` and `user_stocks` tables for better data organization.
+  - Updated data fetching logic to accommodate new table structures.
 
-These changes require updates to the data fetching and manipulation logic throughout the application, particularly in the Investment Analysis Platform subproject.
+- **API Integrations**:
 
-### API Endpoints
+  - **Finnhub API**: Now used to fetch stock data when adding new stocks.
+  - **Parqet API**: Used to fetch stock logos.
 
-New API endpoints have been added to handle stock data fetching and validation:
+- **New Tables**:
 
-- `E:\Stojanovic-One\src\routes\api\fetch-stock-data\+server.ts`: Handles fetching and storing new stock data.
-- `E:\Stojanovic-One\src\routes\api\check-isin\+server.ts`: Validates ISIN numbers.
-- `E:\Stojanovic-One\src\routes\api\check-symbol\+server.ts`: Validates stock symbols.
+  - `company_info`: Stores additional company information.
+  - `company_wiki`: Stores wiki content for companies.
+  - `questions` and `answers`: Implemented for the investment analysis process.
 
-Ensure that these endpoints are properly secured and follow best practices for error handling and data validation.
+- **API Endpoints**:
+
+  - `src/routes/api/fetch-stock-data/+server.ts`: Handles fetching and storing new stock data.
+  - `src/routes/api/check-isin/+server.ts`: Validates ISIN numbers.
+  - `src/routes/api/check-symbol/+server.ts`: Validates stock symbols.
 
 Remember to update this AI.MD file as the project evolves and new features or best practices are implemented.
+
+---
+
+Please ensure all future updates are reflected here to keep the team informed and maintain consistency across the project.
