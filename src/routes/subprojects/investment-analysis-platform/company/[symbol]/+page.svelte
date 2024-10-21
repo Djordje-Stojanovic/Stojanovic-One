@@ -5,6 +5,7 @@
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
   import { supabase } from '$lib/supabaseClient';
+  import { browser } from '$app/environment';
 
   let symbol = '';
   let stockMetadata: any = null;

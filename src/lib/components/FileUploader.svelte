@@ -2,6 +2,18 @@
 	import { supabase } from '$lib/supabaseClient';
 	import { session } from '$lib/stores/sessionStore';
 	import { createEventDispatcher, onMount } from 'svelte';
+	import { browser } from '$app/environment';
+	import * as pdfjs from 'pdfjs-dist';
+	import { getDocument } from 'pdfjs-dist';
+
+	onMount(() => {
+		if (browser) {
+			// Use a dynamic import for the worker
+			import('pdfjs-dist/build/pdf.worker.mjs').then(worker => {
+				pdfjs.GlobalWorkerOptions.workerSrc = worker.default;
+			});
+		}
+	});
 
 	export let symbol: string;
 	const dispatch = createEventDispatcher();
@@ -11,6 +23,10 @@
 	let error = '';
 	let uploadedFiles: any[] = [];
 	let selectedFiles: string[] = [];
+	let pdfUrl: string | null = null;
+	let pdfPageNum = 1;
+	let pdfNumPages = 0;
+	let pdfDoc: pdfjs.PDFDocumentProxy | null = null;
 
 	const allowedFileTypes = [
 		'application/pdf',
@@ -21,9 +37,7 @@
 		'application/vnd.google-apps.spreadsheet'
 	];
 
-	onMount(() => {
-		loadUploadedFiles();
-	});
+
 
 	async function loadUploadedFiles() {
 		const { data, error } = await supabase
@@ -138,6 +152,68 @@
 		const target = event.currentTarget as HTMLInputElement;
 		file = target.files ? target.files[0] : null;
 	}
+
+	async function viewPdf(fileId: string) {
+		const file = uploadedFiles.find(f => f.id === fileId);
+		if (file) {
+			const { data, error } = await supabase.storage
+				.from('company-documents')
+				.createSignedUrl(file.file_path, 60); // URL valid for 60 seconds
+
+			if (error) {
+				console.error('Error creating signed URL:', error);
+				return;
+			}
+
+			pdfUrl = data.signedUrl;
+			loadPdf();
+		}
+	}
+
+	async function loadPdf() {
+		if (!pdfUrl || !browser) return;
+
+		try {
+			const loadingTask = pdfjs.getDocument(pdfUrl);
+			pdfDoc = await loadingTask.promise;
+			pdfNumPages = pdfDoc.numPages;
+			renderPage(pdfPageNum);
+		} catch (err) {
+			console.error('Error loading PDF:', err);
+			error = 'Failed to load PDF. Please try again.';
+		}
+	}
+
+	async function renderPage(num: number) {
+		if (!pdfDoc) return;
+
+		const page = await pdfDoc.getPage(num);
+		const scale = 1.5;
+		const viewport = page.getViewport({ scale });
+
+		const canvas = document.getElementById('pdf-canvas') as HTMLCanvasElement;
+		const context = canvas.getContext('2d');
+
+		if (!context) {
+			console.error('Failed to get canvas context');
+			return;
+		}
+
+		canvas.height = viewport.height;
+		canvas.width = viewport.width;
+
+		const renderContext = {
+			canvasContext: context,
+			viewport: viewport
+		};
+
+		await page.render(renderContext);
+	}
+
+	function changePage(offset: number) {
+		pdfPageNum = Math.min(Math.max(pdfPageNum + offset, 1), pdfNumPages);
+		renderPage(pdfPageNum);
+	}
 </script>
 
 <div class="my-4 p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
@@ -176,6 +252,14 @@
 							class="mr-2"
 						/>
 						<label for={file.id} class="flex-grow text-gray-800 dark:text-gray-200">{file.file_name}</label>
+						{#if file.file_name.toLowerCase().endsWith('.pdf')}
+							<button
+								on:click={() => viewPdf(file.id)}
+								class="ml-2 px-2 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+							>
+								View PDF
+							</button>
+						{/if}
 					</div>
 				{/each}
 			</div>
@@ -190,5 +274,31 @@
 		</div>
 	{:else}
 		<p class="text-gray-600 dark:text-gray-400">No files uploaded yet.</p>
+	{/if}
+
+	{#if pdfUrl}
+		<div class="mt-8">
+			<h4 class="text-lg font-semibold mb-2 text-gray-800 dark:text-gray-200">PDF Viewer</h4>
+			<div class="bg-white p-4 rounded-lg shadow">
+				<canvas id="pdf-canvas"></canvas>
+				<div class="mt-4 flex justify-between items-center">
+					<button
+						on:click={() => changePage(-1)}
+						disabled={pdfPageNum <= 1}
+						class="px-4 py-2 bg-blue-500 text-white rounded-md disabled:bg-gray-400"
+					>
+						Previous
+					</button>
+					<span>Page {pdfPageNum} of {pdfNumPages}</span>
+					<button
+						on:click={() => changePage(1)}
+						disabled={pdfPageNum >= pdfNumPages}
+						class="px-4 py-2 bg-blue-500 text-white rounded-md disabled:bg-gray-400"
+					>
+						Next
+					</button>
+				</div>
+			</div>
+		</div>
 	{/if}
 </div>
