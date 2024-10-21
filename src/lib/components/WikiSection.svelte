@@ -48,18 +48,19 @@
                 // Fetch user information
                 const { data: userData, error: userError } = await supabase
                     .from('profiles')
-                    .select('full_name')
+                    .select('full_name, username')
                     .eq('id', data.user_id)
-                    .maybeSingle();
+                    .single();
 
                 if (userError) {
                     console.error('Error fetching user data:', userError.message);
                     lastUpdatedBy = 'Unknown';
                 } else {
-                    lastUpdatedBy = userData?.full_name || 'Unknown';
+                    lastUpdatedBy = userData.full_name || userData.username || 'Unknown';
                 }
             } else {
                 content = '';
+                lastUpdatedBy = null;
                 console.log('No content found, setting empty string');
             }
         } catch (err) {
