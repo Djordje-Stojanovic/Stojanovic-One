@@ -1,19 +1,25 @@
 <script lang="ts">
 	import { supabase } from '$lib/supabaseClient';
 	import { session } from '$lib/stores/sessionStore';
-	import { createEventDispatcher, onMount } from 'svelte';
+	import { createEventDispatcher, onMount, onDestroy } from 'svelte';
 	import { browser } from '$app/environment';
-	import * as pdfjs from 'pdfjs-dist';
+	import * as pdfjsLib from 'pdfjs-dist';
 	import { getDocument } from 'pdfjs-dist';
 
-	onMount(() => {
-		if (browser) {
-			// Use a dynamic import for the worker
-			import('pdfjs-dist/build/pdf.worker.mjs').then(worker => {
-				pdfjs.GlobalWorkerOptions.workerSrc = worker.default;
-			});
-		}
-	});
+	// Import the worker as a URL
+	let workerSrc: string;
+
+	// Add this variable declaration
+	let pdfjsWorker: Worker | null = null;
+
+	if (browser) {
+		workerSrc = new URL(
+			'pdfjs-dist/build/pdf.worker.min.mjs',
+			import.meta.url
+		).href;
+		pdfjsLib.GlobalWorkerOptions.workerSrc = workerSrc;
+		pdfjsWorker = new Worker(workerSrc);
+	}
 
 	export let symbol: string;
 	const dispatch = createEventDispatcher();
@@ -26,7 +32,7 @@
 	let pdfUrl: string | null = null;
 	let pdfPageNum = 1;
 	let pdfNumPages = 0;
-	let pdfDoc: pdfjs.PDFDocumentProxy | null = null;
+	let pdfDoc: pdfjsLib.PDFDocumentProxy | null = null;
 
 	const allowedFileTypes = [
 		'application/pdf',
@@ -37,18 +43,23 @@
 		'application/vnd.google-apps.spreadsheet'
 	];
 
-
+	// Remove duplicate imports and just use the onMount directly
+	onMount(async () => {
+		await loadUploadedFiles();
+	});
 
 	async function loadUploadedFiles() {
-		const { data, error } = await supabase
-			.from('company_files')
-			.select('*')
-			.eq('symbol', symbol);
+		try {
+			const { data, error } = await supabase
+				.from('company_files')
+				.select('*')
+				.eq('symbol', symbol);
 
-		if (error) {
-			console.error('Error loading files:', error);
-		} else {
+			if (error) throw error;
 			uploadedFiles = data || [];
+		} catch (err) {
+			console.error('Error loading files:', err);
+			error = 'Failed to load files. Please refresh the page.';
 		}
 	}
 
@@ -153,67 +164,123 @@
 		file = target.files ? target.files[0] : null;
 	}
 
+	// Modify the viewPdf function
 	async function viewPdf(fileId: string) {
 		const file = uploadedFiles.find(f => f.id === fileId);
 		if (file) {
-			const { data, error } = await supabase.storage
-				.from('company-documents')
-				.createSignedUrl(file.file_path, 60); // URL valid for 60 seconds
+			try {
+				const { data } = supabase.storage
+					.from('company-documents')
+					.getPublicUrl(file.file_path);
 
-			if (error) {
-				console.error('Error creating signed URL:', error);
-				return;
+				if (!data.publicUrl) throw new Error('Failed to get public URL');
+
+				// Regular fetch without no-cors mode
+				const response = await fetch(data.publicUrl);
+				
+				if (!response.ok) {
+					throw new Error(`HTTP error! status: ${response.status}`);
+				}
+				
+				const blob = await response.blob();
+				
+				// Verify blob size
+				if (blob.size === 0) {
+					throw new Error('Received empty PDF file');
+				}
+
+				// Create new URL and clean up old one if it exists
+				if (pdfUrl && pdfUrl.startsWith('blob:')) {
+					URL.revokeObjectURL(pdfUrl);
+				}
+				
+				pdfUrl = URL.createObjectURL(blob);
+				await loadPdf();
+			} catch (err) {
+				console.error('Error getting PDF URL:', err);
+				error = 'Failed to load PDF. Please try again.';
 			}
-
-			pdfUrl = data.signedUrl;
-			loadPdf();
 		}
 	}
 
+	// Update the loadPdf function to remove credentials
 	async function loadPdf() {
 		if (!pdfUrl || !browser) return;
 
 		try {
-			const loadingTask = pdfjs.getDocument(pdfUrl);
+			// Add loading parameters
+			const loadingTask = pdfjsLib.getDocument({
+				url: pdfUrl,
+				withCredentials: false,
+				cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/',
+				cMapPacked: true
+			});
+
 			pdfDoc = await loadingTask.promise;
 			pdfNumPages = pdfDoc.numPages;
-			renderPage(pdfPageNum);
+			pdfPageNum = 1;
+			await renderPage(pdfPageNum);
 		} catch (err) {
 			console.error('Error loading PDF:', err);
 			error = 'Failed to load PDF. Please try again.';
+			pdfDoc = null;
 		}
 	}
 
+	// Update renderPage function to handle scaling better
 	async function renderPage(num: number) {
 		if (!pdfDoc) return;
 
-		const page = await pdfDoc.getPage(num);
-		const scale = 1.5;
-		const viewport = page.getViewport({ scale });
+		try {
+			const page = await pdfDoc.getPage(num);
+			const viewport = page.getViewport({ scale: 1.0 });
 
-		const canvas = document.getElementById('pdf-canvas') as HTMLCanvasElement;
-		const context = canvas.getContext('2d');
+			const canvas = document.getElementById('pdf-canvas') as HTMLCanvasElement;
+			const context = canvas.getContext('2d');
 
-		if (!context) {
-			console.error('Failed to get canvas context');
-			return;
+			if (!context) {
+				console.error('Failed to get canvas context');
+				return;
+			}
+
+			// Calculate scale to fit width
+			const containerWidth = canvas.parentElement?.clientWidth || viewport.width;
+			const scale = containerWidth / viewport.width;
+			const scaledViewport = page.getViewport({ scale });
+
+			// Set canvas dimensions
+			canvas.height = scaledViewport.height;
+			canvas.width = scaledViewport.width;
+
+			const renderContext = {
+				canvasContext: context,
+				viewport: scaledViewport,
+				enableWebGL: true
+			};
+
+			await page.render(renderContext).promise;
+		} catch (err) {
+			console.error('Error rendering page:', err);
+			error = 'Failed to render PDF page.';
 		}
-
-		canvas.height = viewport.height;
-		canvas.width = viewport.width;
-
-		const renderContext = {
-			canvasContext: context,
-			viewport: viewport
-		};
-
-		await page.render(renderContext);
 	}
 
 	function changePage(offset: number) {
 		pdfPageNum = Math.min(Math.max(pdfPageNum + offset, 1), pdfNumPages);
 		renderPage(pdfPageNum);
 	}
+
+	// Update the onDestroy block
+	onDestroy(() => {
+		if (pdfjsWorker) {
+			pdfjsWorker.terminate();
+			pdfjsWorker = null;
+		}
+		// Clean up any existing blob URLs
+		if (pdfUrl && pdfUrl.startsWith('blob:')) {
+			URL.revokeObjectURL(pdfUrl);
+		}
+	});
 </script>
 
 <div class="my-4 p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">

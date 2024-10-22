@@ -35,7 +35,9 @@
 <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
   <div class="container mx-auto px-4 py-8">
     {#if loading}
-      <p>Loading...</p>
+      <div class="flex justify-center items-center">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      </div>
     {:else if error}
       <p class="text-red-500">{error}</p>
     {:else}
