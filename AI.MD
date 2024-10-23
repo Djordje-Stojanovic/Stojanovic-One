@@ -118,7 +118,7 @@ Apply these principles throughout the development process:
 1. Question every requirement
 2. Delete unnecessary parts
 3. Simplify and optimize
-4. Accelerate cycle time
+4. Accelerate cycle time of development
 5. Automate
 
 The Investment Analysis Platform is a key feature of this project. It includes:
