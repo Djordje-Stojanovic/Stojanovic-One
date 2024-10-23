@@ -27,6 +27,32 @@ Apply these principles throughout the development process:
    - Automate repetitive tasks
    - Create reusable components
 
+## UI/UX Guidelines
+
+### Color Scheme
+- Use consistent color palette across all components
+- Dark mode colors:
+  - Background: #1F2937 (primary), #374151 (secondary)
+  - Text: #F9FAFB (primary), #D1D5DB (secondary)
+  - Accent: #3B82F6 (primary), #60A5FA (hover)
+- Light mode colors:
+  - Background: #FFFFFF (primary), #F3F4F6 (secondary)
+  - Text: #111827 (primary), #4B5563 (secondary)
+  - Accent: #2563EB (primary), #3B82F6 (hover)
+
+### Layout
+- Use consistent spacing (0.5rem, 1rem, 1.5rem, 2rem)
+- Maintain proper hierarchy with clear visual distinction
+- Implement responsive grid systems
+- Use cards for content grouping
+- Maintain proper padding and margins
+
+### Components
+- Use consistent border radius (0.375rem)
+- Implement smooth transitions (300ms)
+- Maintain proper spacing between elements
+- Use shadows for depth (light: 0 1px 3px rgba(0,0,0,0.1), dark: 0 1px 3px rgba(0,0,0,0.3))
+
 ## Common Issues and Solutions
 
 ### State Management

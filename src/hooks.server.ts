@@ -1,11 +1,11 @@
 import type { Handle } from '@sveltejs/kit';
-import type { Session } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js';
 
-// Extend the Locals interface to include the session property
-declare module '@sveltejs/kit' {
-  interface Locals {
-    session: Session | null;
-  }
+const supabaseUrl = import.meta.env.VITE_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_PUBLIC_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('VITE_PUBLIC_SUPABASE_URL and VITE_PUBLIC_SUPABASE_ANON_KEY must be set');
 }
 
 export const handle: Handle = async ({ event, resolve }) => {
@@ -24,10 +24,46 @@ export const handle: Handle = async ({ event, resolve }) => {
     });
   }
 
-  // Your existing authentication logic
-  const session = (event.locals as { session?: Session | null }).session;
+  // Create Supabase client
+  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true
+    }
+  });
 
-  if (!session?.user && event.url.pathname !== '/login') {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    event.locals.session = session;
+  } catch (error) {
+    console.error('Error getting session:', error);
+    event.locals.session = null;
+  }
+
+  // For API routes, always return JSON response
+  if (event.url.pathname.startsWith('/api/')) {
+    if (!event.locals.session?.user) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Unauthorized' }),
+        {
+          status: 401,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+          }
+        }
+      );
+    }
+    return resolve(event);
+  }
+
+  // For non-API routes that require auth (except login), redirect to login
+  if (!event.locals.session?.user && 
+      !event.url.pathname.startsWith('/api/') && 
+      event.url.pathname !== '/login' &&
+      event.url.pathname !== '/register' &&
+      !event.url.pathname.startsWith('/auth/')) {
     return new Response(null, {
       status: 302,
       headers: {
