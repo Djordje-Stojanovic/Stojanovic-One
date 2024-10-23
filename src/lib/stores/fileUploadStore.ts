@@ -29,7 +29,11 @@ function createFileUploadStore() {
                 ? state.selectedFiles.filter(id => id !== fileId)
                 : [...state.selectedFiles, fileId]
         })),
-        clearSelectedFiles: () => update(state => ({ ...state, selectedFiles: [] }))
+        clearSelectedFiles: () => update(state => ({ ...state, selectedFiles: [] })),
+        addFile: (file: UploadedFile) => update(state => ({
+            ...state,
+            uploadedFiles: [...state.uploadedFiles, file]
+        }))
     };
 }
 

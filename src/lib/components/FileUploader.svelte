@@ -68,7 +68,7 @@
 
     {#if pdfUrl}
         <PdfViewer 
-            {pdfUrl} 
+            pdfUrl={pdfUrl} 
             on:close={closePdfViewer}
             on:error={(e) => fileUploadStore.setError(e.detail.message)}
         />

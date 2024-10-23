@@ -55,17 +55,31 @@
                 .from('company-documents')
                 .getPublicUrl(filePath);
 
-            const { error: dbError } = await supabase.from('company_files').insert({
-                symbol,
-                file_path: filePath,
-                file_name: file.name,
-                user_id: $session.user.id,
-            });
+            const { error: dbError, data: fileData } = await supabase
+                .from('company_files')
+                .insert({
+                    symbol,
+                    file_path: filePath,
+                    file_name: file.name,
+                    user_id: $session.user.id,
+                })
+                .select()
+                .single();
 
             if (dbError) throw dbError;
 
+            // Update the store with the new file
+            if (fileData) {
+                fileUploadStore.addFile(fileData);
+            }
+
             dispatch('fileUploaded', { url: urlData.publicUrl });
             file = null;
+            
+            // Reset file input
+            if (document.querySelector('input[type="file"]')) {
+                (document.querySelector('input[type="file"]') as HTMLInputElement).value = '';
+            }
         } catch (err: unknown) {
             console.error('Upload error:', err);
             fileUploadStore.setError(err instanceof Error ? err.message : 'An error occurred during upload.');
