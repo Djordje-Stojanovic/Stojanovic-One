@@ -15,15 +15,49 @@
     let isLoading = false;
 
     async function validateIdentifier() {
+        if (!$session?.user) {
+            errorMessage = 'Please log in to add stocks';
+            isValid = false;
+            return;
+        }
+
+        if (!identifier) {
+            isValid = false;
+            errorMessage = '';
+            return;
+        }
+
         isLoading = true;
-        const response = await fetch(`/api/check-${identifierType}?${identifierType}=${identifier}`);
-        const data = await response.json();
-        isValid = data.isValid;
-        errorMessage = data.error || '';
-        isLoading = false;
+        try {
+            const response = await fetch(`/api/check-${identifierType}?${identifierType}=${identifier}`, {
+                headers: {
+                    'Authorization': `Bearer ${$session.access_token}`
+                }
+            });
+            
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.error || 'Failed to validate identifier');
+            }
+            
+            const data = await response.json();
+            isValid = data.isValid;
+            errorMessage = data.error || '';
+        } catch (error) {
+            console.error('Error validating identifier:', error);
+            errorMessage = error instanceof Error ? error.message : 'Failed to validate identifier';
+            isValid = false;
+        } finally {
+            isLoading = false;
+        }
     }
 
     async function handleSubmit() {
+        if (!$session?.user) {
+            errorMessage = 'Please log in to add stocks';
+            return;
+        }
+
         if (!isValid) {
             errorMessage = 'Please enter a valid identifier';
             return;
@@ -33,27 +67,30 @@
         try {
             const response = await fetch('/api/fetch-stock-data', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${$session.access_token}`
+                },
                 body: JSON.stringify({
                     identifier,
                     identifierType,
-                    userId: $session?.user?.id,
+                    userId: $session.user.id,
                     notes,
                     listName: activeList
                 })
             });
 
-            const result = await response.json();
-
-            if (result.error) {
-                throw new Error(result.error);
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.error || 'Failed to add stock');
             }
 
+            const result = await response.json();
             dispatch('stockAdded', result.data);
             identifier = '';
             notes = '';
             isValid = false;
-        } catch (error: unknown) {
+        } catch (error) {
             console.error('Error adding stock:', error);
             errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
         } finally {
@@ -138,7 +175,7 @@
                                 <button
                                     type="submit"
                                     class="inline-flex w-full justify-center rounded-md border border-transparent bg-primary-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                                    disabled={!isValid || isLoading}
+                                    disabled={!isValid || isLoading || !$session?.user}
                                 >
                                     {isLoading ? 'Adding...' : 'Add Stock'}
                                 </button>
