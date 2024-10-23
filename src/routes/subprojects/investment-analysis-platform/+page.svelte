@@ -113,11 +113,8 @@
             if (moveError) throw moveError;
 
             if (data) {
-                // Update the local state
-                stocks = stocks.map((s) =>
-                    s.id === stockId ? data : s
-                );
-                console.log('Updated stocks:', stocks);
+                // Instead of trying to update the array manually, fetch fresh data
+                await fetchStocks();
             }
         } catch (error) {
             console.error('Error updating stock list:', error);
@@ -170,7 +167,7 @@
             </div>
         {:else}
             <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
-                {#each [...listNames] as listName}
+                {#each [...listNames] as listName (listName)}
                     <div
                         class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border border-gray-200 dark:border-gray-700 transition-all duration-300 {hoveredList === listName ? 'ring-2 ring-blue-500' : ''}"
                         role="list"

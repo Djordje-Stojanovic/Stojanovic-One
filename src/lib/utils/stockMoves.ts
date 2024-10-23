@@ -41,12 +41,16 @@ export async function moveStock(stockId: string, newList: ListName): Promise<{ d
             .single();
 
         if (error) {
+            console.error('Supabase error:', error);
             throw error;
         }
 
         if (!data) {
+            console.error('No data returned from update');
             throw new Error('Stock not found');
         }
+
+        console.log('Raw data from server:', data);
 
         // Transform the data to match UserStock type
         const userStock: UserStock = {
@@ -76,6 +80,8 @@ export async function moveStock(stockId: string, newList: ListName): Promise<{ d
                 weburl: data.stock_metadata.weburl
             }
         };
+
+        console.log('Transformed userStock:', userStock);
 
         return { data: userStock, error: null };
     } catch (error) {
