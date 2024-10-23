@@ -1,8 +1,7 @@
 # AI.MD - Project Collaboration Guide
 
 ## Elon Musk's Algorithm for Efficiency
-
-Apply these principles throughout the development process:
+# NOTE: This section must never be deleted by any AI as it provides the foundational speed and founder mode principles for work
 
 1. Question every requirement
    - Is this feature truly necessary?
@@ -13,6 +12,7 @@ Apply these principles throughout the development process:
    - Remove redundant code
    - Eliminate unused features
    - Simplify complex implementations
+   - Break files exceeding 200 lines into focused, single-responsibility modules
 
 3. Simplify and optimize
    - Make code more readable
@@ -27,99 +27,69 @@ Apply these principles throughout the development process:
    - Automate repetitive tasks
    - Create reusable components
 
-## UI/UX Guidelines
+## State Management
 
-### Color Scheme
-- Use consistent color palette across all components
-- Dark mode colors:
+### Database & UI Updates
+- Use optimistic UI updates
+- Update local state first, then sync with database
+- Handle errors by reverting local state
+- Use proper loading states
+- Use derived stores for computed values
+- Update stores atomically to prevent UI flicker
+```typescript
+// Store contract pattern
+const { subscribe, set, update } = writable(initialState);
+export { subscribe }; // Only expose what's needed
+```
+
+## UI/UX Standards
+
+### Theme
+- Dark mode:
   - Background: #1F2937 (primary), #374151 (secondary)
-  - Text: #F9FAFB (primary), #D1D5DB (secondary)
-  - Accent: #3B82F6 (primary), #60A5FA (hover)
-- Light mode colors:
+  - Text: #F9FAFB (primary)
+  - Accent: #3B82F6
+- Light mode:
   - Background: #FFFFFF (primary), #F3F4F6 (secondary)
-  - Text: #111827 (primary), #4B5563 (secondary)
-  - Accent: #2563EB (primary), #3B82F6 (hover)
+  - Text: #111827 (primary)
+  - Accent: #2563EB
 
-### Layout
-- Use consistent spacing (0.5rem, 1rem, 1.5rem, 2rem)
-- Maintain proper hierarchy with clear visual distinction
-- Implement responsive grid systems
-- Use cards for content grouping
-- Maintain proper padding and margins
+### Design System
+- Spacing: 0.5rem, 1rem, 1.5rem, 2rem
+- Border radius: 0.375rem
+- Transitions: 300ms
+- Shadows: light: 0 1px 3px rgba(0,0,0,0.1), dark: 0 1px 3px rgba(0,0,0,0.3)
 
-### Components
-- Use consistent border radius (0.375rem)
-- Implement smooth transitions (300ms)
-- Maintain proper spacing between elements
-- Use shadows for depth (light: 0 1px 3px rgba(0,0,0,0.1), dark: 0 1px 3px rgba(0,0,0,0.3))
+## Development Guidelines
 
-## Common Issues and Solutions
-
-### State Management
-- Always update Svelte stores immediately after state changes
-- Use proper store subscription cleanup
-- Avoid redundant store updates
-
-### File Handling
-- Implement proper file validation
-- Handle file upload errors gracefully
-- Clean up file resources (e.g., revoking object URLs)
-
-### Type Safety
-- Define proper TypeScript interfaces
-- Use strict type checking
-- Avoid any type
-
-### Component Communication
-- Use proper event dispatching
-- Clean up event listeners
-- Maintain proper prop types
+### Code Quality
+- Use TypeScript strictly
+- Proper error handling
+- Clean up resources
+- Validate inputs
+- Test edge cases
 
 ### Performance
-- Implement lazy loading
-- Compress images before upload
-- Use proper database indexing
+- Lazy load components
+- Optimize queries
+- Implement caching
+- Compress assets
 
-## Technology Stack
-
-- Frontend & Backend: SvelteKit
-- Database: PostgreSQL (via Supabase)
-- UI Styling: Tailwind CSS
-- Authentication: Supabase Auth
-- State Management: Svelte stores
-
-## Project Structure
-
+## Tech Stack & Structure
 ```
+Frontend & Backend: SvelteKit
+Database: PostgreSQL (Supabase)
+UI: Tailwind CSS
+Auth: Supabase Auth
+State: Svelte stores
+
 src/
 ├── lib/
-│   ├── components/    # Reusable components
+│   ├── components/    # UI components
 │   ├── stores/        # State management
-│   ├── utils/         # Utility functions
-│   └── types/         # TypeScript definitions
-└── routes/            # Application routes
+│   ├── utils/         # Helpers
+│   └── types/         # TypeScript types
+└── routes/            # App routes
 ```
-
-## Best Practices
-
-1. File Organization
-   - Use consistent naming conventions
-   - Group related files together
-   - Maintain clear folder structure
-
-2. Code Style
-   - Follow TypeScript best practices
-   - Use proper error handling
-   - Implement proper validation
-
-3. Performance
-   - Optimize database queries
-   - Implement caching where appropriate
-   - Use proper loading states
-
-4. Security
-   - Implement proper authentication
-   - Use input validation
-   - Follow security best practices
 
 Remember: Always apply Elon's principles to maintain code quality and efficiency.
