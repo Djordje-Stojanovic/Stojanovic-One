@@ -117,6 +117,7 @@
                 stocks = stocks.map((s) =>
                     s.id === stockId ? data : s
                 );
+                console.log('Updated stocks:', stocks);
             }
         } catch (error) {
             console.error('Error updating stock list:', error);
