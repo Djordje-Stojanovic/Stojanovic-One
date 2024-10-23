@@ -33,6 +33,7 @@
 	let pdfPageNum = 1;
 	let pdfNumPages = 0;
 	let pdfDoc: pdfjsLib.PDFDocumentProxy | null = null;
+	let currentScale = 1.0;
 
 	const allowedFileTypes = [
 		'application/pdf',
@@ -195,12 +196,26 @@
 				}
 				
 				pdfUrl = URL.createObjectURL(blob);
+				currentScale = 1.0;
 				await loadPdf();
 			} catch (err) {
 				console.error('Error getting PDF URL:', err);
 				error = 'Failed to load PDF. Please try again.';
 			}
 		}
+	}
+
+	function closePdfViewer() {
+		if (pdfUrl && pdfUrl.startsWith('blob:')) {
+			URL.revokeObjectURL(pdfUrl);
+		}
+		pdfUrl = null;
+		pdfDoc = null;
+	}
+
+	function adjustScale(factor: number) {
+		currentScale = Math.max(0.25, Math.min(3.0, currentScale * factor));
+		renderPage(pdfPageNum);
 	}
 
 	// Update the loadPdf function to remove credentials
@@ -233,7 +248,7 @@
 
 		try {
 			const page = await pdfDoc.getPage(num);
-			const viewport = page.getViewport({ scale: 1.0 });
+			const viewport = page.getViewport({ scale: currentScale });
 
 			const canvas = document.getElementById('pdf-canvas') as HTMLCanvasElement;
 			const context = canvas.getContext('2d');
@@ -243,18 +258,13 @@
 				return;
 			}
 
-			// Calculate scale to fit width
-			const containerWidth = canvas.parentElement?.clientWidth || viewport.width;
-			const scale = containerWidth / viewport.width;
-			const scaledViewport = page.getViewport({ scale });
-
 			// Set canvas dimensions
-			canvas.height = scaledViewport.height;
-			canvas.width = scaledViewport.width;
+			canvas.height = viewport.height;
+			canvas.width = viewport.width;
 
 			const renderContext = {
 				canvasContext: context,
-				viewport: scaledViewport,
+				viewport: viewport,
 				enableWebGL: true
 			};
 
@@ -345,9 +355,33 @@
 
 	{#if pdfUrl}
 		<div class="mt-8">
-			<h4 class="text-lg font-semibold mb-2 text-gray-800 dark:text-gray-200">PDF Viewer</h4>
-			<div class="bg-white p-4 rounded-lg shadow">
-				<canvas id="pdf-canvas"></canvas>
+			<div class="flex justify-between items-center mb-4">
+				<h4 class="text-lg font-semibold text-gray-800 dark:text-gray-200">PDF Viewer</h4>
+				<div class="flex gap-2">
+					<button
+						on:click={() => adjustScale(1.2)}
+						class="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+					>
+						Zoom In
+					</button>
+					<button
+						on:click={() => adjustScale(0.8)}
+						class="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+					>
+						Zoom Out
+					</button>
+					<button
+						on:click={closePdfViewer}
+						class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+					>
+						Close
+					</button>
+				</div>
+			</div>
+			<div class="bg-white p-4 rounded-lg shadow overflow-auto max-h-[800px]">
+				<div class="flex justify-center">
+					<canvas id="pdf-canvas" class="max-w-full"></canvas>
+				</div>
 				<div class="mt-4 flex justify-between items-center">
 					<button
 						on:click={() => changePage(-1)}
