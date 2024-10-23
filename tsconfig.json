@@ -11,7 +11,7 @@
 		"strict": true,
 		"moduleResolution": "bundler",
 		"types": ["estree", "json-schema"],
-		"lib": ["esnext", "webworker"]
+		"lib": ["esnext", "webworker", "dom"]
 	},
 	"include": [
 		".svelte-kit/types/**/$types.d.ts",
