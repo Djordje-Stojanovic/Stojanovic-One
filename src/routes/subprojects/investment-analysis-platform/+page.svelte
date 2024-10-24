@@ -77,9 +77,58 @@
         fetchStocks();
     }
 
-    const handleStockAdded = (event: CustomEvent<UserStock>) => {
+    const handleStockAdded = async (event: CustomEvent<UserStock>) => {
         const newStock = event.detail;
-        stocks = [newStock, ...stocks];
+        
+        // Fetch the complete stock data to ensure we have the same structure
+        const { data: stockData, error: stockError } = await supabase
+            .from('user_stocks')
+            .select(`
+                *,
+                stock_metadata!inner (*)
+            `)
+            .eq('id', newStock.id)
+            .single();
+
+        if (stockError) {
+            console.error('Error fetching new stock data:', stockError);
+            return;
+        }
+
+        if (stockData) {
+            // Map the data in the same way as fetchStocks
+            const mappedStock: UserStock = {
+                id: stockData.id,
+                user_id: stockData.user_id,
+                stock_metadata_id: stockData.stock_metadata_id,
+                list_name: stockData.list_name as ListName,
+                created_at: stockData.created_at,
+                updated_at: stockData.updated_at,
+                notes: stockData.notes || undefined,
+                metadata: {
+                    id: stockData.stock_metadata.id,
+                    symbol: stockData.stock_metadata.symbol,
+                    company_name: stockData.stock_metadata.company_name,
+                    sector: stockData.stock_metadata.sector,
+                    market_cap: Number(stockData.stock_metadata.market_cap),
+                    exchange: stockData.stock_metadata.exchange,
+                    currency: stockData.stock_metadata.currency,
+                    country: stockData.stock_metadata.country,
+                    logo_url: stockData.stock_metadata.logo_url,
+                    parqet_logo_url: stockData.stock_metadata.parqet_logo_url,
+                    isin: stockData.stock_metadata.isin,
+                    share_outstanding: stockData.stock_metadata.share_outstanding,
+                    estimate_currency: stockData.stock_metadata.estimate_currency,
+                    ipo: stockData.stock_metadata.ipo,
+                    phone: stockData.stock_metadata.phone,
+                    weburl: stockData.stock_metadata.weburl
+                }
+            };
+
+            // Update the stocks array with the properly mapped data
+            stocks = [mappedStock, ...stocks];
+        }
+        
         showAddForm = false;
     };
 
@@ -90,9 +139,24 @@
         );
     };
 
-    const handleStockDeleted = (event: CustomEvent<string>) => {
+    const handleStockDeleted = async (event: CustomEvent<string>) => {
         const id = event.detail;
-        stocks = stocks.filter((stock) => stock.id !== id);
+        try {
+            const { error: deleteError } = await supabase
+                .from('user_stocks')
+                .delete()
+                .eq('id', id);
+
+            if (deleteError) {
+                throw deleteError;
+            }
+
+            // Only remove from UI after successful database deletion
+            stocks = stocks.filter((stock) => stock.id !== id);
+        } catch (e) {
+            console.error('Error deleting stock:', e);
+            alert('Failed to delete stock. Please try again.');
+        }
     };
 
     const handleDragOver = (e: DragEvent, listName: ListName) => {

@@ -85,12 +85,19 @@
             }
 
             const result = await response.json();
+            // First dispatch stockAdded event
             dispatch('stockAdded', result.data);
+            
+            // Then reset form state
             identifier = '';
             notes = '';
             isValid = false;
             errorMessage = '';
-            dispatch('close');
+            
+            // Finally close the form after a small delay to ensure parent has processed the stock
+            setTimeout(() => {
+                dispatch('close');
+            }, 100);
         } catch (error) {
             console.error('Error adding stock:', error);
             errorMessage = error instanceof Error ? error.message : 'Failed to add stock';
