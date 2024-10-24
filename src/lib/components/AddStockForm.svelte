@@ -74,7 +74,6 @@
                 body: JSON.stringify({
                     identifier,
                     identifierType,
-                    userId: $session.user.id,
                     notes,
                     listName: activeList
                 })
@@ -90,9 +89,11 @@
             identifier = '';
             notes = '';
             isValid = false;
+            errorMessage = '';
+            dispatch('close');
         } catch (error) {
             console.error('Error adding stock:', error);
-            errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+            errorMessage = error instanceof Error ? error.message : 'Failed to add stock';
         } finally {
             isLoading = false;
         }
