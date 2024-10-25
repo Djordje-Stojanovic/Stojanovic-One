@@ -210,7 +210,7 @@
                                         on:keydown={handleKeydown}
                                         required
                                         autocomplete="off"
-                                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:text-sm"
+                                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:text-sm p-2"
                                         placeholder="e.g., AAPL"
                                         role="combobox"
                                         aria-expanded={showSuggestions}
@@ -255,7 +255,7 @@
                                 <textarea
                                     id="notes"
                                     bind:value={notes}
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:text-sm"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:text-sm p-2"
                                     rows="4"
                                 ></textarea>
                             </div>
