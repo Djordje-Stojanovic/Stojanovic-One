@@ -1,101 +1,110 @@
 import { json } from '@sveltejs/kit';
-import type { RequestEvent } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
 import { supabase } from '$lib/supabaseClient';
-import type { ListName } from '$lib/constants/listNames';
 
-interface RequestBody {
-    identifier: string;
-    identifierType: 'symbol' | 'isin';
-    notes: string;
-    listName: ListName;
-}
-
-const FINNHUB_API_KEY = import.meta.env.VITE_FINNHUB_API_KEY;
-
-if (!FINNHUB_API_KEY) {
-    console.error('VITE_FINNHUB_API_KEY is not set');
-}
-
-export async function POST({ request, locals }: RequestEvent) {
-    if (!locals.session) {
-        return json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    if (!FINNHUB_API_KEY) {
-        return json({ error: 'API configuration error' }, { status: 500 });
-    }
-
-    const { identifier, identifierType, notes, listName } = await request.json() as RequestBody;
-
-    if (!identifier || !identifierType || !listName) {
-        return json({ error: 'Missing required fields' }, { status: 400 });
-    }
-
+export const POST: RequestHandler = async ({ request }) => {
     try {
-        // Fetch stock data from Finnhub API
-        const response = await fetch(`https://finnhub.io/api/v1/stock/profile2?${identifierType}=${identifier}&token=${FINNHUB_API_KEY}`);
-        
-        if (!response.ok) {
-            console.error('Failed to fetch stock data from Finnhub:', response.statusText);
-            throw new Error('Failed to fetch stock data from Finnhub');
-        }
-        
-        const stockData = await response.json();
+        const { identifier, identifierType, notes, listName } = await request.json();
 
-        // Check if we got valid stock data
-        if (!stockData || !stockData.name) {
-            console.error('Invalid stock data received:', stockData);
-            throw new Error('Invalid stock data received from Finnhub');
+        // Get the user from the session
+        const authHeader = request.headers.get('Authorization');
+        if (!authHeader) {
+            return json({ error: 'No authorization header' }, { status: 401 });
         }
 
-        // Upsert stock metadata with data from Finnhub
-        const { data: metadata, error: metadataError } = await supabase
+        const token = authHeader.replace('Bearer ', '');
+        const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+
+        if (userError || !user) {
+            return json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        // First check if stock already exists in stock_metadata
+        const { data: existingStock, error: existingStockError } = await supabase
             .from('stock_metadata')
-            .upsert([{
-                [identifierType]: identifier,
-                company_name: stockData.name,
-                sector: stockData.finnhubIndustry,
-                logo_url: stockData.logo,
-                market_cap: stockData.marketCapitalization,
-                exchange: stockData.exchange,
-                country: stockData.country,
-                currency: stockData.currency,
-                ipo: stockData.ipo,
-                phone: stockData.phone,
-                weburl: stockData.weburl
-            }], {
-                onConflict: identifierType,
-                ignoreDuplicates: true
-            })
-            .select()
+            .select('*')
+            .eq(identifierType === 'symbol' ? 'symbol' : 'isin', identifier)
             .single();
 
-        if (metadataError) {
-            console.error('Error upserting stock metadata:', metadataError);
-            throw metadataError;
+        if (existingStockError && existingStockError.code !== 'PGRST116') {
+            return json({ error: existingStockError.message }, { status: 500 });
         }
 
-        // Create user stock entry
-        const { data: userStock, error: stockError } = await supabase
+        let stockMetadataId;
+
+        if (existingStock) {
+            // Use existing stock metadata
+            stockMetadataId = existingStock.id;
+        } else {
+            // Fetch stock data from Finnhub
+            const finnhubResponse = await fetch(
+                `https://finnhub.io/api/v1/stock/profile2?${identifierType}=${identifier}&token=${process.env.FINNHUB_API_KEY}`
+            );
+
+            if (!finnhubResponse.ok) {
+                return json({ error: 'Failed to fetch stock data' }, { status: 500 });
+            }
+
+            const stockData = await finnhubResponse.json();
+
+            if (!stockData || Object.keys(stockData).length === 0) {
+                return json({ error: 'No stock data found' }, { status: 404 });
+            }
+
+            // Insert into stock_metadata
+            const { data: newStockMetadata, error: insertError } = await supabase
+                .from('stock_metadata')
+                .insert([
+                    {
+                        symbol: stockData.ticker,
+                        company_name: stockData.name,
+                        sector: stockData.finnhubIndustry,
+                        market_cap: stockData.marketCapitalization,
+                        exchange: stockData.exchange,
+                        currency: stockData.currency,
+                        country: stockData.country,
+                        logo_url: stockData.logo,
+                        isin: stockData.isin,
+                        share_outstanding: stockData.shareOutstanding,
+                        weburl: stockData.weburl,
+                        phone: stockData.phone,
+                        ipo: stockData.ipo
+                    }
+                ])
+                .select()
+                .single();
+
+            if (insertError) {
+                return json({ error: insertError.message }, { status: 500 });
+            }
+
+            stockMetadataId = newStockMetadata.id;
+        }
+
+        // Create user_stocks entry
+        const { data: userStock, error: userStockError } = await supabase
             .from('user_stocks')
-            .insert([{
-                user_id: locals.session.user.id,
-                stock_metadata_id: metadata.id,
-                notes,
-                list_name: listName
-            }])
-            .select('*, stock_metadata(*)')
+            .insert([
+                {
+                    user_id: user.id,
+                    stock_metadata_id: stockMetadataId,
+                    notes,
+                    list_name: listName
+                }
+            ])
+            .select(`
+                *,
+                stock_metadata (*)
+            `)
             .single();
 
-        if (stockError) {
-            console.error('Error inserting user stock:', stockError);
-            throw stockError;
+        if (userStockError) {
+            return json({ error: userStockError.message }, { status: 500 });
         }
 
         return json({ data: userStock });
     } catch (error) {
-        console.error('Error adding stock:', error);
-        const message = error instanceof Error ? error.message : 'Failed to add stock';
-        return json({ error: message }, { status: 500 });
+        console.error('Error in fetch-stock-data:', error);
+        return json({ error: 'Internal server error' }, { status: 500 });
     }
-}
+};
