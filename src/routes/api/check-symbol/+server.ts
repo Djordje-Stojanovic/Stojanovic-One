@@ -1,39 +1,32 @@
 import { json } from '@sveltejs/kit';
-import type { RequestEvent } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
 import { supabase } from '$lib/supabaseClient';
 
-export async function GET({ url }: RequestEvent) {
+export const GET: RequestHandler = async ({ url }) => {
     const symbol = url.searchParams.get('symbol')?.toUpperCase();
+
     if (!symbol) {
-        return json({ isValid: false, error: 'No symbol provided' });
+        return json({ isValid: false, error: 'Symbol is required' }, { status: 400 });
     }
 
     try {
-        // Simple format validation first
-        if (!/^[A-Z0-9.]{1,5}$/.test(symbol)) {
-            return json({ isValid: false, error: 'Invalid symbol format' });
-        }
-
         // Check if symbol exists in our database
-        const { data } = await supabase
-            .from('stock_metadata')
-            .select('id')
+        const { data, error } = await supabase
+            .from('available_symbols')
+            .select('symbol')
             .eq('symbol', symbol)
-            .maybeSingle();
+            .single();
 
-        // If we have it in our database, it's valid
-        if (data) {
-            return json({ isValid: true });
+        if (error && error.code !== 'PGRST116') {
+            throw error;
         }
 
-        // Validate against external API
-        const response = await fetch(`https://assets.parqet.com/logos/symbol/${symbol}?format=png`, {
-            method: 'HEAD'
+        return json({
+            isValid: !!data,
+            error: data ? null : 'Invalid symbol'
         });
-
-        return json({ isValid: response.ok });
     } catch (error) {
-        console.error('Error checking symbol:', error);
-        return json({ isValid: false, error: 'Failed to validate symbol' });
+        console.error('Error validating symbol:', error);
+        return json({ isValid: false, error: 'Failed to validate symbol' }, { status: 500 });
     }
-}
+};

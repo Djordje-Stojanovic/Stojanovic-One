@@ -1,274 +1,142 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import { supabase } from '$lib/supabaseClient';
-    import type { UserStock, StockMetadata } from '$lib/types';
-    import type { ListName } from '$lib/constants/listNames';
-    import StockItem from '$lib/components/StockItem.svelte';
     import AddStockForm from '$lib/components/AddStockForm.svelte';
-    import { listNames } from '$lib/constants/listNames';
-    import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
+    import StockItem from '$lib/components/StockItem.svelte';
+    import type { ListName } from '$lib/constants/listNames';
     import { session } from '$lib/stores/sessionStore';
-    import { goto } from '$app/navigation';
-    import { moveStock } from '$lib/utils/stockMoves';
+    import type { UserStock } from '$lib/types';
 
+    let showAddForm = false;
     let stocks: UserStock[] = [];
     let loading = true;
     let error: string | null = null;
-    let showAddForm = false;
-    let hoveredList: ListName | null = null;
+    let activeList: ListName = 'Watchlist';
+    let isSyncing = false;
+    let syncError: string | null = null;
+    let syncResult: string | null = null;
 
-    async function fetchStocks() {
+    async function syncSymbols() {
+        if (isSyncing) return;
+        
+        isSyncing = true;
+        syncError = null;
+        syncResult = null;
+        
         try {
-            if (!$session?.user) {
-                throw new Error('No authenticated user');
+            const { data: { session: currentSession } } = await supabase.auth.getSession();
+            if (!currentSession) {
+                throw new Error('User not authenticated');
             }
 
-            const { data: stocksData, error: stocksError } = await supabase
+            const response = await fetch('/subprojects/investment-analysis-platform/sync-symbols', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${currentSession.access_token}`
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to sync symbols');
+            }
+            
+            syncResult = `Successfully synced ${data.count} symbols`;
+        } catch (e) {
+            console.error('Error syncing symbols:', e);
+            syncError = e instanceof Error ? e.message : 'An unknown error occurred';
+        } finally {
+            isSyncing = false;
+        }
+    }
+
+    onMount(async () => {
+        try {
+            const { data, error: fetchError } = await supabase
                 .from('user_stocks')
                 .select(`
                     *,
-                    stock_metadata!inner (*)
+                    metadata:stock_metadata (*)
                 `)
-                .eq('user_id', $session.user.id)
-                .order('created_at', { ascending: false });
+                .eq('user_id', $session?.user?.id)
+                .eq('list_name', activeList);
 
-            if (stocksError) throw stocksError;
-            if (!stocksData) throw new Error('No data received');
-
-            stocks = stocksData.map(stock => ({
-                id: stock.id,
-                user_id: stock.user_id,
-                stock_metadata_id: stock.stock_metadata_id,
-                list_name: stock.list_name as ListName,
-                created_at: stock.created_at,
-                updated_at: stock.updated_at,
-                notes: stock.notes || undefined,
-                metadata: {
-                    id: stock.stock_metadata.id,
-                    symbol: stock.stock_metadata.symbol,
-                    company_name: stock.stock_metadata.company_name,
-                    sector: stock.stock_metadata.sector,
-                    market_cap: Number(stock.stock_metadata.market_cap),
-                    exchange: stock.stock_metadata.exchange,
-                    currency: stock.stock_metadata.currency,
-                    country: stock.stock_metadata.country,
-                    logo_url: stock.stock_metadata.logo_url,
-                    parqet_logo_url: stock.stock_metadata.parqet_logo_url,
-                    isin: stock.stock_metadata.isin,
-                    share_outstanding: stock.stock_metadata.share_outstanding,
-                    estimate_currency: stock.stock_metadata.estimate_currency,
-                    ipo: stock.stock_metadata.ipo,
-                    phone: stock.stock_metadata.phone,
-                    weburl: stock.stock_metadata.weburl
-                }
-            })) as UserStock[];
+            if (fetchError) throw fetchError;
+            stocks = data || [];
         } catch (e) {
             console.error('Error fetching stocks:', e);
-            error = e instanceof Error ? e.message : 'An unknown error occurred';
-            stocks = [];
+            error = e instanceof Error ? e.message : 'Failed to fetch stocks';
         } finally {
             loading = false;
         }
+    });
+
+    function handleStockAdded(event: CustomEvent<UserStock>) {
+        stocks = [...stocks, event.detail];
     }
-
-    $: if (!$session) {
-        goto('/login');
-    } else if ($session && loading) {
-        fetchStocks();
-    }
-
-    const handleStockAdded = async (event: CustomEvent<UserStock>) => {
-        const newStock = event.detail;
-        
-        // Fetch the complete stock data to ensure we have the same structure
-        const { data: stockData, error: stockError } = await supabase
-            .from('user_stocks')
-            .select(`
-                *,
-                stock_metadata!inner (*)
-            `)
-            .eq('id', newStock.id)
-            .single();
-
-        if (stockError) {
-            console.error('Error fetching new stock data:', stockError);
-            return;
-        }
-
-        if (stockData) {
-            // Map the data in the same way as fetchStocks
-            const mappedStock: UserStock = {
-                id: stockData.id,
-                user_id: stockData.user_id,
-                stock_metadata_id: stockData.stock_metadata_id,
-                list_name: stockData.list_name as ListName,
-                created_at: stockData.created_at,
-                updated_at: stockData.updated_at,
-                notes: stockData.notes || undefined,
-                metadata: {
-                    id: stockData.stock_metadata.id,
-                    symbol: stockData.stock_metadata.symbol,
-                    company_name: stockData.stock_metadata.company_name,
-                    sector: stockData.stock_metadata.sector,
-                    market_cap: Number(stockData.stock_metadata.market_cap),
-                    exchange: stockData.stock_metadata.exchange,
-                    currency: stockData.stock_metadata.currency,
-                    country: stockData.stock_metadata.country,
-                    logo_url: stockData.stock_metadata.logo_url,
-                    parqet_logo_url: stockData.stock_metadata.parqet_logo_url,
-                    isin: stockData.stock_metadata.isin,
-                    share_outstanding: stockData.stock_metadata.share_outstanding,
-                    estimate_currency: stockData.stock_metadata.estimate_currency,
-                    ipo: stockData.stock_metadata.ipo,
-                    phone: stockData.stock_metadata.phone,
-                    weburl: stockData.stock_metadata.weburl
-                }
-            };
-
-            // Update the stocks array with the properly mapped data
-            stocks = [mappedStock, ...stocks];
-        }
-        
-        showAddForm = false;
-    };
-
-    const handleStockUpdated = (event: CustomEvent<UserStock>) => {
-        const updatedStock = event.detail;
-        stocks = stocks.map((stock) =>
-            stock.id === updatedStock.id ? updatedStock : stock
-        );
-    };
-
-    const handleStockDeleted = async (event: CustomEvent<string>) => {
-        const id = event.detail;
-        try {
-            const { error: deleteError } = await supabase
-                .from('user_stocks')
-                .delete()
-                .eq('id', id);
-
-            if (deleteError) {
-                throw deleteError;
-            }
-
-            // Only remove from UI after successful database deletion
-            stocks = stocks.filter((stock) => stock.id !== id);
-        } catch (e) {
-            console.error('Error deleting stock:', e);
-            alert('Failed to delete stock. Please try again.');
-        }
-    };
-
-    const handleDragOver = (e: DragEvent, listName: ListName) => {
-        e.preventDefault();
-        if (e.dataTransfer) {
-            e.dataTransfer.dropEffect = 'move';
-        }
-        hoveredList = listName;
-    };
-
-    const handleDragLeave = () => {
-        hoveredList = null;
-    };
-
-    async function updateStockList(stockId: string, newListName: ListName) {
-        try {
-            const { data, error: moveError } = await moveStock(stockId, newListName);
-            if (moveError) throw moveError;
-
-            if (data) {
-                // Instead of trying to update the array manually, fetch fresh data
-                await fetchStocks();
-            }
-        } catch (error) {
-            console.error('Error updating stock list:', error);
-            alert('Failed to move stock. Please try again.');
-        }
-    }
-
-    const handleDrop = async (e: DragEvent, newListName: ListName) => {
-        e.preventDefault();
-        const stockId = e.dataTransfer?.getData('text/plain');
-        if (!stockId || !$session?.user) return;
-
-        await updateStockList(stockId, newListName);
-        hoveredList = null;
-    };
-
-    const handleMoveItem = async (event: CustomEvent<{ stockId: string, newListName: ListName }>) => {
-        const { stockId, newListName } = event.detail;
-        await updateStockList(stockId, newListName);
-    };
-
-    const handleClose = () => {
-        showAddForm = false;
-    };
 </script>
 
-<div class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+<div class="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
     <div class="container mx-auto px-4 py-8">
-        <div class="mb-8 bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-            <div class="flex justify-between items-center">
-                <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">Investment Analysis Platform</h1>
+        <div class="mb-6 flex items-center justify-between">
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Investment Analysis Platform</h1>
+            <div class="space-x-2">
                 <button
-                    class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-md transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
-                    on:click={() => (showAddForm = !showAddForm)}
+                    on:click={syncSymbols}
+                    disabled={isSyncing}
+                    class="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 transition duration-300 ease-in-out transform hover:scale-105"
                 >
-                    {showAddForm ? 'Cancel' : 'Add Stock'}
+                    {isSyncing ? 'Syncing...' : 'Sync Symbols'}
+                </button>
+                <button
+                    on:click={() => (showAddForm = true)}
+                    class="rounded bg-green-500 px-4 py-2 text-white hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-300 ease-in-out transform hover:scale-105"
+                >
+                    Add Stock
                 </button>
             </div>
         </div>
 
-        {#if showAddForm}
-            <div class="mb-8 bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-                <AddStockForm 
-                    on:stockAdded={handleStockAdded} 
-                    on:close={handleClose}
-                    activeList="Watchlist" 
-                />
+        {#if syncResult}
+            <div class="mb-4 rounded-md bg-green-100 p-4 text-green-700 dark:bg-green-800 dark:text-green-100 transition-colors duration-300">
+                {syncResult}
+            </div>
+        {/if}
+
+        {#if syncError}
+            <div class="mb-4 rounded-md bg-red-100 p-4 text-red-700 dark:bg-red-800 dark:text-red-100 transition-colors duration-300">
+                Error syncing symbols: {syncError}
             </div>
         {/if}
 
         {#if loading}
-            <div class="flex justify-center items-center h-64">
-                <LoadingSpinner />
+            <div class="flex justify-center">
+                <div class="h-8 w-8 animate-spin rounded-full border-b-2 border-gray-900 dark:border-white"></div>
             </div>
         {:else if error}
-            <div class="bg-red-50 dark:bg-red-900 text-red-600 dark:text-red-200 p-4 rounded-lg text-center">
-                {error}
+            <div class="rounded-md bg-red-50 p-4 text-red-700 dark:bg-red-800 dark:text-red-100 transition-colors duration-300">{error}</div>
+        {:else if stocks.length === 0}
+            <div class="text-center text-gray-600 dark:text-gray-400 transition-colors duration-300">
+                No stocks added yet. Click "Add Stock" to get started.
             </div>
         {:else}
-            <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
-                {#each [...listNames] as listName (listName)}
-                    <div
-                        class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border border-gray-200 dark:border-gray-700 transition-all duration-300 {hoveredList === listName ? 'ring-2 ring-blue-500' : ''}"
-                        role="list"
-                        on:dragover={(e) => handleDragOver(e, listName)}
-                        on:dragleave={handleDragLeave}
-                        on:drop={(e) => handleDrop(e, listName)}
-                    >
-                        <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">{listName}</h2>
-                        <div class="space-y-4">
-                            {#each stocks.filter((stock) => stock.list_name === listName) as stock (stock.id)}
-                                {#if stock.metadata}
-                                    <div 
-                                        role="listitem"
-                                        class="transform transition-transform duration-300 hover:-translate-y-1"
-                                    >
-                                        <StockItem
-                                            item={stock.metadata}
-                                            userStock={stock}
-                                            on:stockUpdated={handleStockUpdated}
-                                            on:deleteItem={handleStockDeleted}
-                                            on:moveItem={handleMoveItem}
-                                        />
-                                    </div>
-                                {/if}
-                            {/each}
-                        </div>
-                    </div>
+            <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {#each stocks as userStock (userStock.id)}
+                    <StockItem 
+                        item={userStock.metadata} 
+                        {userStock}
+                    />
                 {/each}
             </div>
+        {/if}
+
+        {#if showAddForm}
+            <AddStockForm
+                {activeList}
+                on:close={() => (showAddForm = false)}
+                on:stockAdded={handleStockAdded}
+            />
         {/if}
     </div>
 </div>

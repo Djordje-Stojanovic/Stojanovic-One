@@ -3,7 +3,12 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
 	plugins: [sveltekit()],
-	optimizeDeps: {
-		include: ['pdfjs-dist']
+	server: {
+		fs: {
+			allow: ['.']
+		}
+	},
+	define: {
+		'process.env': process.env
 	}
 });

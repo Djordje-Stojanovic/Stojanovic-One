@@ -36,39 +36,64 @@ export const POST: RequestHandler = async ({ request }) => {
             // Use existing stock metadata
             stockMetadataId = existingStock.id;
         } else {
-            // Fetch stock data from Finnhub
-            const finnhubResponse = await fetch(
-                `https://finnhub.io/api/v1/stock/profile2?${identifierType}=${identifier}&token=${process.env.FINNHUB_API_KEY}`
+            // Fetch stock data from Financial Modeling Prep
+            const fmpResponse = await fetch(
+                `https://financialmodelingprep.com/api/v3/profile/${identifier}?apikey=${process.env.VITE_FMP_API_KEY}`
             );
 
-            if (!finnhubResponse.ok) {
+            if (!fmpResponse.ok) {
                 return json({ error: 'Failed to fetch stock data' }, { status: 500 });
             }
 
-            const stockData = await finnhubResponse.json();
-
-            if (!stockData || Object.keys(stockData).length === 0) {
+            const stockDataArray = await fmpResponse.json();
+            
+            if (!stockDataArray || !Array.isArray(stockDataArray) || stockDataArray.length === 0) {
                 return json({ error: 'No stock data found' }, { status: 404 });
             }
+
+            const stockData = stockDataArray[0];
 
             // Insert into stock_metadata
             const { data: newStockMetadata, error: insertError } = await supabase
                 .from('stock_metadata')
                 .insert([
                     {
-                        symbol: stockData.ticker,
-                        company_name: stockData.name,
-                        sector: stockData.finnhubIndustry,
-                        market_cap: stockData.marketCapitalization,
+                        symbol: stockData.symbol,
+                        company_name: stockData.companyName,
+                        sector: stockData.sector,
+                        market_cap: stockData.mktCap,
                         exchange: stockData.exchange,
                         currency: stockData.currency,
                         country: stockData.country,
-                        logo_url: stockData.logo,
+                        logo_url: stockData.image,
                         isin: stockData.isin,
-                        share_outstanding: stockData.shareOutstanding,
-                        weburl: stockData.weburl,
+                        share_outstanding: stockData.volAvg,
+                        weburl: stockData.website,
                         phone: stockData.phone,
-                        ipo: stockData.ipo
+                        ipo: stockData.ipoDate,
+                        price: stockData.price,
+                        beta: stockData.beta,
+                        vol_avg: stockData.volAvg,
+                        last_div: stockData.lastDiv,
+                        price_range: stockData.range,
+                        changes: stockData.changes,
+                        cik: stockData.cik,
+                        cusip: stockData.cusip,
+                        exchange_short_name: stockData.exchangeShortName,
+                        industry: stockData.industry,
+                        description: stockData.description,
+                        ceo: stockData.ceo,
+                        full_time_employees: parseInt(stockData.fullTimeEmployees),
+                        address: stockData.address,
+                        city: stockData.city,
+                        state: stockData.state,
+                        zip: stockData.zip,
+                        dcf_diff: stockData.dcfDiff,
+                        dcf: stockData.dcf,
+                        is_etf: stockData.isEtf,
+                        is_actively_trading: stockData.isActivelyTrading,
+                        is_adr: stockData.isAdr,
+                        is_fund: stockData.isFund
                     }
                 ])
                 .select()
