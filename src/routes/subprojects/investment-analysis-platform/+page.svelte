@@ -199,6 +199,10 @@
         const { stockId, newListName } = event.detail;
         await updateStockList(stockId, newListName);
     };
+
+    const handleClose = () => {
+        showAddForm = false;
+    };
 </script>
 
 <div class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
@@ -217,7 +221,11 @@
 
         {#if showAddForm}
             <div class="mb-8 bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-                <AddStockForm on:stockAdded={handleStockAdded} activeList="Watchlist" />
+                <AddStockForm 
+                    on:stockAdded={handleStockAdded} 
+                    on:close={handleClose}
+                    activeList="Watchlist" 
+                />
             </div>
         {/if}
 
