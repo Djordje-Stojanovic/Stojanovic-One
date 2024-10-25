@@ -5,8 +5,8 @@
     import type { ListName } from '$lib/constants/listNames';
     import type { UserStock, StockMetadata } from '$lib/types';
 
-    export let item: StockMetadata;
-    export let userStock: UserStock;
+    export let item: StockMetadata | undefined;
+    export let userStock: UserStock | undefined;
     
     const dispatch = createEventDispatcher<{
         stockUpdated: UserStock;
@@ -15,6 +15,7 @@
     }>();
     
     async function handleMoveItem(event: Event) {
+        if (!userStock) return;
         const newListName = (event.target as HTMLSelectElement).value as ListName;
         if (newListName) {
             dispatch('moveItem', { stockId: userStock.id, newListName });
@@ -23,16 +24,19 @@
     }
     
     function handleFullPage() {
+        if (!userStock || !item) return;
         goto(`/subprojects/investment-analysis-platform/${userStock.list_name.toLowerCase()}/${item.symbol.toLowerCase()}`);
     }
     
     function handleDelete() {
+        if (!userStock) return;
         if (confirm('Are you sure you want to delete this stock item?')) {
             dispatch('deleteItem', userStock.id);
         }
     }
 
     function handleDragStart(event: DragEvent) {
+        if (!userStock) return;
         if (event.dataTransfer) {
             event.dataTransfer.effectAllowed = 'move';
             event.dataTransfer.setData('text/plain', userStock.id);
@@ -40,6 +44,7 @@
     }
 </script>
 
+{#if item && userStock}
 <div 
     class="rounded-lg border bg-white p-6 shadow-md transition-all duration-300 hover:shadow-lg dark:border-gray-700 dark:bg-gray-800"
     draggable="true"
@@ -49,7 +54,7 @@
     on:dragend
 >
     <div class="mb-3 flex items-center">
-        <img src={item.parqet_logo_url || item.logo_url} alt="{item.symbol} logo" class="mr-3 h-8 w-8">
+        <img src={item.logo_url} alt="{item.symbol} logo" class="mr-3 h-8 w-8">
         <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
             {item.symbol}
         </h3>
@@ -58,7 +63,7 @@
     <p class="mb-2 text-gray-600 dark:text-gray-400">Sector: {item.sector}</p>
     <div class="mb-2 flex justify-between">
         <span class="text-gray-600 dark:text-gray-400">Market Cap:</span>
-        <span class="font-semibold text-gray-900 dark:text-gray-100">${item.market_cap.toLocaleString()}</span>
+        <span class="font-semibold text-gray-900 dark:text-gray-100">${item.market_cap?.toLocaleString() ?? 'N/A'}</span>
     </div>
     <div class="mb-4 flex justify-between">
         <span class="text-gray-600 dark:text-gray-400">Exchange:</span>
@@ -101,3 +106,8 @@
         </button>
     </div>
 </div>
+{:else}
+<div class="rounded-lg border bg-white p-6 shadow-md dark:border-gray-700 dark:bg-gray-800">
+    <p class="text-gray-600 dark:text-gray-400">Error loading stock data</p>
+</div>
+{/if}

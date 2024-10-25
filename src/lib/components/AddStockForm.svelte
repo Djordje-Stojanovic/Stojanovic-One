@@ -150,7 +150,7 @@
             }
 
             const result = await response.json();
-            dispatch('stockAdded', result.data);
+            dispatch('stockAdded', { id: result.data.id });
             
             identifier = '';
             notes = '';
@@ -209,6 +209,7 @@
                                         on:input={handleInput}
                                         on:keydown={handleKeydown}
                                         required
+                                        autocomplete="off"
                                         class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:text-sm"
                                         placeholder="e.g., AAPL"
                                         role="combobox"
