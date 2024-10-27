@@ -10,7 +10,7 @@
 		"sourceMap": true,
 		"strict": true,
 		"moduleResolution": "bundler",
-		"types": ["estree", "json-schema", "vite/client"],
+		"types": ["estree", "json-schema", "vite/client", "quill"],
 		"lib": ["esnext", "webworker", "dom"]
 	},
 	"include": [
