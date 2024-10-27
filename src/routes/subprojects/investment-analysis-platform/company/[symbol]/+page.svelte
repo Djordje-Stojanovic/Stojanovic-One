@@ -6,6 +6,7 @@
   import { onMount } from 'svelte';
   import { supabase } from '$lib/supabaseClient';
   import { browser } from '$app/environment';
+  import { goto } from '$app/navigation';
 
   let symbol = '';
   let stockMetadata: any = null;
@@ -30,19 +31,31 @@
       loading = false;
     }
   });
+
+  function navigateToFinancials() {
+    goto(`/subprojects/investment-analysis-platform/company/${symbol}/financials`);
+  }
 </script>
 
 <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
   <div class="container mx-auto px-4 py-8">
     {#if loading}
-      <div class="flex justify-center items-center">
-        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      <div class="flex items-center justify-center">
+        <div class="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-500"></div>
       </div>
     {:else if error}
       <p class="text-red-500">{error}</p>
     {:else}
       <!-- Company Info -->
       <CompanyInfo {stockMetadata} />
+
+      <!-- Financials Button -->
+      <button
+        class="mb-6 mt-4 rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+        on:click={navigateToFinancials}
+      >
+        View Financial Statements
+      </button>
 
       <!-- Wiki Sections -->
       <WikiSection {symbol} section="History" />

@@ -1,5 +1,3 @@
-<!-- E:\Stojanovic-One\src\routes\subprojects\investment-analysis-platform\global-lookup\+page.svelte -->
-
 <script lang="ts">
   import { onMount } from 'svelte';
   import { supabase } from '$lib/supabaseClient';
@@ -83,6 +81,10 @@
 
   function viewDetails(stock: StockMetadata) {
     goto(`/subprojects/investment-analysis-platform/company/${encodeURIComponent(stock.symbol)}`);
+  }
+
+  function viewFinancials(stock: StockMetadata) {
+    goto(`/subprojects/investment-analysis-platform/company/${encodeURIComponent(stock.symbol)}/financials`);
   }
 </script>
 
@@ -196,12 +198,18 @@
                   <td class="py-3 px-6">{stock.sector}</td>
                   <td class="py-3 px-6">${stock.market_cap?.toLocaleString()}</td>
                   <td class="py-3 px-6">{stock.exchange}</td>
-                  <td class="py-3 px-6">
+                  <td class="py-3 px-6 flex space-x-2">
                     <button
                       class="rounded bg-primary-500 px-4 py-2 text-white transition-colors hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-offset-gray-800"
-                      on:click={() => goto(`/subprojects/investment-analysis-platform/company/${encodeURIComponent(stock.symbol)}`)}
+                      on:click={() => viewDetails(stock)}
                     >
                       View Details
+                    </button>
+                    <button
+                      class="rounded bg-secondary-500 px-4 py-2 text-white transition-colors hover:bg-secondary-600 focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:ring-offset-2 dark:bg-secondary-600 dark:hover:bg-secondary-700 dark:focus:ring-offset-gray-800"
+                      on:click={() => viewFinancials(stock)}
+                    >
+                      View Financials
                     </button>
                   </td>
                 </tr>
