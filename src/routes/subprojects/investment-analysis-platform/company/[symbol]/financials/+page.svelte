@@ -110,6 +110,16 @@
   onMount(() => {
     fetchFinancialData();
   });
+
+  function formatCurrency(value: number): string {
+    if (value === undefined || value === null) return 'N/A';
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(value);
+  }
 </script>
 
 <svelte:head>
@@ -153,9 +163,9 @@
             {#each financialData.incomeStatements as statement}
               <tr>
                 <td class="border px-4 py-2">{new Date(statement.date).toLocaleDateString()}</td>
-                <td class="border px-4 py-2">${statement.revenue.toLocaleString()}</td>
-                <td class="border px-4 py-2">${statement.netIncome.toLocaleString()}</td>
-                <td class="border px-4 py-2">${statement.eps.toFixed(2)}</td>
+                <td class="border px-4 py-2">{formatCurrency(statement.revenue)}</td>
+                <td class="border px-4 py-2">{formatCurrency(statement.net_income)}</td>
+                <td class="border px-4 py-2">{statement.eps?.toFixed(2) ?? 'N/A'}</td>
               </tr>
             {/each}
           </tbody>
@@ -179,9 +189,9 @@
             {#each financialData.balanceSheets as statement}
               <tr>
                 <td class="border px-4 py-2">{new Date(statement.date).toLocaleDateString()}</td>
-                <td class="border px-4 py-2">${statement.totalAssets.toLocaleString()}</td>
-                <td class="border px-4 py-2">${statement.totalLiabilities.toLocaleString()}</td>
-                <td class="border px-4 py-2">${statement.totalStockholdersEquity.toLocaleString()}</td>
+                <td class="border px-4 py-2">{formatCurrency(statement.total_assets)}</td>
+                <td class="border px-4 py-2">{formatCurrency(statement.total_liabilities)}</td>
+                <td class="border px-4 py-2">{formatCurrency(statement.total_stockholders_equity)}</td>
               </tr>
             {/each}
           </tbody>
@@ -205,9 +215,9 @@
             {#each financialData.cashFlowStatements as statement}
               <tr>
                 <td class="border px-4 py-2">{new Date(statement.date).toLocaleDateString()}</td>
-                <td class="border px-4 py-2">${statement.netCashProvidedByOperatingActivities.toLocaleString()}</td>
-                <td class="border px-4 py-2">${statement.netCashUsedForInvestingActivites.toLocaleString()}</td>
-                <td class="border px-4 py-2">${statement.netCashUsedProvidedByFinancingActivities.toLocaleString()}</td>
+                <td class="border px-4 py-2">{formatCurrency(statement.net_cash_provided_by_operating_activities)}</td>
+                <td class="border px-4 py-2">{formatCurrency(statement.net_cash_used_for_investing_activities)}</td>
+                <td class="border px-4 py-2">{formatCurrency(statement.net_cash_used_provided_by_financing_activities)}</td>
               </tr>
             {/each}
           </tbody>
