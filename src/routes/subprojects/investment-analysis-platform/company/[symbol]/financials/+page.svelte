@@ -9,38 +9,49 @@
     interface FinancialStatement {
         symbol: string;
         date: string;
-        reportedCurrency: string;
+        reported_currency: string;
         cik: string;
-        fillingDate: string;
-        acceptedDate: string;
-        calendarYear: string;
+        filling_date: string;
+        accepted_date: string;
+        calendar_year: string;
         period: string;
     }
 
-    interface IncomeStatement extends FinancialStatement {
+    interface IncomeStatement {
+        symbol: string;
+        date: string;
         revenue: number;
-        netIncome: number;
+        net_income: number;
         eps: number;
-        operatingIncome: number;
-        grossProfit: number;
-        ebitda: number;
+        operating_income: number;
     }
 
     interface BalanceSheet extends FinancialStatement {
-        totalAssets: number;
-        totalLiabilities: number;
-        totalStockholdersEquity: number;
-        cashAndCashEquivalents: number;
-        totalInvestments: number;
-        totalDebt: number;
+        cash_and_cash_equivalents: number;
+        short_term_investments: number;
+        cash_and_short_term_investments: number;
+        net_receivables: number;
+        inventory: number;
+        total_current_assets: number;
+        property_plant_equipment_net: number;
+        total_non_current_assets: number;
+        total_assets: number;
+        total_current_liabilities: number;
+        total_non_current_liabilities: number;
+        total_liabilities: number;
+        total_stockholders_equity: number;
+        total_equity: number;
+        total_investments: number;
+        total_debt: number;
     }
 
     interface CashFlowStatement extends FinancialStatement {
-        operatingCashFlow: number;
-        netCashUsedForInvestingActivities: number;
-        netCashUsedProvidedByFinancingActivities: number;
-        freeCashFlow: number;
-        capitalExpenditure: number;
+        net_income: number;
+        operating_cash_flow: number;
+        net_cash_used_for_investing_activities: number;
+        net_cash_used_provided_by_financing_activities: number;
+        free_cash_flow: number;
+        capital_expenditure: number;
     }
 
     interface FinancialData {
@@ -57,6 +68,7 @@
     };
     let loading = false;
     let error: string | null = null;
+    let initialized = false;
 
     async function loadFinancialData() {
         if (!$session) {
@@ -69,13 +81,35 @@
         error = null;
 
         try {
-            const response = await fetch(`/api/financial-data/${symbol}`);
-            const result = await response.json();
+            console.log('Loading financial data for symbol:', symbol);
+            const { data: { session: currentSession } } = await supabase.auth.getSession();
+            if (!currentSession) {
+                throw new Error('No active session');
+            }
+
+            const response = await fetch(`/api/financial-data/${symbol}`, {
+                headers: {
+                    'Authorization': `Bearer ${currentSession.access_token}`
+                }
+            });
+            
+            console.log('API Response status:', response.status);
+            const responseText = await response.text();
+            console.log('API Response text:', responseText);
+
+            let result;
+            try {
+                result = JSON.parse(responseText);
+            } catch (e) {
+                console.error('Failed to parse JSON response:', e);
+                throw new Error('Invalid response format');
+            }
 
             if (!result.success) {
                 throw new Error(result.error || 'Failed to fetch financial data');
             }
 
+            console.log('Received financial data:', result.data);
             financialData = result.data;
         } catch (e) {
             error = e instanceof Error ? e.message : 'An error occurred while fetching data';
@@ -95,13 +129,18 @@
         }).format(value);
     }
 
-    onMount(() => {
-        if ($session) {
-            loadFinancialData();
+    onMount(async () => {
+        console.log('Component mounted, session:', $session);
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        console.log('Initial session:', initialSession);
+        if (initialSession) {
+            await loadFinancialData();
         }
+        initialized = true;
     });
 
-    $: if ($session) {
+    $: if (initialized && $session) {
+        console.log('Session changed, reloading data');
         loadFinancialData();
     }
 </script>
@@ -127,80 +166,98 @@
             <strong class="font-bold">Error!</strong>
             <span class="block sm:inline">{error}</span>
         </div>
-    {:else if financialData.income_statements.length === 0}
-        <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative" role="alert">
-            <strong class="font-bold">No Data Available!</strong>
-            <span class="block sm:inline">No financial data found for {symbol}</span>
-        </div>
     {:else}
-        <div class="overflow-x-auto">
-            <h2 class="text-2xl font-bold mb-4">Income Statements</h2>
-            <table class="w-full table-auto mb-8">
-                <thead>
-                    <tr>
-                        <th class="px-4 py-2">Date</th>
-                        <th class="px-4 py-2">Revenue</th>
-                        <th class="px-4 py-2">Net Income</th>
-                        <th class="px-4 py-2">EPS</th>
-                        <th class="px-4 py-2">Operating Income</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {#each financialData.income_statements as statement}
-                        <tr>
-                            <td class="border px-4 py-2">{new Date(statement.date).toLocaleDateString()}</td>
-                            <td class="border px-4 py-2">{formatCurrency(statement.revenue)}</td>
-                            <td class="border px-4 py-2">{formatCurrency(statement.netIncome)}</td>
-                            <td class="border px-4 py-2">{statement.eps?.toFixed(2) ?? 'N/A'}</td>
-                            <td class="border px-4 py-2">{formatCurrency(statement.operatingIncome)}</td>
-                        </tr>
-                    {/each}
-                </tbody>
-            </table>
+        {#if financialData.income_statements.length === 0 && financialData.balance_sheets.length === 0 && financialData.cash_flow_statements.length === 0}
+            <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative" role="alert">
+                <strong class="font-bold">No Data Available!</strong>
+                <span class="block sm:inline">No financial data found for {symbol}</span>
+            </div>
+        {:else}
+            <div class="overflow-x-auto space-y-8">
+                {#if financialData.income_statements.length > 0}
+                    <div>
+                        <h2 class="text-2xl font-bold mb-4">Income Statements</h2>
+                        <table class="w-full table-auto">
+                            <thead>
+                                <tr>
+                                    <th class="px-4 py-2">Date</th>
+                                    <th class="px-4 py-2">Revenue</th>
+                                    <th class="px-4 py-2">Net Income</th>
+                                    <th class="px-4 py-2">EPS</th>
+                                    <th class="px-4 py-2">Operating Income</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {#each financialData.income_statements as statement}
+                                    <tr>
+                                        <td class="border px-4 py-2">{new Date(statement.date).toLocaleDateString()}</td>
+                                        <td class="border px-4 py-2">{formatCurrency(statement.revenue)}</td>
+                                        <td class="border px-4 py-2">{formatCurrency(statement.net_income)}</td>
+                                        <td class="border px-4 py-2">{statement.eps?.toFixed(2) ?? 'N/A'}</td>
+                                        <td class="border px-4 py-2">{formatCurrency(statement.operating_income)}</td>
+                                    </tr>
+                                {/each}
+                            </tbody>
+                        </table>
+                    </div>
+                {/if}
 
-            <h2 class="text-2xl font-bold mb-4">Balance Sheets</h2>
-            <table class="w-full table-auto mb-8">
-                <thead>
-                    <tr>
-                        <th class="px-4 py-2">Date</th>
-                        <th class="px-4 py-2">Total Assets</th>
-                        <th class="px-4 py-2">Total Liabilities</th>
-                        <th class="px-4 py-2">Total Equity</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {#each financialData.balance_sheets as statement}
-                        <tr>
-                            <td class="border px-4 py-2">{new Date(statement.date).toLocaleDateString()}</td>
-                            <td class="border px-4 py-2">{formatCurrency(statement.totalAssets)}</td>
-                            <td class="border px-4 py-2">{formatCurrency(statement.totalLiabilities)}</td>
-                            <td class="border px-4 py-2">{formatCurrency(statement.totalStockholdersEquity)}</td>
-                        </tr>
-                    {/each}
-                </tbody>
-            </table>
+                {#if financialData.balance_sheets.length > 0}
+                    <div>
+                        <h2 class="text-2xl font-bold mb-4">Balance Sheets</h2>
+                        <table class="w-full table-auto">
+                            <thead>
+                                <tr>
+                                    <th class="px-4 py-2">Date</th>
+                                    <th class="px-4 py-2">Total Assets</th>
+                                    <th class="px-4 py-2">Total Liabilities</th>
+                                    <th class="px-4 py-2">Total Equity</th>
+                                    <th class="px-4 py-2">Total Debt</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {#each financialData.balance_sheets as statement}
+                                    <tr>
+                                        <td class="border px-4 py-2">{new Date(statement.date).toLocaleDateString()}</td>
+                                        <td class="border px-4 py-2">{formatCurrency(statement.total_assets)}</td>
+                                        <td class="border px-4 py-2">{formatCurrency(statement.total_liabilities)}</td>
+                                        <td class="border px-4 py-2">{formatCurrency(statement.total_equity)}</td>
+                                        <td class="border px-4 py-2">{formatCurrency(statement.total_debt)}</td>
+                                    </tr>
+                                {/each}
+                            </tbody>
+                        </table>
+                    </div>
+                {/if}
 
-            <h2 class="text-2xl font-bold mb-4">Cash Flow Statements</h2>
-            <table class="w-full table-auto">
-                <thead>
-                    <tr>
-                        <th class="px-4 py-2">Date</th>
-                        <th class="px-4 py-2">Operating CF</th>
-                        <th class="px-4 py-2">Investing CF</th>
-                        <th class="px-4 py-2">Financing CF</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {#each financialData.cash_flow_statements as statement}
-                        <tr>
-                            <td class="border px-4 py-2">{new Date(statement.date).toLocaleDateString()}</td>
-                            <td class="border px-4 py-2">{formatCurrency(statement.operatingCashFlow)}</td>
-                            <td class="border px-4 py-2">{formatCurrency(statement.netCashUsedForInvestingActivities)}</td>
-                            <td class="border px-4 py-2">{formatCurrency(statement.netCashUsedProvidedByFinancingActivities)}</td>
-                        </tr>
-                    {/each}
-                </tbody>
-            </table>
-        </div>
+                {#if financialData.cash_flow_statements.length > 0}
+                    <div>
+                        <h2 class="text-2xl font-bold mb-4">Cash Flow Statements</h2>
+                        <table class="w-full table-auto">
+                            <thead>
+                                <tr>
+                                    <th class="px-4 py-2">Date</th>
+                                    <th class="px-4 py-2">Operating CF</th>
+                                    <th class="px-4 py-2">Investing CF</th>
+                                    <th class="px-4 py-2">Financing CF</th>
+                                    <th class="px-4 py-2">Free Cash Flow</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {#each financialData.cash_flow_statements as statement}
+                                    <tr>
+                                        <td class="border px-4 py-2">{new Date(statement.date).toLocaleDateString()}</td>
+                                        <td class="border px-4 py-2">{formatCurrency(statement.operating_cash_flow)}</td>
+                                        <td class="border px-4 py-2">{formatCurrency(statement.net_cash_used_for_investing_activities)}</td>
+                                        <td class="border px-4 py-2">{formatCurrency(statement.net_cash_used_provided_by_financing_activities)}</td>
+                                        <td class="border px-4 py-2">{formatCurrency(statement.free_cash_flow)}</td>
+                                    </tr>
+                                {/each}
+                            </tbody>
+                        </table>
+                    </div>
+                {/if}
+            </div>
+        {/if}
     {/if}
 </div>
