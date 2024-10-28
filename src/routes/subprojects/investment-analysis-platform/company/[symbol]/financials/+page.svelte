@@ -1,241 +1,206 @@
 <script lang="ts">
-  import { page } from '$app/stores';
-  import { onMount } from 'svelte';
-  import { supabase } from '$lib/supabaseClient';
-  import { goto } from '$app/navigation';
-  import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
-  import { session } from '$lib/stores/sessionStore';
+    import { page } from '$app/stores';
+    import { onMount } from 'svelte';
+    import { goto } from '$app/navigation';
+    import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
+    import { supabase } from '$lib/supabaseClient';
+    import { session } from '$lib/stores/sessionStore';
 
-  let symbol = $page.params.symbol;
-  let financialData: any = {
-    incomeStatements: [],
-    balanceSheets: [],
-    cashFlowStatements: []
-  };
-  let loading = true;
-  let error: string | null = null;
-  let retryCount = 0;
-  const MAX_RETRIES = 3;
-  let retryLoading = false;
-
-  async function fetchFinancialData() {
-    if (!$session) {
-      goto('/login?redirected=true&from=' + $page.url.pathname);
-      return;
+    interface FinancialStatement {
+        symbol: string;
+        date: string;
+        reportedCurrency: string;
+        cik: string;
+        fillingDate: string;
+        acceptedDate: string;
+        calendarYear: string;
+        period: string;
     }
 
-    loading = true;
-    error = null;
-
-    try {
-      const [incomeStatementsResponse, balanceSheetsResponse, cashFlowStatementsResponse] = await Promise.all([
-        supabase.from('income_statements').select('*').eq('symbol', symbol).order('date', { ascending: false }),
-        supabase.from('balance_sheets').select('*').eq('symbol', symbol).order('date', { ascending: false }),
-        supabase.from('cash_flow_statements').select('*').eq('symbol', symbol).order('date', { ascending: false })
-      ]);
-
-      if (incomeStatementsResponse.error) throw incomeStatementsResponse.error;
-      if (balanceSheetsResponse.error) throw balanceSheetsResponse.error;
-      if (cashFlowStatementsResponse.error) throw cashFlowStatementsResponse.error;
-
-      financialData = {
-        incomeStatements: incomeStatementsResponse.data || [],
-        balanceSheets: balanceSheetsResponse.data || [],
-        cashFlowStatements: cashFlowStatementsResponse.data || []
-      };
-
-      if (financialData.incomeStatements.length === 0 && financialData.balanceSheets.length === 0 && financialData.cashFlowStatements.length === 0) {
-        await loadFinancialData();
-      }
-    } catch (err) {
-      console.error('Error fetching financial data:', err);
-      error = err instanceof Error ? err.message : 'An unknown error occurred while fetching financial data';
-    } finally {
-      loading = false;
-    }
-  }
-
-  async function loadFinancialData() {
-    if (retryCount >= MAX_RETRIES) {
-      error = 'Maximum retry attempts reached. Please try again later.';
-      return;
+    interface IncomeStatement extends FinancialStatement {
+        revenue: number;
+        netIncome: number;
+        eps: number;
+        operatingIncome: number;
+        grossProfit: number;
+        ebitda: number;
     }
 
-    loading = true;
-    retryLoading = true;
-    error = null;
+    interface BalanceSheet extends FinancialStatement {
+        totalAssets: number;
+        totalLiabilities: number;
+        totalStockholdersEquity: number;
+        cashAndCashEquivalents: number;
+        totalInvestments: number;
+        totalDebt: number;
+    }
 
-    try {
-      const { data: { session: currentSession } } = await supabase.auth.getSession();
-      if (!currentSession) {
-        goto('/login?redirected=true&from=' + $page.url.pathname);
-        return;
-      }
+    interface CashFlowStatement extends FinancialStatement {
+        operatingCashFlow: number;
+        netCashUsedForInvestingActivities: number;
+        netCashUsedProvidedByFinancingActivities: number;
+        freeCashFlow: number;
+        capitalExpenditure: number;
+    }
 
-      const response = await fetch(`/api/financial-data/${symbol}`, {
-        headers: {
-          'Authorization': `Bearer ${currentSession.access_token}`
+    interface FinancialData {
+        income_statements: IncomeStatement[];
+        balance_sheets: BalanceSheet[];
+        cash_flow_statements: CashFlowStatement[];
+    }
+
+    const symbol = $page.params.symbol;
+    let financialData: FinancialData = {
+        income_statements: [],
+        balance_sheets: [],
+        cash_flow_statements: []
+    };
+    let loading = false;
+    let error: string | null = null;
+
+    async function loadFinancialData() {
+        if (!$session) {
+            const returnUrl = encodeURIComponent($page.url.pathname);
+            goto(`/login?returnUrl=${returnUrl}`);
+            return;
         }
-      });
+        
+        loading = true;
+        error = null;
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          goto('/login?redirected=true&from=' + $page.url.pathname);
-          return;
+        try {
+            const response = await fetch(`/api/financial-data/${symbol}`);
+            const result = await response.json();
+
+            if (!result.success) {
+                throw new Error(result.error || 'Failed to fetch financial data');
+            }
+
+            financialData = result.data;
+        } catch (e) {
+            error = e instanceof Error ? e.message : 'An error occurred while fetching data';
+            console.error('Error loading financial data:', e);
+        } finally {
+            loading = false;
         }
-        const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      financialData = {
-        incomeStatements: data.incomeStatements || [],
-        balanceSheets: data.balanceSheets || [],
-        cashFlowStatements: data.cashFlowStatements || []
-      };
-      retryCount = 0; // Reset retry count on successful fetch
-    } catch (err) {
-      console.error('Error loading financial data:', err);
-      if (err instanceof TypeError && err.message === 'Failed to fetch') {
-        error = 'Network error. Please check your internet connection and try again.';
-      } else {
-        error = err instanceof Error ? err.message : 'An unknown error occurred while loading financial data';
-      }
-      retryCount++;
-    } finally {
-      loading = false;
-      retryLoading = false;
     }
-  }
 
-  onMount(() => {
-    fetchFinancialData();
-  });
+    function formatCurrency(value: number | null | undefined): string {
+        if (value == null) return 'N/A';
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(value);
+    }
 
-  function formatCurrency(value: number): string {
-    if (value === undefined || value === null) return 'N/A';
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(value);
-  }
+    onMount(() => {
+        if ($session) {
+            loadFinancialData();
+        }
+    });
+
+    $: if ($session) {
+        loadFinancialData();
+    }
 </script>
 
-<svelte:head>
-  <title>{symbol} Financial Statements - Investment Analysis Platform</title>
-</svelte:head>
-
 <div class="container mx-auto px-4 py-8">
-  <h1 class="mb-6 text-3xl font-bold">{symbol} Financial Statements</h1>
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold">Financial Statements - {symbol}</h1>
+        <button
+            class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+            on:click={loadFinancialData}
+            disabled={loading}
+        >
+            {loading ? 'Loading...' : 'Refresh Data'}
+        </button>
+    </div>
 
-  {#if loading && !retryLoading}
-    <LoadingSpinner />
-  {:else if error}
-    <p class="text-red-500">{error}</p>
-    {#if retryCount < MAX_RETRIES}
-      <button
-        class="mt-4 rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 disabled:opacity-50"
-        on:click={loadFinancialData}
-        disabled={retryLoading}
-      >
-        {#if retryLoading}
-          <LoadingSpinner size="small" />
-        {:else}
-          Retry Loading Financial Data
-        {/if}
-      </button>
+    {#if loading}
+        <div class="flex justify-center items-center h-64">
+            <LoadingSpinner />
+        </div>
+    {:else if error}
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+            <strong class="font-bold">Error!</strong>
+            <span class="block sm:inline">{error}</span>
+        </div>
+    {:else if financialData.income_statements.length === 0}
+        <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative" role="alert">
+            <strong class="font-bold">No Data Available!</strong>
+            <span class="block sm:inline">No financial data found for {symbol}</span>
+        </div>
+    {:else}
+        <div class="overflow-x-auto">
+            <h2 class="text-2xl font-bold mb-4">Income Statements</h2>
+            <table class="w-full table-auto mb-8">
+                <thead>
+                    <tr>
+                        <th class="px-4 py-2">Date</th>
+                        <th class="px-4 py-2">Revenue</th>
+                        <th class="px-4 py-2">Net Income</th>
+                        <th class="px-4 py-2">EPS</th>
+                        <th class="px-4 py-2">Operating Income</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {#each financialData.income_statements as statement}
+                        <tr>
+                            <td class="border px-4 py-2">{new Date(statement.date).toLocaleDateString()}</td>
+                            <td class="border px-4 py-2">{formatCurrency(statement.revenue)}</td>
+                            <td class="border px-4 py-2">{formatCurrency(statement.netIncome)}</td>
+                            <td class="border px-4 py-2">{statement.eps?.toFixed(2) ?? 'N/A'}</td>
+                            <td class="border px-4 py-2">{formatCurrency(statement.operatingIncome)}</td>
+                        </tr>
+                    {/each}
+                </tbody>
+            </table>
+
+            <h2 class="text-2xl font-bold mb-4">Balance Sheets</h2>
+            <table class="w-full table-auto mb-8">
+                <thead>
+                    <tr>
+                        <th class="px-4 py-2">Date</th>
+                        <th class="px-4 py-2">Total Assets</th>
+                        <th class="px-4 py-2">Total Liabilities</th>
+                        <th class="px-4 py-2">Total Equity</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {#each financialData.balance_sheets as statement}
+                        <tr>
+                            <td class="border px-4 py-2">{new Date(statement.date).toLocaleDateString()}</td>
+                            <td class="border px-4 py-2">{formatCurrency(statement.totalAssets)}</td>
+                            <td class="border px-4 py-2">{formatCurrency(statement.totalLiabilities)}</td>
+                            <td class="border px-4 py-2">{formatCurrency(statement.totalStockholdersEquity)}</td>
+                        </tr>
+                    {/each}
+                </tbody>
+            </table>
+
+            <h2 class="text-2xl font-bold mb-4">Cash Flow Statements</h2>
+            <table class="w-full table-auto">
+                <thead>
+                    <tr>
+                        <th class="px-4 py-2">Date</th>
+                        <th class="px-4 py-2">Operating CF</th>
+                        <th class="px-4 py-2">Investing CF</th>
+                        <th class="px-4 py-2">Financing CF</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {#each financialData.cash_flow_statements as statement}
+                        <tr>
+                            <td class="border px-4 py-2">{new Date(statement.date).toLocaleDateString()}</td>
+                            <td class="border px-4 py-2">{formatCurrency(statement.operatingCashFlow)}</td>
+                            <td class="border px-4 py-2">{formatCurrency(statement.netCashUsedForInvestingActivities)}</td>
+                            <td class="border px-4 py-2">{formatCurrency(statement.netCashUsedProvidedByFinancingActivities)}</td>
+                        </tr>
+                    {/each}
+                </tbody>
+            </table>
+        </div>
     {/if}
-  {:else if financialData.incomeStatements.length > 0 || financialData.balanceSheets.length > 0 || financialData.cashFlowStatements.length > 0}
-    <div class="mb-8">
-      <h2 class="mb-4 text-2xl font-bold">Income Statements</h2>
-      <div class="overflow-x-auto">
-        <table class="w-full table-auto">
-          <thead>
-            <tr>
-              <th class="px-4 py-2">Date</th>
-              <th class="px-4 py-2">Revenue</th>
-              <th class="px-4 py-2">Net Income</th>
-              <th class="px-4 py-2">EPS</th>
-            </tr>
-          </thead>
-          <tbody>
-            {#each financialData.incomeStatements as statement}
-              <tr>
-                <td class="border px-4 py-2">{new Date(statement.date).toLocaleDateString()}</td>
-                <td class="border px-4 py-2">{formatCurrency(statement.revenue)}</td>
-                <td class="border px-4 py-2">{formatCurrency(statement.net_income)}</td>
-                <td class="border px-4 py-2">{statement.eps?.toFixed(2) ?? 'N/A'}</td>
-              </tr>
-            {/each}
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="mb-8">
-      <h2 class="mb-4 text-2xl font-bold">Balance Sheets</h2>
-      <div class="overflow-x-auto">
-        <table class="w-full table-auto">
-          <thead>
-            <tr>
-              <th class="px-4 py-2">Date</th>
-              <th class="px-4 py-2">Total Assets</th>
-              <th class="px-4 py-2">Total Liabilities</th>
-              <th class="px-4 py-2">Total Equity</th>
-            </tr>
-          </thead>
-          <tbody>
-            {#each financialData.balanceSheets as statement}
-              <tr>
-                <td class="border px-4 py-2">{new Date(statement.date).toLocaleDateString()}</td>
-                <td class="border px-4 py-2">{formatCurrency(statement.total_assets)}</td>
-                <td class="border px-4 py-2">{formatCurrency(statement.total_liabilities)}</td>
-                <td class="border px-4 py-2">{formatCurrency(statement.total_stockholders_equity)}</td>
-              </tr>
-            {/each}
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="mb-8">
-      <h2 class="mb-4 text-2xl font-bold">Cash Flow Statements</h2>
-      <div class="overflow-x-auto">
-        <table class="w-full table-auto">
-          <thead>
-            <tr>
-              <th class="px-4 py-2">Date</th>
-              <th class="px-4 py-2">Operating Cash Flow</th>
-              <th class="px-4 py-2">Investing Cash Flow</th>
-              <th class="px-4 py-2">Financing Cash Flow</th>
-            </tr>
-          </thead>
-          <tbody>
-            {#each financialData.cashFlowStatements as statement}
-              <tr>
-                <td class="border px-4 py-2">{new Date(statement.date).toLocaleDateString()}</td>
-                <td class="border px-4 py-2">{formatCurrency(statement.net_cash_provided_by_operating_activities)}</td>
-                <td class="border px-4 py-2">{formatCurrency(statement.net_cash_used_for_investing_activities)}</td>
-                <td class="border px-4 py-2">{formatCurrency(statement.net_cash_used_provided_by_financing_activities)}</td>
-              </tr>
-            {/each}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  {:else}
-    <p>No financial data available.</p>
-    <button
-      class="mt-4 rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 disabled:opacity-50"
-      on:click={loadFinancialData}
-      disabled={retryLoading}
-    >
-      {#if retryLoading}
-        <LoadingSpinner size="small" />
-      {:else}
-        Load Financial Data
-      {/if}
-    </button>
-  {/if}
 </div>
