@@ -46,7 +46,7 @@
 
 {#if item && userStock}
 <div 
-    class="rounded-lg border bg-white p-6 shadow-md transition-all duration-300 hover:shadow-lg dark:border-gray-700 dark:bg-gray-800"
+    class="rounded-lg border bg-white p-6 shadow-md transition-all duration-100 hover:shadow-lg dark:border-gray-700 dark:bg-gray-800"
     draggable="true"
     role="listitem"
     aria-label="Stock item for {item.symbol}"
@@ -70,40 +70,56 @@
         <span class="font-semibold text-gray-900 dark:text-gray-100">{item.exchange}</span>
     </div>
     <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">{userStock.notes}</p>
-    <div class="flex flex-wrap justify-between gap-2">
-        {#if allowedMoves[userStock.list_name] && allowedMoves[userStock.list_name].length > 0}
-            <select 
-                on:change={handleMoveItem} 
-                class="rounded bg-blue-600 px-3 py-2 text-sm text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
-                aria-label="Move stock to different list"
+
+    <!-- Actions section with consistent spacing and grouping -->
+    <div class="space-y-2">
+        <!-- List management actions -->
+        <div class="flex gap-2">
+            {#if allowedMoves[userStock.list_name] && allowedMoves[userStock.list_name].length > 0}
+                <select 
+                    on:change={handleMoveItem} 
+                    class="flex-1 rounded bg-blue-600 px-3 py-2 text-sm text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+                    aria-label="Move stock to different list"
+                >
+                    <option value="">Move to...</option>
+                    {#each allowedMoves[userStock.list_name] as listName}
+                        <option value={listName}>{listName}</option>
+                    {/each}
+                </select>
+            {/if}
+            <button 
+                on:click={handleDelete} 
+                class="rounded bg-red-600 px-3 py-2 text-sm text-white transition-colors hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+                aria-label="Delete {item.symbol} from list"
             >
-                <option value="">Move to...</option>
-                {#each allowedMoves[userStock.list_name] as listName}
-                    <option value={listName}>{listName}</option>
-                {/each}
-            </select>
-        {/if}
-        <button 
-            on:click={handleFullPage} 
-            class="rounded bg-blue-600 px-3 py-2 text-sm text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
-            aria-label="View full page for {item.symbol}"
-        >
-            Full Page
-        </button>
-        <button 
-            on:click={() => goto(`/subprojects/investment-analysis-platform/company/${item.symbol}`)} 
-            class="rounded bg-green-600 px-3 py-2 text-sm text-white transition-colors hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
-            aria-label="View wiki for {item.symbol}"
-        >
-            Wiki
-        </button>
-        <button 
-            on:click={handleDelete} 
-            class="rounded bg-red-600 px-3 py-2 text-sm text-white transition-colors hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
-            aria-label="Delete {item.symbol} from list"
-        >
-            Delete
-        </button>
+                Delete
+            </button>
+        </div>
+
+        <!-- Navigation actions in a grid -->
+        <div class="grid grid-cols-3 gap-2">
+            <button 
+                on:click={handleFullPage} 
+                class="rounded bg-gray-600 px-3 py-2 text-sm text-white transition-colors hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+                aria-label="View full page for {item.symbol}"
+            >
+                Full Page
+            </button>
+            <button 
+                on:click={() => goto(`/subprojects/investment-analysis-platform/company/${item.symbol}`)} 
+                class="rounded bg-gray-600 px-3 py-2 text-sm text-white transition-colors hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+                aria-label="View wiki for {item.symbol}"
+            >
+                Wiki
+            </button>
+            <button 
+                on:click={() => goto(`/subprojects/investment-analysis-platform/company/${item.symbol}/financials`)} 
+                class="rounded bg-gray-600 px-3 py-2 text-sm text-white transition-colors hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+                aria-label="View financials for {item.symbol}"
+            >
+                Financials
+            </button>
+        </div>
     </div>
 </div>
 {:else}

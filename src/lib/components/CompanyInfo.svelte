@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { formatCurrency, formatNumber } from '$lib/utils/numberFormat';
     export let stockMetadata: any;
 </script>
 
@@ -30,11 +31,15 @@
                     </div>
                     <div class="flex justify-between items-center">
                         <span class="font-medium text-gray-700 dark:text-gray-300">Price:</span>
-                        <span class="text-gray-900 dark:text-gray-100">{stockMetadata.price ? `$${stockMetadata.price.toLocaleString()}` : 'N/A'}</span>
+                        <span class="text-gray-900 dark:text-gray-100" title={formatCurrency(stockMetadata.price, 'full').tooltip}>
+                            {formatCurrency(stockMetadata.price, 'full').formatted}
+                        </span>
                     </div>
                     <div class="flex justify-between items-center">
                         <span class="font-medium text-gray-700 dark:text-gray-300">Market Cap:</span>
-                        <span class="text-gray-900 dark:text-gray-100">{stockMetadata.market_cap ? `$${stockMetadata.market_cap.toLocaleString()}` : 'N/A'}</span>
+                        <span class="text-gray-900 dark:text-gray-100" title={formatCurrency(stockMetadata.market_cap, 'full').tooltip}>
+                            {formatCurrency(stockMetadata.market_cap, 'abbreviated').formatted}
+                        </span>
                     </div>
                     <div class="flex justify-between items-center">
                         <span class="font-medium text-gray-700 dark:text-gray-300">Beta:</span>
@@ -52,7 +57,9 @@
                     </div>
                     <div class="flex justify-between items-center">
                         <span class="font-medium text-gray-700 dark:text-gray-300">Last Dividend:</span>
-                        <span class="text-gray-900 dark:text-gray-100">{stockMetadata.last_div ? `$${stockMetadata.last_div}` : 'N/A'}</span>
+                        <span class="text-gray-900 dark:text-gray-100" title={formatCurrency(stockMetadata.last_div, 'full').tooltip}>
+                            {formatCurrency(stockMetadata.last_div, 'full').formatted}
+                        </span>
                     </div>
                     <div class="flex justify-between items-center">
                         <span class="font-medium text-gray-700 dark:text-gray-300">Price Range:</span>
@@ -60,7 +67,9 @@
                     </div>
                     <div class="flex justify-between items-center">
                         <span class="font-medium text-gray-700 dark:text-gray-300">Employees:</span>
-                        <span class="text-gray-900 dark:text-gray-100">{stockMetadata.full_time_employees?.toLocaleString() || 'N/A'}</span>
+                        <span class="text-gray-900 dark:text-gray-100" title={formatNumber(stockMetadata.full_time_employees, 'full').tooltip}>
+                            {formatNumber(stockMetadata.full_time_employees, 'abbreviated').formatted}
+                        </span>
                     </div>
                     <div class="flex justify-between items-center">
                         <span class="font-medium text-gray-700 dark:text-gray-300">IPO Date:</span>

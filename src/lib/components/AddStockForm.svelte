@@ -3,7 +3,6 @@
     import { createEventDispatcher } from 'svelte';
     import type { ListName } from '$lib/constants/listNames';
     import { session } from '$lib/stores/sessionStore';
-    import { onMount } from 'svelte';
     import { supabase } from '$lib/supabaseClient';
 
     const dispatch = createEventDispatcher();
@@ -17,6 +16,14 @@
     let suggestions: string[] = [];
     let showSuggestions = false;
     let suggestionIndex = -1;
+    let inputElement: HTMLInputElement;
+
+    function handleEscape(event: KeyboardEvent) {
+        if (event.key === 'Escape') {
+            showSuggestions = false;
+            dispatch('close');
+        }
+    }
 
     async function searchSymbols(query: string) {
         if (!query) {
@@ -24,20 +31,50 @@
             return;
         }
 
-        const { data, error } = await supabase
-            .from('available_symbols')
-            .select('symbol')
-            .ilike('symbol', `${query}%`)
-            .limit(5);
+        try {
+            // First, try to find exact matches
+            const { data: exactMatches, error: exactError } = await supabase
+                .from('available_symbols')
+                .select('symbol')
+                .ilike('symbol', query)
+                .limit(5);
 
-        if (error) {
+            if (exactError) throw exactError;
+
+            // Then, find symbols that start with the query
+            const { data: startsWithMatches, error: startsWithError } = await supabase
+                .from('available_symbols')
+                .select('symbol')
+                .ilike('symbol', `${query}%`)
+                .not('symbol', 'ilike', query) // Exclude exact matches
+                .limit(5);
+
+            if (startsWithError) throw startsWithError;
+
+            // Finally, find symbols that contain the query anywhere
+            const { data: containsMatches, error: containsError } = await supabase
+                .from('available_symbols')
+                .select('symbol')
+                .ilike('symbol', `%${query}%`)
+                .not('symbol', 'ilike', `${query}%`) // Exclude exact and starts-with matches
+                .limit(5);
+
+            if (containsError) throw containsError;
+
+            // Combine results in priority order
+            suggestions = [
+                ...(exactMatches || []).map(item => item.symbol),
+                ...(startsWithMatches || []).map(item => item.symbol),
+                ...(containsMatches || []).map(item => item.symbol)
+            ].slice(0, 5); // Limit to 5 total results
+
+            showSuggestions = suggestions.length > 0;
+            suggestionIndex = -1;
+        } catch (error) {
             console.error('Error searching symbols:', error);
             suggestions = [];
-        } else {
-            suggestions = data.map(item => item.symbol);
+            showSuggestions = false;
         }
-        showSuggestions = suggestions.length > 0;
-        suggestionIndex = -1;
     }
 
     async function validateIdentifier() {
@@ -169,32 +206,41 @@
     }
 </script>
 
-<div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+<svelte:window on:keydown={handleEscape}/>
+
+<div class="fixed inset-0 z-50 overflow-y-auto" aria-modal="true">
     <div class="flex min-h-screen items-end justify-center px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" on:click={() => dispatch('close')}></div>
-        <span class="hidden sm:inline-block sm:h-screen sm:align-middle" aria-hidden="true">&#8203;</span>
+        <!-- Modal backdrop -->
+        <button 
+            type="button"
+            class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity cursor-default"
+            on:click={() => dispatch('close')}
+        ></button>
+
+        <span class="hidden sm:inline-block sm:h-screen sm:align-middle"></span>
+
+        <!-- Modal panel -->
         <div
+            class="inline-block transform overflow-hidden rounded-lg bg-white px-4 pt-5 pb-4 text-left align-bottom shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6 sm:align-middle dark:bg-gray-800"
             in:fly="{{ y: 50, duration: 300 }}"
             out:fade="{{ duration: 200 }}"
-            class="inline-block transform overflow-hidden rounded-lg bg-white px-4 pt-5 pb-4 text-left align-bottom shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6 sm:align-middle dark:bg-gray-800"
         >
-            <div class="absolute top-0 right-0 pt-4 pr-4">
-                <button
-                    type="button"
-                    class="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:bg-gray-800 dark:text-gray-300 dark:hover:text-gray-100"
-                    on:click={() => dispatch('close')}
-                >
-                    <span class="sr-only">Close</span>
-                    <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
+            <button
+                type="button"
+                class="absolute top-4 right-4 rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:bg-gray-800 dark:text-gray-300 dark:hover:text-gray-100"
+                on:click={() => dispatch('close')}
+            >
+                <span class="sr-only">Close</span>
+                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+
             <div class="sm:flex sm:items-start">
                 <div class="mt-3 w-full text-center sm:mt-0 sm:text-left">
-                    <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100" id="modal-title">
+                    <h2 class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100">
                         Add New Stock
-                    </h3>
+                    </h2>
                     <div class="mt-2">
                         <form on:submit|preventDefault={handleSubmit} class="space-y-6">
                             <div>
@@ -206,30 +252,21 @@
                                         type="text"
                                         id="identifier"
                                         bind:value={identifier}
+                                        bind:this={inputElement}
                                         on:input={handleInput}
                                         on:keydown={handleKeydown}
                                         required
                                         autocomplete="off"
                                         class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:text-sm p-2"
                                         placeholder="e.g., AAPL"
-                                        role="combobox"
-                                        aria-expanded={showSuggestions}
-                                        aria-controls="symbol-listbox"
-                                        aria-autocomplete="list"
                                     >
                                     {#if showSuggestions}
-                                        <div 
-                                            class="absolute z-10 mt-1 w-full rounded-md bg-white shadow-lg dark:bg-gray-700"
-                                            id="symbol-listbox"
-                                            role="listbox"
-                                        >
+                                        <div class="absolute z-10 mt-1 w-full rounded-md bg-white shadow-lg dark:bg-gray-700">
                                             <div class="max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
                                                 {#each suggestions as symbol, i}
                                                     <button
                                                         type="button"
                                                         class="w-full text-left px-4 py-2 text-gray-900 hover:bg-primary-100 dark:text-white dark:hover:bg-gray-600 {i === suggestionIndex ? 'bg-primary-100 dark:bg-gray-600' : ''}"
-                                                        role="option"
-                                                        aria-selected={i === suggestionIndex}
                                                         on:click={() => selectSuggestion(symbol)}
                                                     >
                                                         {symbol}
@@ -247,9 +284,11 @@
                                     {/if}
                                 </div>
                             </div>
+
                             {#if errorMessage}
-                                <p class="mt-2 text-sm text-red-600 dark:text-red-400">{errorMessage}</p>
+                                <p class="mt-2 text-sm text-red-600 dark:text-red-400" role="alert">{errorMessage}</p>
                             {/if}
+
                             <div>
                                 <label for="notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Notes</label>
                                 <textarea
@@ -259,6 +298,7 @@
                                     rows="4"
                                 ></textarea>
                             </div>
+
                             <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
                                 <button
                                     type="submit"

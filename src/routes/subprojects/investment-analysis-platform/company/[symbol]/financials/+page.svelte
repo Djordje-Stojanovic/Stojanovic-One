@@ -5,6 +5,7 @@
     import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
     import { supabase } from '$lib/supabaseClient';
     import { session } from '$lib/stores/sessionStore';
+    import { formatCurrency, formatPercentage, type NumberFormat } from '$lib/utils/numberFormat';
 
     interface FinancialStatement {
         symbol: string;
@@ -68,6 +69,7 @@
     };
     let loading = false;
     let error: string | null = null;
+    let numberFormat: NumberFormat = 'abbreviated';
 
     async function loadFinancialData() {
         if (!$session) {
@@ -118,16 +120,6 @@
         }
     }
 
-    function formatCurrency(value: number | null | undefined): string {
-        if (value == null) return 'N/A';
-        return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD',
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0
-        }).format(value);
-    }
-
     onMount(async () => {
         if ($session) {
             await loadFinancialData();
@@ -142,13 +134,22 @@
 <div class="container mx-auto px-4 py-8">
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-3xl font-bold">Financial Statements - {symbol}</h1>
-        <button
-            class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
-            on:click={loadFinancialData}
-            disabled={loading}
-        >
-            {loading ? 'Loading...' : 'Refresh Data'}
-        </button>
+        <div class="flex items-center gap-4">
+            <select
+                bind:value={numberFormat}
+                class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-3 py-1"
+            >
+                <option value="full">Full Numbers</option>
+                <option value="abbreviated">Abbreviated (K/M/B)</option>
+            </select>
+            <button
+                class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+                on:click={loadFinancialData}
+                disabled={loading}
+            >
+                {loading ? 'Loading...' : 'Refresh Data'}
+            </button>
+        </div>
     </div>
 
     {#if loading}
@@ -185,10 +186,16 @@
                                 {#each financialData.income_statements as statement}
                                     <tr>
                                         <td class="border px-4 py-2">{new Date(statement.date).toLocaleDateString()}</td>
-                                        <td class="border px-4 py-2">{formatCurrency(statement.revenue)}</td>
-                                        <td class="border px-4 py-2">{formatCurrency(statement.net_income)}</td>
+                                        <td class="border px-4 py-2" title={formatCurrency(statement.revenue, 'full').tooltip}>
+                                            {formatCurrency(statement.revenue, numberFormat).formatted}
+                                        </td>
+                                        <td class="border px-4 py-2" title={formatCurrency(statement.net_income, 'full').tooltip}>
+                                            {formatCurrency(statement.net_income, numberFormat).formatted}
+                                        </td>
                                         <td class="border px-4 py-2">{statement.eps?.toFixed(2) ?? 'N/A'}</td>
-                                        <td class="border px-4 py-2">{formatCurrency(statement.operating_income)}</td>
+                                        <td class="border px-4 py-2" title={formatCurrency(statement.operating_income, 'full').tooltip}>
+                                            {formatCurrency(statement.operating_income, numberFormat).formatted}
+                                        </td>
                                     </tr>
                                 {/each}
                             </tbody>
@@ -213,10 +220,18 @@
                                 {#each financialData.balance_sheets as statement}
                                     <tr>
                                         <td class="border px-4 py-2">{new Date(statement.date).toLocaleDateString()}</td>
-                                        <td class="border px-4 py-2">{formatCurrency(statement.total_assets)}</td>
-                                        <td class="border px-4 py-2">{formatCurrency(statement.total_liabilities)}</td>
-                                        <td class="border px-4 py-2">{formatCurrency(statement.total_equity)}</td>
-                                        <td class="border px-4 py-2">{formatCurrency(statement.total_debt)}</td>
+                                        <td class="border px-4 py-2" title={formatCurrency(statement.total_assets, 'full').tooltip}>
+                                            {formatCurrency(statement.total_assets, numberFormat).formatted}
+                                        </td>
+                                        <td class="border px-4 py-2" title={formatCurrency(statement.total_liabilities, 'full').tooltip}>
+                                            {formatCurrency(statement.total_liabilities, numberFormat).formatted}
+                                        </td>
+                                        <td class="border px-4 py-2" title={formatCurrency(statement.total_equity, 'full').tooltip}>
+                                            {formatCurrency(statement.total_equity, numberFormat).formatted}
+                                        </td>
+                                        <td class="border px-4 py-2" title={formatCurrency(statement.total_debt, 'full').tooltip}>
+                                            {formatCurrency(statement.total_debt, numberFormat).formatted}
+                                        </td>
                                     </tr>
                                 {/each}
                             </tbody>
@@ -241,10 +256,18 @@
                                 {#each financialData.cash_flow_statements as statement}
                                     <tr>
                                         <td class="border px-4 py-2">{new Date(statement.date).toLocaleDateString()}</td>
-                                        <td class="border px-4 py-2">{formatCurrency(statement.operating_cash_flow)}</td>
-                                        <td class="border px-4 py-2">{formatCurrency(statement.net_cash_used_for_investing_activities)}</td>
-                                        <td class="border px-4 py-2">{formatCurrency(statement.net_cash_used_provided_by_financing_activities)}</td>
-                                        <td class="border px-4 py-2">{formatCurrency(statement.free_cash_flow)}</td>
+                                        <td class="border px-4 py-2" title={formatCurrency(statement.operating_cash_flow, 'full').tooltip}>
+                                            {formatCurrency(statement.operating_cash_flow, numberFormat).formatted}
+                                        </td>
+                                        <td class="border px-4 py-2" title={formatCurrency(statement.net_cash_used_for_investing_activities, 'full').tooltip}>
+                                            {formatCurrency(statement.net_cash_used_for_investing_activities, numberFormat).formatted}
+                                        </td>
+                                        <td class="border px-4 py-2" title={formatCurrency(statement.net_cash_used_provided_by_financing_activities, 'full').tooltip}>
+                                            {formatCurrency(statement.net_cash_used_provided_by_financing_activities, numberFormat).formatted}
+                                        </td>
+                                        <td class="border px-4 py-2" title={formatCurrency(statement.free_cash_flow, 'full').tooltip}>
+                                            {formatCurrency(statement.free_cash_flow, numberFormat).formatted}
+                                        </td>
                                     </tr>
                                 {/each}
                             </tbody>
