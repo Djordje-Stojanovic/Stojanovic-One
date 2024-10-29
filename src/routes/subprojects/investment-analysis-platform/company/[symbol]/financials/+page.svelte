@@ -68,7 +68,6 @@
     };
     let loading = false;
     let error: string | null = null;
-    let initialized = false;
 
     async function loadFinancialData() {
         if (!$session) {
@@ -130,17 +129,12 @@
     }
 
     onMount(async () => {
-        console.log('Component mounted, session:', $session);
-        const { data: { session: initialSession } } = await supabase.auth.getSession();
-        console.log('Initial session:', initialSession);
-        if (initialSession) {
+        if ($session) {
             await loadFinancialData();
         }
-        initialized = true;
     });
 
-    $: if (initialized && $session) {
-        console.log('Session changed, reloading data');
+    $: if ($session) {
         loadFinancialData();
     }
 </script>
