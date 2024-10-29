@@ -1,4 +1,4 @@
-import { writable } from 'svelte/store';
+import { writable, derived } from 'svelte/store';
 import { supabase } from '$lib/supabaseClient';
 import type { Session } from '@supabase/supabase-js';
 
@@ -7,10 +7,18 @@ interface SessionState {
     isLoading: boolean;
 }
 
-const { subscribe, update } = writable<SessionState>({
+const sessionState = writable<SessionState>({
     session: null,
     isLoading: true
 });
+
+const { subscribe, update } = sessionState;
+
+// Create a derived store that only exposes the session
+export const session = derived<typeof sessionState, Session | null>(
+    sessionState,
+    $state => $state.session
+);
 
 export const sessionStore = {
     subscribe,
@@ -18,16 +26,8 @@ export const sessionStore = {
     setLoading: (isLoading: boolean) => update(state => ({ ...state, isLoading })),
     refresh: async () => {
         try {
-            sessionStore.setLoading(true);
             const { data: { session } } = await supabase.auth.getSession();
-            
-            if (!session) {
-                // Try to refresh the session if we don't have one
-                const { data: { session: refreshedSession } } = await supabase.auth.refreshSession();
-                sessionStore.set(refreshedSession);
-            } else {
-                sessionStore.set(session);
-            }
+            sessionStore.set(session);
         } catch (error) {
             console.error('Failed to refresh session:', error);
             sessionStore.set(null);
@@ -35,18 +35,11 @@ export const sessionStore = {
     }
 };
 
-// Initialize session
-let initialized = false;
-async function initializeSession() {
-    if (initialized) return;
-    initialized = true;
-    await sessionStore.refresh();
-}
+// Initialize
+supabase.auth.getSession().then(({ data: { session } }) => {
+    sessionStore.set(session);
+});
 
-// Initialize on import
-initializeSession();
-
-// Listen for auth changes
-supabase.auth.onAuthStateChange((_event, session) => {
+supabase.auth.onAuthStateChange((_, session) => {
     sessionStore.set(session);
 });

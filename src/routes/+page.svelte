@@ -1,11 +1,8 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { session } from '$lib/stores/sessionStore';
+	import { sessionStore } from '$lib/stores/sessionStore';
 	import SubprojectCard from '$lib/components/SubprojectCard.svelte';
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 	import { supabase } from '$lib/supabaseClient';
-	import { browser } from '$app/environment';
-	import { goto } from '$app/navigation';
 
 	let subprojects = [
 		{
@@ -22,62 +19,48 @@
 		}
 	];
 	let loading = true;
-	let sessionChecked = false;
 
-	onMount(async () => {
-		if (browser) {
-			const {
-				data: { session: currentSession }
-			} = await supabase.auth.getSession();
-			if (currentSession) {
-				$session = currentSession;
-				if (window.location.pathname === '/login') {
-					const from = new URLSearchParams(window.location.search).get('from') || '/';
-					goto(from);
-				}
-			} else if (window.location.pathname !== '/login') {
-				goto('/login?redirected=true&from=' + window.location.pathname);
-			}
-
-			if ($session) {
-				const { data, error } = await supabase.from('subprojects').select('id, title, description');
+	// Load additional subprojects if user is authenticated
+	$: if ($sessionStore.session) {
+		supabase
+			.from('subprojects')
+			.select('id, title, description')
+			.then(({ data, error }) => {
 				if (error) {
 					console.error('Error fetching subprojects:', error);
 				} else if (data) {
-					subprojects = [...subprojects, ...data.map(item => ({...item, route: `/subproject/${item.id}`}))];
+					subprojects = [
+						...subprojects,
+						...data.map(item => ({ ...item, route: `/subproject/${item.id}` }))
+					];
 				}
-			}
-
-			loading = false;
-			sessionChecked = true;
-		}
-	});
+				loading = false;
+			});
+	} else {
+		loading = false;
+	}
 </script>
 
 <svelte:head>
 	<title>Dashboard - Stojanovic-One</title>
 </svelte:head>
 
-{#if !sessionChecked}
+{#if loading}
 	<div class="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900">
 		<LoadingSpinner size="w-12 h-12" />
 	</div>
-{:else if $session}
+{:else if $sessionStore.session}
 	<div class="container mx-auto px-4 py-8">
 		<h1 class="mb-6 text-3xl font-bold">Your Subprojects</h1>
-		{#if loading}
-			<LoadingSpinner size="w-12 h-12" />
-		{:else}
-			<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-				{#each subprojects as subproject (subproject.id)}
-					<SubprojectCard
-						title={subproject.title}
-						description={subproject.description}
-						route={subproject.route || `/subproject/${subproject.id}`}
-					/>
-				{/each}
-			</div>
-		{/if}
+		<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+			{#each subprojects as subproject (subproject.id)}
+				<SubprojectCard
+					title={subproject.title}
+					description={subproject.description}
+					route={subproject.route || `/subproject/${subproject.id}`}
+				/>
+			{/each}
+		</div>
 	</div>
 {:else}
 	<div class="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900">

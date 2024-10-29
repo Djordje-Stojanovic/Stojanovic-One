@@ -5,7 +5,7 @@
     import StockItem from '$lib/components/StockItem.svelte';
     import type { ListName } from '$lib/constants/listNames';
     import { listNames } from '$lib/constants/listNames';
-    import { session } from '$lib/stores/sessionStore';
+    import { sessionStore } from '$lib/stores/sessionStore';
     import type { UserStock } from '$lib/types';
     import { moveStock } from '$lib/utils/stockMoves';
 
@@ -57,13 +57,18 @@
 
     async function fetchStocks() {
         try {
+            const userId = $sessionStore?.session?.user?.id;
+            if (!userId) {
+                throw new Error('No user ID available');
+            }
+
             const { data, error: fetchError } = await supabase
                 .from('user_stocks')
                 .select(`
                     *,
                     metadata:stock_metadata (*)
                 `)
-                .eq('user_id', $session?.user?.id);
+                .eq('user_id', userId);
 
             if (fetchError) throw fetchError;
             stocks = data || [];
@@ -128,7 +133,7 @@
     async function handleDrop(e: DragEvent, newListName: ListName) {
         e.preventDefault();
         const stockId = e.dataTransfer?.getData('text/plain');
-        if (!stockId || !$session?.user) return;
+        if (!stockId || !$sessionStore?.session?.user) return;
         await handleMoveItem(new CustomEvent('moveItem', { detail: { stockId, newListName } }));
         hoveredList = null;
     }
