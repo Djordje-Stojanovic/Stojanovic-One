@@ -10,7 +10,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 // Create a single Supabase client instance
 const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: { persistSession: false }
+  auth: { persistSession: true } // Changed to true to maintain session persistence
 });
 
 export const handle: Handle = async ({ event, resolve }) => {
