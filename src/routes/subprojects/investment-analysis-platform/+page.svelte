@@ -7,7 +7,7 @@
     import { listNames } from '$lib/constants/listNames';
     import { sessionStore } from '$lib/stores/sessionStore';
     import type { UserStock } from '$lib/types';
-    import { moveStock } from '$lib/utils/stockMoves';
+    import { moveStock, allowedMoves } from '$lib/utils/stockMoves';
 
     let showAddForm = false;
     let stocks: UserStock[] = [];
@@ -18,6 +18,7 @@
     let syncResult: string | null = null;
     let hoveredList: ListName | null = null;
     let activeList: ListName = 'Watchlist';
+    let dragSourceList: ListName | null = null;
 
     async function syncSymbols() {
         if (isSyncing) return;
@@ -118,12 +119,26 @@
         }
     }
 
+    function handleDragStart(event: CustomEvent<ListName>) {
+        dragSourceList = event.detail;
+    }
+
+    function handleDragEnd() {
+        dragSourceList = null;
+        hoveredList = null;
+    }
+
     function handleDragOver(e: DragEvent, listName: ListName) {
         e.preventDefault();
-        if (e.dataTransfer) {
+        if (!e.dataTransfer) return;
+        
+        if (dragSourceList && allowedMoves[dragSourceList]?.includes(listName)) {
             e.dataTransfer.dropEffect = 'move';
+            hoveredList = listName;
+        } else {
+            e.dataTransfer.dropEffect = 'none';
+            hoveredList = null;
         }
-        hoveredList = listName;
     }
 
     function handleDragLeave() {
@@ -132,10 +147,20 @@
 
     async function handleDrop(e: DragEvent, newListName: ListName) {
         e.preventDefault();
-        const stockId = e.dataTransfer?.getData('text/plain');
-        if (!stockId || !$sessionStore?.session?.user) return;
-        await handleMoveItem(new CustomEvent('moveItem', { detail: { stockId, newListName } }));
         hoveredList = null;
+        dragSourceList = null;
+        
+        if (!e.dataTransfer) return;
+        
+        try {
+            const dragData = JSON.parse(e.dataTransfer.getData('application/json'));
+            const stockId = dragData.id;
+            await handleMoveItem(new CustomEvent('moveItem', { 
+                detail: { stockId, newListName } 
+            }));
+        } catch (error) {
+            console.error('Error handling drop:', error);
+        }
     }
 
     async function handleDeleteItem(event: CustomEvent<string>) {
@@ -148,12 +173,15 @@
 
             if (deleteError) throw deleteError;
 
-            // Update local state only if the database operation was successful
             stocks = stocks.filter(stock => stock.id !== stockId);
         } catch (error) {
             console.error('Error deleting stock:', error);
             alert('Failed to delete stock. Please try again.');
         }
+    }
+
+    function isValidDropTarget(listName: ListName): boolean {
+        return dragSourceList ? allowedMoves[dragSourceList]?.includes(listName) ?? false : false;
     }
 </script>
 
@@ -204,7 +232,9 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
                 {#each [...listNames] as listName (listName)}
                     <div
-                        class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border border-gray-200 dark:border-gray-700 transition-all duration-300 {hoveredList === listName ? 'ring-2 ring-blue-500' : ''}"
+                        class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border border-gray-200 dark:border-gray-700 transition-all duration-300 
+                            {dragSourceList && isValidDropTarget(listName) ? 'ring-2 ring-blue-500/50 shadow-md bg-blue-50/30 dark:bg-blue-900/10' : ''} 
+                            {hoveredList === listName ? '!ring-2 !ring-blue-500 !shadow-lg !scale-[1.02] !bg-blue-50/50 dark:!bg-blue-900/20' : ''}"
                         role="list"
                         on:dragover={(e) => handleDragOver(e, listName)}
                         on:dragleave={handleDragLeave}
@@ -222,6 +252,8 @@
                                         {userStock}
                                         on:moveItem={handleMoveItem}
                                         on:deleteItem={handleDeleteItem}
+                                        on:dragStart={handleDragStart}
+                                        on:dragEnd={handleDragEnd}
                                     />
                                 </div>
                             {/each}

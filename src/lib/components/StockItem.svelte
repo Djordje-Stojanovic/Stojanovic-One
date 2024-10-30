@@ -12,6 +12,8 @@
         stockUpdated: UserStock;
         deleteItem: string;
         moveItem: { stockId: string; newListName: ListName };
+        dragStart: ListName;
+        dragEnd: void;
     }>();
     
     async function handleMoveItem(event: Event) {
@@ -36,11 +38,18 @@
     }
 
     function handleDragStart(event: DragEvent) {
-        if (!userStock) return;
-        if (event.dataTransfer) {
-            event.dataTransfer.effectAllowed = 'move';
-            event.dataTransfer.setData('text/plain', userStock.id);
-        }
+        if (!userStock || !event.dataTransfer) return;
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData('text/plain', userStock.id);
+        event.dataTransfer.setData('application/json', JSON.stringify({
+            id: userStock.id,
+            currentList: userStock.list_name
+        }));
+        dispatch('dragStart', userStock.list_name);
+    }
+
+    function handleDragEnd() {
+        dispatch('dragEnd');
     }
 </script>
 
@@ -51,7 +60,7 @@
     role="listitem"
     aria-label="Stock item for {item.symbol}"
     on:dragstart={handleDragStart}
-    on:dragend
+    on:dragend={handleDragEnd}
 >
     <div class="mb-3 flex items-center">
         <img src={item.logo_url} alt="{item.symbol} logo" class="mr-3 h-8 w-8">
