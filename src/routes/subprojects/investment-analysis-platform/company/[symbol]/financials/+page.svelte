@@ -3,6 +3,7 @@
     import { onMount } from 'svelte';
     import { goto } from '$app/navigation';
     import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
+    import FinancialsHeader from '$lib/components/FinancialsHeader.svelte';
     import { supabase } from '$lib/supabaseClient';
     import { session } from '$lib/stores/sessionStore';
     import { formatCurrency, formatPercentage, type NumberFormat } from '$lib/utils/numberFormat';
@@ -70,6 +71,9 @@
     let loading = false;
     let error: string | null = null;
     let numberFormat: NumberFormat = 'abbreviated';
+    let startDate = new Date(new Date().setFullYear(new Date().getFullYear() - 5)).toISOString().split('T')[0];
+    let endDate = new Date().toISOString().split('T')[0];
+    let activeTab = 'income';
 
     async function loadFinancialData() {
         if (!$session) {
@@ -82,7 +86,6 @@
         error = null;
 
         try {
-            console.log('Loading financial data for symbol:', symbol);
             const { data: { session: currentSession } } = await supabase.auth.getSession();
             if (!currentSession) {
                 throw new Error('No active session');
@@ -94,15 +97,11 @@
                 }
             });
             
-            console.log('API Response status:', response.status);
             const responseText = await response.text();
-            console.log('API Response text:', responseText);
-
             let result;
             try {
                 result = JSON.parse(responseText);
             } catch (e) {
-                console.error('Failed to parse JSON response:', e);
                 throw new Error('Invalid response format');
             }
 
@@ -110,7 +109,6 @@
                 throw new Error(result.error || 'Failed to fetch financial data');
             }
 
-            console.log('Received financial data:', result.data);
             financialData = result.data;
         } catch (e) {
             error = e instanceof Error ? e.message : 'An error occurred while fetching data';
@@ -131,150 +129,160 @@
     }
 </script>
 
-<div class="container mx-auto px-4 py-8">
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-bold">Financial Statements - {symbol}</h1>
-        <div class="flex items-center gap-4">
-            <select
-                bind:value={numberFormat}
-                class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-3 py-1"
-            >
-                <option value="full">Full Numbers</option>
-                <option value="abbreviated">Abbreviated (K/M/B)</option>
-            </select>
-            <button
-                class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
-                on:click={loadFinancialData}
-                disabled={loading}
-            >
-                {loading ? 'Loading...' : 'Refresh Data'}
-            </button>
+<div class="flex flex-col h-full">
+    <FinancialsHeader 
+        {symbol}
+        {loading}
+        {numberFormat}
+        {startDate}
+        {endDate}
+        on:refresh={loadFinancialData}
+        on:formatChange={(e) => numberFormat = e.detail}
+        on:dateChange={(e) => {
+            if (e.detail.startDate) startDate = e.detail.startDate;
+            if (e.detail.endDate) endDate = e.detail.endDate;
+        }}
+    />
+
+    <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div class="container mx-auto">
+            <div class="flex space-x-4 p-4">
+                <button 
+                    class="px-4 py-2 rounded-lg transition-colors {activeTab === 'income' ? 'bg-blue-500 text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}"
+                    on:click={() => activeTab = 'income'}
+                >
+                    Income Statement
+                </button>
+                <button 
+                    class="px-4 py-2 rounded-lg transition-colors {activeTab === 'balance' ? 'bg-blue-500 text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}"
+                    on:click={() => activeTab = 'balance'}
+                >
+                    Balance Sheet
+                </button>
+                <button 
+                    class="px-4 py-2 rounded-lg transition-colors {activeTab === 'cashflow' ? 'bg-blue-500 text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}"
+                    on:click={() => activeTab = 'cashflow'}
+                >
+                    Cash Flow
+                </button>
+            </div>
         </div>
     </div>
 
-    {#if loading}
-        <div class="flex justify-center items-center h-64">
-            <LoadingSpinner />
-        </div>
-    {:else if error}
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-            <strong class="font-bold">Error!</strong>
-            <span class="block sm:inline">{error}</span>
-        </div>
-    {:else}
-        {#if financialData.income_statements.length === 0 && financialData.balance_sheets.length === 0 && financialData.cash_flow_statements.length === 0}
-            <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative" role="alert">
-                <strong class="font-bold">No Data Available!</strong>
-                <span class="block sm:inline">No financial data found for {symbol}</span>
+    <div class="flex-1 overflow-hidden">
+        {#if loading}
+            <div class="flex justify-center items-center h-64">
+                <LoadingSpinner />
+            </div>
+        {:else if error}
+            <div class="p-4">
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                    <strong class="font-bold">Error!</strong>
+                    <span class="block sm:inline">{error}</span>
+                </div>
             </div>
         {:else}
-            <div class="overflow-x-auto space-y-8">
-                {#if financialData.income_statements.length > 0}
-                    <div>
-                        <h2 class="text-2xl font-bold mb-4">Income Statements</h2>
-                        <table class="w-full table-auto">
-                            <thead>
+            <div class="overflow-x-auto">
+                <div class="p-4">
+                    {#if activeTab === 'income' && financialData.income_statements.length > 0}
+                        <table class="w-full whitespace-nowrap">
+                            <thead class="bg-gray-50 dark:bg-gray-700 sticky top-0">
                                 <tr>
-                                    <th class="px-4 py-2">Date</th>
-                                    <th class="px-4 py-2">Revenue</th>
-                                    <th class="px-4 py-2">Net Income</th>
-                                    <th class="px-4 py-2">EPS</th>
-                                    <th class="px-4 py-2">Operating Income</th>
+                                    <th class="px-4 py-2 text-left">Date</th>
+                                    <th class="px-4 py-2 text-right">Revenue</th>
+                                    <th class="px-4 py-2 text-right">Net Income</th>
+                                    <th class="px-4 py-2 text-right">EPS</th>
+                                    <th class="px-4 py-2 text-right">Operating Income</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {#each financialData.income_statements as statement}
-                                    <tr>
-                                        <td class="border px-4 py-2">{new Date(statement.date).toLocaleDateString()}</td>
-                                        <td class="border px-4 py-2" title={formatCurrency(statement.revenue, 'full').tooltip}>
+                                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-800">
+                                        <td class="border-b px-4 py-2">{new Date(statement.date).toLocaleDateString()}</td>
+                                        <td class="border-b px-4 py-2 text-right" title={formatCurrency(statement.revenue, 'full').tooltip}>
                                             {formatCurrency(statement.revenue, numberFormat).formatted}
                                         </td>
-                                        <td class="border px-4 py-2" title={formatCurrency(statement.net_income, 'full').tooltip}>
+                                        <td class="border-b px-4 py-2 text-right" title={formatCurrency(statement.net_income, 'full').tooltip}>
                                             {formatCurrency(statement.net_income, numberFormat).formatted}
                                         </td>
-                                        <td class="border px-4 py-2">{statement.eps?.toFixed(2) ?? 'N/A'}</td>
-                                        <td class="border px-4 py-2" title={formatCurrency(statement.operating_income, 'full').tooltip}>
+                                        <td class="border-b px-4 py-2 text-right">{statement.eps?.toFixed(2) ?? 'N/A'}</td>
+                                        <td class="border-b px-4 py-2 text-right" title={formatCurrency(statement.operating_income, 'full').tooltip}>
                                             {formatCurrency(statement.operating_income, numberFormat).formatted}
                                         </td>
                                     </tr>
                                 {/each}
                             </tbody>
                         </table>
-                    </div>
-                {/if}
-
-                {#if financialData.balance_sheets.length > 0}
-                    <div>
-                        <h2 class="text-2xl font-bold mb-4">Balance Sheets</h2>
-                        <table class="w-full table-auto">
-                            <thead>
+                    {:else if activeTab === 'balance' && financialData.balance_sheets.length > 0}
+                        <table class="w-full whitespace-nowrap">
+                            <thead class="bg-gray-50 dark:bg-gray-700 sticky top-0">
                                 <tr>
-                                    <th class="px-4 py-2">Date</th>
-                                    <th class="px-4 py-2">Total Assets</th>
-                                    <th class="px-4 py-2">Total Liabilities</th>
-                                    <th class="px-4 py-2">Total Equity</th>
-                                    <th class="px-4 py-2">Total Debt</th>
+                                    <th class="px-4 py-2 text-left">Date</th>
+                                    <th class="px-4 py-2 text-right">Total Assets</th>
+                                    <th class="px-4 py-2 text-right">Total Liabilities</th>
+                                    <th class="px-4 py-2 text-right">Total Equity</th>
+                                    <th class="px-4 py-2 text-right">Total Debt</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {#each financialData.balance_sheets as statement}
-                                    <tr>
-                                        <td class="border px-4 py-2">{new Date(statement.date).toLocaleDateString()}</td>
-                                        <td class="border px-4 py-2" title={formatCurrency(statement.total_assets, 'full').tooltip}>
+                                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-800">
+                                        <td class="border-b px-4 py-2">{new Date(statement.date).toLocaleDateString()}</td>
+                                        <td class="border-b px-4 py-2 text-right" title={formatCurrency(statement.total_assets, 'full').tooltip}>
                                             {formatCurrency(statement.total_assets, numberFormat).formatted}
                                         </td>
-                                        <td class="border px-4 py-2" title={formatCurrency(statement.total_liabilities, 'full').tooltip}>
+                                        <td class="border-b px-4 py-2 text-right" title={formatCurrency(statement.total_liabilities, 'full').tooltip}>
                                             {formatCurrency(statement.total_liabilities, numberFormat).formatted}
                                         </td>
-                                        <td class="border px-4 py-2" title={formatCurrency(statement.total_equity, 'full').tooltip}>
+                                        <td class="border-b px-4 py-2 text-right" title={formatCurrency(statement.total_equity, 'full').tooltip}>
                                             {formatCurrency(statement.total_equity, numberFormat).formatted}
                                         </td>
-                                        <td class="border px-4 py-2" title={formatCurrency(statement.total_debt, 'full').tooltip}>
+                                        <td class="border-b px-4 py-2 text-right" title={formatCurrency(statement.total_debt, 'full').tooltip}>
                                             {formatCurrency(statement.total_debt, numberFormat).formatted}
                                         </td>
                                     </tr>
                                 {/each}
                             </tbody>
                         </table>
-                    </div>
-                {/if}
-
-                {#if financialData.cash_flow_statements.length > 0}
-                    <div>
-                        <h2 class="text-2xl font-bold mb-4">Cash Flow Statements</h2>
-                        <table class="w-full table-auto">
-                            <thead>
+                    {:else if activeTab === 'cashflow' && financialData.cash_flow_statements.length > 0}
+                        <table class="w-full whitespace-nowrap">
+                            <thead class="bg-gray-50 dark:bg-gray-700 sticky top-0">
                                 <tr>
-                                    <th class="px-4 py-2">Date</th>
-                                    <th class="px-4 py-2">Operating CF</th>
-                                    <th class="px-4 py-2">Investing CF</th>
-                                    <th class="px-4 py-2">Financing CF</th>
-                                    <th class="px-4 py-2">Free Cash Flow</th>
+                                    <th class="px-4 py-2 text-left">Date</th>
+                                    <th class="px-4 py-2 text-right">Operating CF</th>
+                                    <th class="px-4 py-2 text-right">Investing CF</th>
+                                    <th class="px-4 py-2 text-right">Financing CF</th>
+                                    <th class="px-4 py-2 text-right">Free Cash Flow</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {#each financialData.cash_flow_statements as statement}
-                                    <tr>
-                                        <td class="border px-4 py-2">{new Date(statement.date).toLocaleDateString()}</td>
-                                        <td class="border px-4 py-2" title={formatCurrency(statement.operating_cash_flow, 'full').tooltip}>
+                                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-800">
+                                        <td class="border-b px-4 py-2">{new Date(statement.date).toLocaleDateString()}</td>
+                                        <td class="border-b px-4 py-2 text-right" title={formatCurrency(statement.operating_cash_flow, 'full').tooltip}>
                                             {formatCurrency(statement.operating_cash_flow, numberFormat).formatted}
                                         </td>
-                                        <td class="border px-4 py-2" title={formatCurrency(statement.net_cash_used_for_investing_activities, 'full').tooltip}>
+                                        <td class="border-b px-4 py-2 text-right" title={formatCurrency(statement.net_cash_used_for_investing_activities, 'full').tooltip}>
                                             {formatCurrency(statement.net_cash_used_for_investing_activities, numberFormat).formatted}
                                         </td>
-                                        <td class="border px-4 py-2" title={formatCurrency(statement.net_cash_used_provided_by_financing_activities, 'full').tooltip}>
+                                        <td class="border-b px-4 py-2 text-right" title={formatCurrency(statement.net_cash_used_provided_by_financing_activities, 'full').tooltip}>
                                             {formatCurrency(statement.net_cash_used_provided_by_financing_activities, numberFormat).formatted}
                                         </td>
-                                        <td class="border px-4 py-2" title={formatCurrency(statement.free_cash_flow, 'full').tooltip}>
+                                        <td class="border-b px-4 py-2 text-right" title={formatCurrency(statement.free_cash_flow, 'full').tooltip}>
                                             {formatCurrency(statement.free_cash_flow, numberFormat).formatted}
                                         </td>
                                     </tr>
                                 {/each}
                             </tbody>
                         </table>
-                    </div>
-                {/if}
+                    {:else}
+                        <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative" role="alert">
+                            <strong class="font-bold">No Data Available!</strong>
+                            <span class="block sm:inline">No financial data found for {symbol}</span>
+                        </div>
+                    {/if}
+                </div>
             </div>
         {/if}
-    {/if}
+    </div>
 </div>
