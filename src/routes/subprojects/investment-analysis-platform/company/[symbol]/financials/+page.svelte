@@ -79,7 +79,10 @@
     }
 </script>
 
-<div class="flex flex-col h-full">
+<div class="min-h-screen bg-white dark:bg-gray-800 p-4">
+    <button class="mb-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" on:click={() => goto('/subprojects/investment-analysis-platform')}>
+        Back to Stocks
+    </button>
     <FinancialsHeader 
         {symbol}
         {loading}
@@ -94,68 +97,63 @@
         }}
     />
 
-    <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <div class="container mx-auto">
-            <div class="flex space-x-4 p-4">
-                <button 
-                    class="px-4 py-2 rounded-lg transition-colors {activeTab === 'income' ? 'bg-blue-500 text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}"
-                    on:click={() => activeTab = 'income'}
-                >
-                    Income Statement
-                </button>
-                <button 
-                    class="px-4 py-2 rounded-lg transition-colors {activeTab === 'balance' ? 'bg-blue-500 text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}"
-                    on:click={() => activeTab = 'balance'}
-                >
-                    Balance Sheet
-                </button>
-                <button 
-                    class="px-4 py-2 rounded-lg transition-colors {activeTab === 'cashflow' ? 'bg-blue-500 text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}"
-                    on:click={() => activeTab = 'cashflow'}
-                >
-                    Cash Flow
-                </button>
-            </div>
+    <div class="mt-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 rounded-lg shadow-sm p-4">
+        <div class="flex space-x-4">
+            <button 
+                class="px-4 py-2 rounded-lg transition-colors {activeTab === 'income' ? 'bg-blue-500 text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}"
+                on:click={() => activeTab = 'income'}
+            >
+                Income Statement
+            </button>
+            <button 
+                class="px-4 py-2 rounded-lg transition-colors {activeTab === 'balance' ? 'bg-blue-500 text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}"
+                on:click={() => activeTab = 'balance'}
+            >
+                Balance Sheet
+            </button>
+            <button 
+                class="px-4 py-2 rounded-lg transition-colors {activeTab === 'cashflow' ? 'bg-blue-500 text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}"
+                on:click={() => activeTab = 'cashflow'}
+            >
+                Cash Flow
+            </button>
         </div>
     </div>
 
-    <div class="flex-1 overflow-hidden">
+    <div class="mt-4 overflow-hidden rounded-lg shadow-sm">
         {#if loading}
             <div class="flex justify-center items-center h-64">
                 <LoadingSpinner />
             </div>
-        {:else if error}
-            <div class="p-4">
-                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-                    <strong class="font-bold">Error!</strong>
-                    <span class="block sm:inline">{error}</span>
-                </div>
+        {/if}
+        {#if error}
+            <div class="p-4 bg-red-100 border border-red-400 text-red-700 rounded relative" role="alert">
+                <strong class="font-bold">Error!</strong>
+                <span class="block sm:inline">{error}</span>
             </div>
         {:else}
-            <div class="overflow-x-auto">
-                <div class="p-4">
-                    {#if activeTab === 'income' && financialData.income_statements.length > 0}
-                        <IncomeStatementTable 
-                            statements={financialData.income_statements} 
-                            {numberFormat} 
-                        />
-                    {:else if activeTab === 'balance' && financialData.balance_sheets.length > 0}
-                        <BalanceSheetTable 
-                            statements={financialData.balance_sheets} 
-                            {numberFormat} 
-                        />
-                    {:else if activeTab === 'cashflow' && financialData.cash_flow_statements.length > 0}
-                        <CashFlowTable 
-                            statements={financialData.cash_flow_statements} 
-                            {numberFormat} 
-                        />
-                    {:else}
-                        <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative" role="alert">
-                            <strong class="font-bold">No Data Available!</strong>
-                            <span class="block sm:inline">No financial data found for {symbol}</span>
-                        </div>
-                    {/if}
-                </div>
+            <div class="overflow-x-auto p-4">
+                {#if activeTab === 'income' && financialData.income_statements.length > 0}
+                    <IncomeStatementTable 
+                        statements={financialData.income_statements} 
+                        {numberFormat} 
+                    />
+                {:else if activeTab === 'balance' && financialData.balance_sheets.length > 0}
+                    <BalanceSheetTable 
+                        statements={financialData.balance_sheets} 
+                        {numberFormat} 
+                    />
+                {:else if activeTab === 'cashflow' && financialData.cash_flow_statements.length > 0}
+                    <CashFlowTable 
+                        statements={financialData.cash_flow_statements} 
+                        {numberFormat} 
+                    />
+                {:else}
+                    <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative" role="alert">
+                        <strong class="font-bold">No Data Available!</strong>
+                        <span class="block sm:inline">No financial data found for {symbol}</span>
+                    </div>
+                {/if}
             </div>
         {/if}
     </div>
