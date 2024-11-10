@@ -26,8 +26,7 @@
     let activeTab = 'income';
     let companyName: string | null = null;
 
-
-    async function loadFinancialData() {
+    async function loadFinancialData(forceRefresh = false) {
         if (!$session) {
             const returnUrl = encodeURIComponent($page.url.pathname);
             goto(`/login?returnUrl=${returnUrl}`);
@@ -43,7 +42,12 @@
                 throw new Error('No active session');
             }
 
-            const response = await fetch(`/api/financial-data/${symbol}`, {
+            const url = new URL(`/api/financial-data/${symbol}`, window.location.origin);
+            if (forceRefresh) {
+                url.searchParams.set('forceRefresh', 'true');
+            }
+
+            const response = await fetch(url.toString(), {
                 headers: {
                     'Authorization': `Bearer ${currentSession.access_token}`
                 }
@@ -84,7 +88,7 @@
             companyName = data?.company_name ?? null;
         } catch (e) {
             console.error('Error fetching company name:', e);
-            companyName = null; // Handle error appropriately
+            companyName = null;
         }
     }
 
@@ -112,7 +116,7 @@
         {numberFormat}
         {startDate}
         {endDate}
-        on:refresh={loadFinancialData}
+        on:refresh={() => loadFinancialData(true)}
         on:formatChange={(e) => numberFormat = e.detail}
         on:dateChange={(e) => {
             if (e.detail.startDate) startDate = e.detail.startDate;
