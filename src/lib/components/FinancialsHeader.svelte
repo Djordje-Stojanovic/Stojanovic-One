@@ -3,6 +3,7 @@
     import type { NumberFormat } from '$lib/utils/numberFormat';
 
     export let symbol: string;
+    export let companyName: string | null = null;
     export let loading: boolean = false;
     export let numberFormat: NumberFormat;
     export let startDate: string;
@@ -31,7 +32,13 @@
     <div class="container mx-auto">
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div class="flex items-center gap-4">
-                <h1 class="text-xl font-semibold">{symbol} Financial Statements</h1>
+                <h1 class="text-xl font-semibold">
+                    {#if companyName}
+                        {companyName} ({symbol}) Financial Statements
+                    {:else}
+                        {symbol} Financial Statements
+                    {/if}
+                </h1>
                 <button
                     class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm transition-colors"
                     on:click={handleRefresh}
