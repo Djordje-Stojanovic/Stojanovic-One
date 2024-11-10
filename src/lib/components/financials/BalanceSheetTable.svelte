@@ -2,9 +2,11 @@
     import type { BalanceSheet } from '$lib/types/financialStatements';
     import { formatNumber } from '$lib/utils/numberFormat';
     import type { NumberFormat } from '$lib/utils/numberFormat';
+    import { onMount } from 'svelte';
 
     export let statements: BalanceSheet[] = [];
     export let numberFormat: NumberFormat = 'abbreviated';
+    let tableContainer: HTMLDivElement;
 
     const sortedStatements = statements.sort((a, b) => 
         new Date(a.date).getTime() - new Date(b.date).getTime()
@@ -13,6 +15,16 @@
     function formatDate(date: string) {
         return new Date(date).toLocaleDateString('en-US', { year: 'numeric' });
     }
+
+    onMount(() => {
+        if (tableContainer) {
+            tableContainer.scrollLeft = tableContainer.scrollWidth;
+        }
+    });
+
+    $: if (tableContainer && statements.length) {
+        tableContainer.scrollLeft = tableContainer.scrollWidth;
+    }
 </script>
 
 <style>
@@ -20,6 +32,7 @@
         overflow-x: auto;
         background: #1F2937;
         border-radius: 0.375rem;
+        scroll-behavior: smooth;
     }
 
     .metric-name {
@@ -72,7 +85,7 @@
     }
 </style>
 
-<div class="table-container">
+<div class="table-container" bind:this={tableContainer}>
     <table class="w-full text-sm text-[#F9FAFB]">
         <thead>
             <tr class="border-b border-[#374151]">
@@ -85,6 +98,7 @@
             </tr>
         </thead>
         <tbody>
+            <!-- Rest of the table content remains unchanged -->
             <!-- Assets Section -->
             <tr>
                 <td class="metric-name section-header">Assets</td>

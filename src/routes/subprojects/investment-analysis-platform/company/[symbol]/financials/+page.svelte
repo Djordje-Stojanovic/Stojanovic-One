@@ -25,6 +25,13 @@
     let endDate = new Date().toISOString().split('T')[0];
     let activeTab = 'income';
     let companyName: string | null = null;
+    let tableContainer: HTMLDivElement;
+
+    function scrollToRight() {
+        if (tableContainer) {
+            tableContainer.scrollLeft = tableContainer.scrollWidth;
+        }
+    }
 
     async function loadFinancialData(forceRefresh = false) {
         if (!$session) {
@@ -66,6 +73,8 @@
             }
 
             financialData = result.data;
+            // Scroll after data loads
+            setTimeout(scrollToRight, 100);
         } catch (e) {
             error = e instanceof Error ? e.message : 'An error occurred while fetching data';
             console.error('Error loading financial data:', e);
@@ -103,12 +112,21 @@
         loadFinancialData();
         fetchCompanyName();
     }
+
+    // Scroll to right when switching tabs
+    $: if (activeTab) {
+        setTimeout(scrollToRight, 100);
+    }
 </script>
 
-<div class="min-h-screen bg-white dark:bg-gray-800 p-4">
-    <button class="mb-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" on:click={() => goto('/subprojects/investment-analysis-platform')}>
+<div class="min-h-screen bg-white dark:bg-[#1F2937] p-4 space-y-4">
+    <button 
+        class="bg-[#3B82F6] hover:bg-[#2563EB] text-white font-medium px-4 py-2 rounded-[0.375rem] shadow-sm transition-all duration-300 ease-in-out hover:shadow-md"
+        on:click={() => goto('/subprojects/investment-analysis-platform')}
+    >
         Back to Stocks
     </button>
+
     <FinancialsHeader
         {symbol}
         {companyName}
@@ -124,19 +142,34 @@
         }}
     />
 
-    <div class="mt-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 rounded-lg shadow-sm p-4">
-        <div class="flex space-x-4">
-            <button class={`px-4 py-2 rounded-lg transition-colors ${activeTab === 'income' ? 'bg-blue-500 text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+    <div class="bg-white dark:bg-[#374151] rounded-[0.375rem] shadow-sm transition-all duration-300">
+        <div class="flex space-x-1 p-2">
+            <button
+                class={`px-4 py-2 rounded-[0.375rem] font-medium transition-all duration-300 ${
+                    activeTab === 'income'
+                        ? 'bg-[#3B82F6] text-white shadow-sm'
+                        : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#1F2937]'
+                }`}
                 on:click={() => activeTab = 'income'}
             >
                 Income Statement
             </button>
-            <button class={`px-4 py-2 rounded-lg transition-colors ${activeTab === 'balance' ? 'bg-blue-500 text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+            <button
+                class={`px-4 py-2 rounded-[0.375rem] font-medium transition-all duration-300 ${
+                    activeTab === 'balance'
+                        ? 'bg-[#3B82F6] text-white shadow-sm'
+                        : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#1F2937]'
+                }`}
                 on:click={() => activeTab = 'balance'}
             >
                 Balance Sheet
             </button>
-            <button class={`px-4 py-2 rounded-lg transition-colors ${activeTab === 'cashflow' ? 'bg-blue-500 text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+            <button
+                class={`px-4 py-2 rounded-[0.375rem] font-medium transition-all duration-300 ${
+                    activeTab === 'cashflow'
+                        ? 'bg-[#3B82F6] text-white shadow-sm'
+                        : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#1F2937]'
+                }`}
                 on:click={() => activeTab = 'cashflow'}
             >
                 Cash Flow
@@ -144,18 +177,18 @@
         </div>
     </div>
 
-    <div class="mt-4 overflow-hidden rounded-lg shadow-sm">
+    <div class="bg-white dark:bg-[#374151] rounded-[0.375rem] shadow-sm overflow-hidden transition-all duration-300">
         {#if loading}
             <div class="flex justify-center items-center h-64">
                 <LoadingSpinner />
             </div>
         {:else if error}
-            <div class="p-4 bg-red-100 border border-red-400 text-red-700 rounded relative" role="alert">
+            <div class="p-4 bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-200 rounded-[0.375rem] relative" role="alert">
                 <strong class="font-bold">Error!</strong>
-                <span class="block sm:inline">{error}</span>
+                <span class="block sm:inline ml-2">{error}</span>
             </div>
         {:else}
-            <div class="overflow-x-auto p-4">
+            <div class="overflow-x-auto" bind:this={tableContainer}>
                 {#if activeTab === 'income' && financialData.income_statements.length > 0}
                     <IncomeStatementTable statements={financialData.income_statements} {numberFormat} />
                 {:else if activeTab === 'balance' && financialData.balance_sheets.length > 0}
@@ -163,9 +196,9 @@
                 {:else if activeTab === 'cashflow' && financialData.cash_flow_statements.length > 0}
                     <CashFlowTable statements={financialData.cash_flow_statements} {numberFormat} />
                 {:else}
-                    <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative" role="alert">
+                    <div class="p-4 bg-yellow-100 dark:bg-yellow-900 border border-yellow-400 dark:border-yellow-700 text-yellow-700 dark:text-yellow-200 rounded-[0.375rem] m-4" role="alert">
                         <strong class="font-bold">No Data Available!</strong>
-                        <span class="block sm:inline">No financial data found for {symbol}</span>
+                        <span class="block sm:inline ml-2">No financial data found for {symbol}</span>
                     </div>
                 {/if}
             </div>
