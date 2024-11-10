@@ -46,7 +46,7 @@
     {:else if error}
       <p class="text-red-500">{error}</p>
     {:else}
-      <!-- Company Info -->
+      <!-- Company Info Section -->
       <CompanyInfo {stockMetadata} />
 
       <!-- Financials Button -->
