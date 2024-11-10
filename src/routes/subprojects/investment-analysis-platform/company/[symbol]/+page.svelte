@@ -58,10 +58,13 @@
       </button>
 
       <!-- Wiki Sections -->
-      <WikiSection {symbol} section="History" />
+      <WikiSection {symbol} section="Founding and Early History" />
+      <WikiSection {symbol} section="Key Milestones" />
+      <WikiSection {symbol} section="Current State and Future Outlook" />
       <WikiSection {symbol} section="Business Model" />
       <WikiSection {symbol} section="Competitors" />
       <WikiSection {symbol} section="Risks" />
+
 
       <!-- File Upload -->
       <FileUploader {symbol} />
