@@ -18,6 +18,7 @@
    - Make code more readable
    - Reduce complexity
    - Improve performance
+   - Most Importantnly always make small surgical changes and dont overbloat features. Never introduce code that breaks the app.
 
 4. Accelerate cycle time of development
    - Use efficient development practices
