@@ -27,14 +27,17 @@ export async function saveWikiContent(symbol: string, section: string, content: 
     const currentData = await loadWikiContent(symbol, section);
     
     if (currentData) {
-        // Save to history
+        // Save to history with current timestamp
         await saveToHistory(symbol, section, currentData);
         
         // Clean up old history entries
         await cleanupHistory(symbol, section);
     }
 
-    // Update current content
+    // Get current timestamp
+    const now = new Date().toISOString();
+
+    // Update current content with new timestamp
     const { error } = await supabase
         .from('company_wiki')
         .upsert(
@@ -42,7 +45,8 @@ export async function saveWikiContent(symbol: string, section: string, content: 
                 symbol,
                 section,
                 content,
-                user_id: userId
+                user_id: userId,
+                updated_at: now // Explicitly set the timestamp
             },
             { onConflict: 'symbol,section' }
         );
@@ -51,6 +55,9 @@ export async function saveWikiContent(symbol: string, section: string, content: 
 }
 
 async function saveToHistory(symbol: string, section: string, currentData: WikiContent) {
+    // Get current timestamp for history entry
+    const now = new Date().toISOString();
+
     const { error } = await supabase
         .from('company_wiki_history')
         .insert({
@@ -59,7 +66,7 @@ async function saveToHistory(symbol: string, section: string, currentData: WikiC
             section,
             content: currentData.content,
             user_id: currentData.user_id,
-            updated_at: currentData.updated_at
+            updated_at: now // Use current timestamp instead of currentData.updated_at
         });
 
     if (error) throw error;
@@ -95,11 +102,14 @@ export async function loadUserData(userId: string) {
 export async function revertContent(symbol: string, section: string, content: string, userId: string | undefined) {
     if (!userId) throw new Error('User must be logged in to revert content');
 
+    const now = new Date().toISOString();
+
     const { error } = await supabase
         .from('company_wiki')
         .update({
             content,
-            user_id: userId
+            user_id: userId,
+            updated_at: now // Add explicit timestamp for reverts too
         })
         .eq('symbol', symbol)
         .eq('section', section);

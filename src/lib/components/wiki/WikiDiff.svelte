@@ -1,25 +1,29 @@
 <script lang="ts">
-    import { diffLines } from 'diff';
+    import { diffLines } from '$lib/utils/diffUtils';
+    import type { DiffLine } from '$lib/utils/diffUtils';
 
     export let oldContent: string;
     export let newContent: string;
 
     $: differences = diffLines(oldContent || '', newContent || '');
 
-    function stripHtmlTags(str: string) {
-        return str.replace(/<[^>]*>/g, '');
-    }
-
-    function getLineClass(line: { added?: boolean; removed?: boolean }) {
+    function getLineClass(line: DiffLine) {
         if (line.added) return 'bg-green-100 dark:bg-green-900';
         if (line.removed) return 'bg-red-100 dark:bg-red-900';
         return 'bg-gray-50 dark:bg-gray-800';
     }
 
-    function getLinePrefix(line: { added?: boolean; removed?: boolean }) {
+    function getLinePrefix(line: DiffLine) {
         if (line.added) return '+';
         if (line.removed) return '-';
         return ' ';
+    }
+
+    function renderContent(line: DiffLine) {
+        if (line.type === 'image' && line.imageData) {
+            return `<img src="${line.imageData}" alt="Wiki content image" class="max-w-full h-auto my-2" />`;
+        }
+        return line.value;
     }
 </script>
 
@@ -31,7 +35,7 @@
                     {getLinePrefix(line)}
                 </div>
                 <div class="px-4 py-1 whitespace-pre-wrap break-all">
-                    {stripHtmlTags(line.value)}
+                    {@html renderContent(line)}
                 </div>
             </div>
         {/each}
