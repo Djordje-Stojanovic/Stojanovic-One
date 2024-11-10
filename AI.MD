@@ -54,6 +54,39 @@ export { subscribe }; // Only expose what's needed
   - Text: #111827 (primary)
   - Accent: #2563EB
 
+### Financial Tables Theme
+- Section Groups:
+  - Border: 2px solid #4B5563
+  - Border Radius: 0.375rem
+  - Margin Bottom: 1.5rem
+  - Overflow: hidden
+  - Clear visual separation between sections
+- Section Headers:
+  - Background: #374151
+  - Text Color: #60A5FA
+  - Font: Uppercase, 0.75rem, letter-spacing: 0.05em
+  - Border Bottom: 2px solid #4B5563
+- Total Rows:
+  - Background: #2D3748
+  - Font Weight: 600 (semibold)
+  - Border Top: 1px solid #4B5563
+- Regular Rows:
+  - Background: #1F2937
+  - Hover: #4B5563
+- Cell Borders:
+  - Vertical Borders: 1px solid #374151
+  - Last Cell: No right border
+- Indented Rows:
+  - Padding Left: 32px
+- Sticky Elements:
+  - First column (metric names) stays fixed during horizontal scroll
+  - z-index hierarchy to prevent overlap issues
+- Visual Hierarchy:
+  - Boxed sections with 2px borders
+  - Headers > Totals > Regular rows
+  - Vertical borders between columns
+  - Consistent spacing between sections
+
 ### Design System
 - Spacing: 0.5rem, 1rem, 1.5rem, 2rem
 - Border radius: 0.375rem

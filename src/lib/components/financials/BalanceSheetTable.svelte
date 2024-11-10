@@ -28,90 +28,166 @@
     }
 </script>
 
-<!-- Rest of the component remains exactly the same -->
 <style>
     .table-container {
         overflow-x: auto;
         background: #1F2937;
         border-radius: 0.375rem;
         scroll-behavior: smooth;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+
+    table {
+        border-collapse: separate;
+        border-spacing: 0;
+        width: 100%;
     }
 
     .metric-name {
         position: sticky;
         left: 0;
-        background: #1F2937;
         z-index: 10;
         min-width: 250px;
-        padding: 8px 16px;
+        padding: 12px 16px;
         text-align: left;
+        background: inherit;
     }
 
     .metric-name.header {
         z-index: 11;
+        background: #1F2937;
+        border-bottom: 2px solid #4B5563;
+        padding: 16px;
+        font-weight: 600;
     }
 
+    /* Section styling */
     .section-header {
-        background: #374151 !important;
+        background: #374151;
         font-weight: 600;
         color: #60A5FA;
         text-transform: uppercase;
         font-size: 0.75rem;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.1em;
+        border-top: 2px solid #4B5563;
+    }
+
+    .section-header td {
+        background: #374151;
+        padding: 12px 16px;
+    }
+
+    .section-header:not(:first-child) td {
+        padding-top: 24px;
     }
 
     .subsection-header {
-        background: #1F2937 !important;
+        background: #2D3748 !important;
         font-weight: 500;
         color: #9CA3AF;
         padding-left: 24px !important;
+        border-bottom: 1px solid #4B5563;
+    }
+
+    .subsection-header td {
+        background: #2D3748;
+        padding: 12px 16px;
     }
 
     .metric-row {
         padding-left: 32px !important;
     }
 
-    .total-row {
-        font-weight: 600;
-        background: #374151 !important;
+    tr:nth-child(even):not(.section-header):not(.subsection-header):not(.total-row) {
+        background: #262f3d;
     }
 
-    tr:hover:not(.section-header):not(.total-row) {
-        background: #4B5563;
+    tr:nth-child(odd):not(.section-header):not(.subsection-header):not(.total-row) {
+        background: #1F2937;
+    }
+
+    tr:hover:not(.section-header):not(.subsection-header):not(.total-row) td {
+        background: #374151;
+        transition: background-color 0.15s ease-in-out;
+    }
+
+    .total-row td {
+        background: #2D3748 !important;
+        font-weight: 600;
+        border-top: 1px solid #4B5563;
+        border-bottom: 1px solid #4B5563;
+        padding: 14px 16px;
     }
 
     .value-cell {
-        padding: 8px 16px;
+        padding: 12px 16px;
         text-align: right;
         white-space: nowrap;
+        background: inherit;
+        border-left: 1px solid #374151;
+    }
+
+    /* First column styling */
+    td:first-child, th:first-child {
+        border-left: none;
+    }
+
+    /* Last row in each section */
+    .total-row:not(:last-child) td {
+        border-bottom: 2px solid #4B5563;
+        margin-bottom: 16px;
+    }
+
+    /* Spacing after sections */
+    .section-header td {
+        padding-top: 24px;
+    }
+
+    /* Header row styling */
+    thead tr th {
+        background: #1F2937;
+        padding: 16px;
+        font-weight: 600;
+        border-bottom: 2px solid #4B5563;
+    }
+
+    /* Sticky header */
+    thead tr th {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    /* Ensure proper sticky behavior */
+    tbody tr td:first-child {
+        background: inherit;
     }
 </style>
 
 <div class="table-container" bind:this={tableContainer}>
-    <table class="w-full text-sm text-[#F9FAFB]">
+    <table class="text-sm text-[#F9FAFB]">
         <thead>
-            <tr class="border-b border-[#374151]">
-                <th class="metric-name header font-medium">Balance Sheet</th>
+            <tr>
+                <th class="metric-name header">Balance Sheet</th>
                 {#each sortedStatements as statement}
-                    <th class="value-cell font-medium">
+                    <th class="value-cell">
                         {formatDate(statement.date)}
                     </th>
                 {/each}
             </tr>
         </thead>
         <tbody>
-            <!-- Rest of the table content remains exactly the same -->
             <!-- Assets Section -->
-            <tr>
-                <td class="metric-name section-header">Assets</td>
+            <tr class="section-header">
+                <td class="metric-name">Assets</td>
                 {#each sortedStatements as statement}
-                    <td class="value-cell section-header"></td>
+                    <td class="value-cell"></td>
                 {/each}
             </tr>
 
             <!-- Current Assets -->
-            <tr>
-                <td class="metric-name subsection-header">Current Assets</td>
+            <tr class="subsection-header">
+                <td class="metric-name">Current Assets</td>
                 {#each sortedStatements as statement}
                     <td class="value-cell"></td>
                 {/each}
@@ -163,8 +239,8 @@
             </tr>
 
             <!-- Non-Current Assets -->
-            <tr>
-                <td class="metric-name subsection-header">Non-Current Assets</td>
+            <tr class="subsection-header">
+                <td class="metric-name">Non-Current Assets</td>
                 {#each sortedStatements as statement}
                     <td class="value-cell"></td>
                 {/each}
@@ -198,16 +274,16 @@
             </tr>
 
             <!-- Liabilities Section -->
-            <tr>
-                <td class="metric-name section-header">Liabilities</td>
+            <tr class="section-header">
+                <td class="metric-name">Liabilities</td>
                 {#each sortedStatements as statement}
-                    <td class="value-cell section-header"></td>
+                    <td class="value-cell"></td>
                 {/each}
             </tr>
 
             <!-- Current Liabilities -->
-            <tr>
-                <td class="metric-name subsection-header">Current Liabilities</td>
+            <tr class="subsection-header">
+                <td class="metric-name">Current Liabilities</td>
                 {#each sortedStatements as statement}
                     <td class="value-cell"></td>
                 {/each}
@@ -241,8 +317,8 @@
             </tr>
 
             <!-- Non-Current Liabilities -->
-            <tr>
-                <td class="metric-name subsection-header">Non-Current Liabilities</td>
+            <tr class="subsection-header">
+                <td class="metric-name">Non-Current Liabilities</td>
                 {#each sortedStatements as statement}
                     <td class="value-cell"></td>
                 {/each}
@@ -267,10 +343,10 @@
             </tr>
 
             <!-- Shareholders' Equity Section -->
-            <tr>
-                <td class="metric-name section-header">Shareholders' Equity</td>
+            <tr class="section-header">
+                <td class="metric-name">Shareholders' Equity</td>
                 {#each sortedStatements as statement}
-                    <td class="value-cell section-header"></td>
+                    <td class="value-cell"></td>
                 {/each}
             </tr>
 
