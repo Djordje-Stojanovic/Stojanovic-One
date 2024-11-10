@@ -8,7 +8,10 @@
   export let numberFormat: NumberFormat = 'abbreviated';
   let tableContainer: HTMLDivElement;
 
-  $: sortedYears = statements.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  // Sort statements by date (ascending - oldest to newest)
+  $: sortedStatements = [...statements].sort((a, b) => 
+    new Date(a.date).getTime() - new Date(b.date).getTime()
+  );
 
   function formatDate(dateString: string) {
     const date = new Date(dateString);
@@ -82,8 +85,8 @@
     <thead>
       <tr class="border-b border-[#374151]">
         <th class="metric-name header font-medium">Cash Flow Statement</th>
-        {#each sortedYears as year}
-          <th class="value-cell font-medium">{formatDate(year.date)}</th>
+        {#each sortedStatements as statement}
+          <th class="value-cell font-medium">{formatDate(statement.date)}</th>
         {/each}
       </tr>
     </thead>
@@ -91,52 +94,52 @@
       <!-- Operating Activities -->
       <tr>
         <td class="metric-name section-header">Operating Activities</td>
-        {#each sortedYears as year}
+        {#each sortedStatements as statement}
           <td class="value-cell section-header"></td>
         {/each}
       </tr>
 
       <tr>
         <td class="metric-name metric-row">Net Income</td>
-        {#each sortedYears as year}
+        {#each sortedStatements as statement}
           <td class="value-cell">
-            {formatNumber(year.net_income, numberFormat).formatted}
+            {formatNumber(statement.net_income, numberFormat).formatted}
           </td>
         {/each}
       </tr>
 
       <tr>
         <td class="metric-name metric-row">Depreciation & Amortization</td>
-        {#each sortedYears as year}
+        {#each sortedStatements as statement}
           <td class="value-cell">
-            {formatNumber(year.depreciation_and_amortization, numberFormat).formatted}
+            {formatNumber(statement.depreciation_and_amortization, numberFormat).formatted}
           </td>
         {/each}
       </tr>
 
       <tr>
         <td class="metric-name metric-row">Stock Based Compensation</td>
-        {#each sortedYears as year}
+        {#each sortedStatements as statement}
           <td class="value-cell">
-            {formatNumber(year.stock_based_compensation, numberFormat).formatted}
+            {formatNumber(statement.stock_based_compensation, numberFormat).formatted}
           </td>
         {/each}
       </tr>
 
       <tr>
         <td class="metric-name metric-row">Change in Working Capital</td>
-        {#each sortedYears as year}
+        {#each sortedStatements as statement}
           <td class="value-cell">
-            {formatNumber(year.change_in_working_capital, numberFormat).formatted}
+            {formatNumber(statement.change_in_working_capital, numberFormat).formatted}
           </td>
         {/each}
       </tr>
 
       <tr class="total-row">
         <td class="metric-name">Operating Cash Flow</td>
-        {#each sortedYears as year}
+        {#each sortedStatements as statement}
           <td class="value-cell">
-            {formatNumber(year.net_cash_provided_by_operating_activities, numberFormat).formatted}
+            {formatNumber(statement.net_cash_provided_by_operating_activities, numberFormat).formatted}
           </td>
         {/each}
       </tr>
@@ -144,34 +147,34 @@
       <!-- Investing Activities -->
       <tr>
         <td class="metric-name section-header">Investing Activities</td>
-        {#each sortedYears as year}
+        {#each sortedStatements as statement}
           <td class="value-cell section-header"></td>
         {/each}
       </tr>
 
       <tr>
         <td class="metric-name metric-row">Capital Expenditure</td>
-        {#each sortedYears as year}
+        {#each sortedStatements as statement}
           <td class="value-cell">
-            {formatNumber(year.capital_expenditure, numberFormat).formatted}
+            {formatNumber(statement.capital_expenditure, numberFormat).formatted}
           </td>
         {/each}
       </tr>
 
       <tr>
         <td class="metric-name metric-row">Acquisitions</td>
-        {#each sortedYears as year}
+        {#each sortedStatements as statement}
           <td class="value-cell">
-            {formatNumber(year.acquisitions_net, numberFormat).formatted}
+            {formatNumber(statement.acquisitions_net, numberFormat).formatted}
           </td>
         {/each}
       </tr>
 
       <tr class="total-row">
         <td class="metric-name">Net Investing Cash Flow</td>
-        {#each sortedYears as year}
+        {#each sortedStatements as statement}
           <td class="value-cell">
-            {formatNumber(year.net_cash_used_for_investing_activities, numberFormat).formatted}
+            {formatNumber(statement.net_cash_used_for_investing_activities, numberFormat).formatted}
           </td>
         {/each}
       </tr>
@@ -179,43 +182,43 @@
       <!-- Financing Activities -->
       <tr>
         <td class="metric-name section-header">Financing Activities</td>
-        {#each sortedYears as year}
+        {#each sortedStatements as statement}
           <td class="value-cell section-header"></td>
         {/each}
       </tr>
 
       <tr>
         <td class="metric-name metric-row">Debt Repayment</td>
-        {#each sortedYears as year}
+        {#each sortedStatements as statement}
           <td class="value-cell">
-            {formatNumber(year.debt_repayment, numberFormat).formatted}
+            {formatNumber(statement.debt_repayment, numberFormat).formatted}
           </td>
         {/each}
       </tr>
 
       <tr>
         <td class="metric-name metric-row">Share Repurchases</td>
-        {#each sortedYears as year}
+        {#each sortedStatements as statement}
           <td class="value-cell">
-            {formatNumber(year.common_stock_repurchased, numberFormat).formatted}
+            {formatNumber(statement.common_stock_repurchased, numberFormat).formatted}
           </td>
         {/each}
       </tr>
 
       <tr>
         <td class="metric-name metric-row">Dividends Paid</td>
-        {#each sortedYears as year}
+        {#each sortedStatements as statement}
           <td class="value-cell">
-            {formatNumber(year.dividends_paid, numberFormat).formatted}
+            {formatNumber(statement.dividends_paid, numberFormat).formatted}
           </td>
         {/each}
       </tr>
 
       <tr class="total-row">
         <td class="metric-name">Net Financing Cash Flow</td>
-        {#each sortedYears as year}
+        {#each sortedStatements as statement}
           <td class="value-cell">
-            {formatNumber(year.net_cash_used_provided_by_financing_activities, numberFormat).formatted}
+            {formatNumber(statement.net_cash_used_provided_by_financing_activities, numberFormat).formatted}
           </td>
         {/each}
       </tr>
@@ -223,16 +226,16 @@
       <!-- Free Cash Flow -->
       <tr>
         <td class="metric-name section-header">Free Cash Flow</td>
-        {#each sortedYears as year}
+        {#each sortedStatements as statement}
           <td class="value-cell section-header"></td>
         {/each}
       </tr>
 
       <tr class="total-row">
         <td class="metric-name">Free Cash Flow</td>
-        {#each sortedYears as year}
+        {#each sortedStatements as statement}
           <td class="value-cell">
-            {formatNumber(year.free_cash_flow, numberFormat).formatted}
+            {formatNumber(statement.free_cash_flow, numberFormat).formatted}
           </td>
         {/each}
       </tr>

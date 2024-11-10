@@ -18,11 +18,15 @@
         balance_sheets: [],
         cash_flow_statements: []
     };
+    let allFinancialData: FinancialData = {
+        income_statements: [],
+        balance_sheets: [],
+        cash_flow_statements: []
+    };
     let loading = false;
     let error: string | null = null;
     let numberFormat: NumberFormat = 'abbreviated';
-    let startDate = new Date(new Date().setFullYear(new Date().getFullYear() - 5)).toISOString().split('T')[0];
-    let endDate = new Date().toISOString().split('T')[0];
+    let selectedYears = 10;
     let activeTab = 'income';
     let companyName: string | null = null;
     let tableContainer: HTMLDivElement;
@@ -31,6 +35,29 @@
         if (tableContainer) {
             tableContainer.scrollLeft = tableContainer.scrollWidth;
         }
+    }
+
+    function filterDataByYears(data: FinancialData, years: number): FinancialData {
+        if (years === 0) return data; // Return all data
+
+        const filterMostRecent = (statements: any[]) => {
+            // Sort by date descending to get most recent first
+            const sorted = [...statements].sort((a, b) => 
+                new Date(b.date).getTime() - new Date(a.date).getTime()
+            );
+            // Take the required number of years
+            const filtered = sorted.slice(0, years);
+            // Sort ascending (oldest to newest) for display
+            return filtered.sort((a, b) => 
+                new Date(a.date).getTime() - new Date(b.date).getTime()
+            );
+        };
+
+        return {
+            income_statements: filterMostRecent(data.income_statements),
+            balance_sheets: filterMostRecent(data.balance_sheets),
+            cash_flow_statements: filterMostRecent(data.cash_flow_statements)
+        };
     }
 
     async function loadFinancialData(forceRefresh = false) {
@@ -72,8 +99,8 @@
                 throw new Error(result.error || 'Failed to fetch financial data');
             }
 
-            financialData = result.data;
-            // Scroll after data loads
+            allFinancialData = result.data;
+            financialData = filterDataByYears(allFinancialData, selectedYears);
             setTimeout(scrollToRight, 100);
         } catch (e) {
             error = e instanceof Error ? e.message : 'An error occurred while fetching data';
@@ -108,9 +135,9 @@
         }
     });
 
-    $: if ($session) {
-        loadFinancialData();
-        fetchCompanyName();
+    // Update filtered data when selectedYears changes
+    $: if (allFinancialData && allFinancialData.income_statements.length > 0) {
+        financialData = filterDataByYears(allFinancialData, selectedYears);
     }
 
     // Scroll to right when switching tabs
@@ -119,6 +146,7 @@
     }
 </script>
 
+<!-- Rest of the component remains the same -->
 <div class="min-h-screen bg-white dark:bg-[#1F2937] p-4 space-y-4">
     <button 
         class="bg-[#3B82F6] hover:bg-[#2563EB] text-white font-medium px-4 py-2 rounded-[0.375rem] shadow-sm transition-all duration-300 ease-in-out hover:shadow-md"
@@ -132,14 +160,10 @@
         {companyName}
         {loading}
         {numberFormat}
-        {startDate}
-        {endDate}
+        {selectedYears}
         on:refresh={() => loadFinancialData(true)}
         on:formatChange={(e) => numberFormat = e.detail}
-        on:dateChange={(e) => {
-            if (e.detail.startDate) startDate = e.detail.startDate;
-            if (e.detail.endDate) endDate = e.detail.endDate;
-        }}
+        on:yearChange={(e) => selectedYears = e.detail.years}
     />
 
     <div class="bg-white dark:bg-[#374151] rounded-[0.375rem] shadow-sm transition-all duration-300">

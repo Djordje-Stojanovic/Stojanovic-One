@@ -8,7 +8,8 @@
     export let numberFormat: NumberFormat = 'abbreviated';
     let tableContainer: HTMLDivElement;
 
-    const sortedStatements = statements.sort((a, b) => 
+    // Sort statements by date (ascending - oldest to newest)
+    $: sortedStatements = [...statements].sort((a, b) => 
         new Date(a.date).getTime() - new Date(b.date).getTime()
     );
 
@@ -27,6 +28,7 @@
     }
 </script>
 
+<!-- Rest of the component remains the same -->
 <style>
     .table-container {
         overflow-x: auto;
