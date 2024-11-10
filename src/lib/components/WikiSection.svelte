@@ -61,6 +61,10 @@
             editing = false;
             lastSaved = new Date().toLocaleString();
             lastUpdatedBy = $session?.user?.user_metadata?.full_name || $session?.user?.email || 'Unknown';
+            // Reload history if it's being shown
+            if (showHistory) {
+                await loadContent();
+            }
         } catch (err) {
             error = (err as Error).message;
             console.error('Error saving content:', error);
@@ -136,6 +140,7 @@
                 {symbol}
                 {section}
                 onRevert={handleRevert}
+                currentContent={content}
             />
         {/if}
     {/if}
