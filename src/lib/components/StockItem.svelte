@@ -4,6 +4,7 @@
     import { allowedMoves } from '$lib/utils/stockMoves';
     import type { ListName } from '$lib/constants/listNames';
     import type { UserStock, StockMetadata } from '$lib/types';
+    import StockPageButton from './StockPageButton.svelte';
 
     export let item: StockMetadata | undefined;
     export let userStock: UserStock | undefined;
@@ -96,38 +97,38 @@
                     {/each}
                 </select>
             {/if}
-            <button 
-                on:click={handleDelete} 
-                class="rounded bg-red-600 px-3 py-2 text-sm text-white transition-colors hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+            <StockPageButton 
+                variant="danger"
+                onClick={handleDelete}
                 aria-label="Delete {item.symbol} from list"
             >
                 Delete
-            </button>
+            </StockPageButton>
         </div>
 
         <!-- Navigation actions in a grid -->
         <div class="grid grid-cols-3 gap-2">
-            <button 
-                on:click={handleFullPage} 
-                class="rounded bg-gray-600 px-3 py-2 text-sm text-white transition-colors hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+            <StockPageButton 
+                variant="secondary"
+                onClick={handleFullPage}
                 aria-label="View full page for {item.symbol}"
             >
                 Full Page
-            </button>
-            <button 
-                on:click={() => goto(`/subprojects/investment-analysis-platform/company/${item.symbol}`)} 
-                class="rounded bg-gray-600 px-3 py-2 text-sm text-white transition-colors hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+            </StockPageButton>
+            <StockPageButton 
+                variant="secondary"
+                onClick={() => goto(`/subprojects/investment-analysis-platform/company/${item.symbol}`)}
                 aria-label="View wiki for {item.symbol}"
             >
                 Wiki
-            </button>
-            <button 
-                on:click={() => goto(`/subprojects/investment-analysis-platform/company/${item.symbol}/financials`)} 
-                class="rounded bg-gray-600 px-3 py-2 text-sm text-white transition-colors hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+            </StockPageButton>
+            <StockPageButton 
+                variant="secondary"
+                onClick={() => goto(`/subprojects/investment-analysis-platform/company/${item.symbol}/financials`)}
                 aria-label="View financials for {item.symbol}"
             >
                 Financials
-            </button>
+            </StockPageButton>
         </div>
     </div>
 </div>

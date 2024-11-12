@@ -8,6 +8,7 @@
   import { browser } from '$app/environment';
   import { goto } from '$app/navigation';
   import type { ListName } from '$lib/constants/listNames';
+  import StockPageButton from '$lib/components/StockPageButton.svelte';
 
   let symbol = '';
   let stockMetadata: any = null;
@@ -69,34 +70,23 @@
   <div class="container mx-auto px-4 py-8">
     <!-- Navigation Buttons -->
     <div class="flex space-x-4 mb-6">
-      <button 
-        class="bg-[#3B82F6] hover:bg-[#2563EB] text-white font-medium px-4 py-2 rounded-[0.375rem] shadow-sm transition-all duration-300 ease-in-out hover:shadow-md"
-        on:click={() => goto('/subprojects/investment-analysis-platform')}
-      >
+      <StockPageButton onClick={() => goto('/subprojects/investment-analysis-platform')}>
         Go to IAP
-      </button>
+      </StockPageButton>
 
       {#if companyList}
-        <button 
-          class="bg-[#3B82F6] hover:bg-[#2563EB] text-white font-medium px-4 py-2 rounded-[0.375rem] shadow-sm transition-all duration-300 ease-in-out hover:shadow-md"
-          on:click={handleFullpageNavigation}
-        >
+        <StockPageButton onClick={handleFullpageNavigation}>
           Go to Fullpage
-        </button>
+        </StockPageButton>
       {/if}
 
-      <button 
-        class="bg-gray-600 hover:bg-gray-700 text-white font-medium px-4 py-2 rounded-[0.375rem] shadow-sm transition-all duration-300 ease-in-out hover:shadow-md cursor-default"
-      >
+      <StockPageButton variant="disabled">
         Wiki
-      </button>
+      </StockPageButton>
 
-      <button 
-        class="bg-[#3B82F6] hover:bg-[#2563EB] text-white font-medium px-4 py-2 rounded-[0.375rem] shadow-sm transition-all duration-300 ease-in-out hover:shadow-md"
-        on:click={() => goto(`/subprojects/investment-analysis-platform/company/${symbol}/financials`)}
-      >
+      <StockPageButton onClick={() => goto(`/subprojects/investment-analysis-platform/company/${symbol}/financials`)}>
         Financials
-      </button>
+      </StockPageButton>
     </div>
 
     {#if loading}

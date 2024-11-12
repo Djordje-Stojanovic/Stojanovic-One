@@ -12,6 +12,7 @@
     import type { NumberFormat } from '$lib/utils/numberFormat';
     import type { FinancialData } from '$lib/types/financialStatements';
     import type { ListName } from '$lib/constants/listNames';
+    import StockPageButton from '$lib/components/StockPageButton.svelte';
 
     const symbol = $page.params.symbol;
     let financialData: FinancialData = {
@@ -181,34 +182,23 @@
 <div class="min-h-screen bg-white dark:bg-[#1F2937] p-4 space-y-4">
     <!-- Navigation Buttons -->
     <div class="flex space-x-4 mb-6">
-        <button 
-            class="bg-[#3B82F6] hover:bg-[#2563EB] text-white font-medium px-4 py-2 rounded-[0.375rem] shadow-sm transition-all duration-300 ease-in-out hover:shadow-md"
-            on:click={() => goto('/subprojects/investment-analysis-platform')}
-        >
+        <StockPageButton onClick={() => goto('/subprojects/investment-analysis-platform')}>
             Go to IAP
-        </button>
+        </StockPageButton>
 
         {#if companyList}
-            <button 
-                class="bg-[#3B82F6] hover:bg-[#2563EB] text-white font-medium px-4 py-2 rounded-[0.375rem] shadow-sm transition-all duration-300 ease-in-out hover:shadow-md"
-                on:click={handleFullpageNavigation}
-            >
+            <StockPageButton onClick={handleFullpageNavigation}>
                 Go to Fullpage
-            </button>
+            </StockPageButton>
         {/if}
 
-        <button 
-            class="bg-[#3B82F6] hover:bg-[#2563EB] text-white font-medium px-4 py-2 rounded-[0.375rem] shadow-sm transition-all duration-300 ease-in-out hover:shadow-md"
-            on:click={() => goto(`/subprojects/investment-analysis-platform/company/${symbol}`)}
-        >
+        <StockPageButton onClick={() => goto(`/subprojects/investment-analysis-platform/company/${symbol}`)}>
             Wiki
-        </button>
+        </StockPageButton>
 
-        <button 
-            class="bg-gray-600 hover:bg-gray-700 text-white font-medium px-4 py-2 rounded-[0.375rem] shadow-sm transition-all duration-300 ease-in-out hover:shadow-md cursor-default"
-        >
+        <StockPageButton variant="disabled">
             Financials
-        </button>
+        </StockPageButton>
     </div>
 
     <FinancialsHeader

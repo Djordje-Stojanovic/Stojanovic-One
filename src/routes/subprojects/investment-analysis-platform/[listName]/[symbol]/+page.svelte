@@ -9,6 +9,7 @@
   import { allowedMoves } from '$lib/utils/stockMoves';
   import { session } from '$lib/stores/sessionStore';
   import { onMount } from 'svelte';
+  import StockPageButton from '$lib/components/StockPageButton.svelte';
 
   // Define interfaces for better type checking
   interface Question {
@@ -235,19 +236,14 @@
         <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">{stockItem.symbol}</h1>
       </div>
       <div class="flex items-center space-x-4">
-        <button 
-          class="rounded bg-[#3B82F6] px-4 py-2 text-sm font-medium text-white shadow-sm transition-all duration-300 hover:bg-[#2563EB] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
-          on:click={() => goto(`/subprojects/investment-analysis-platform/company/${symbol}`)}
-        >
+        <StockPageButton onClick={() => goto(`/subprojects/investment-analysis-platform/company/${symbol}`)}>
           Go to Wiki
-        </button>
-        <button 
-          on:click={() => goto(`/subprojects/investment-analysis-platform/company/${symbol}/financials`)} 
-          class="rounded bg-gray-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all duration-300 hover:bg-gray-700 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
-          aria-label="View financials for {symbol}"
-        >
+        </StockPageButton>
+        
+        <StockPageButton onClick={() => goto(`/subprojects/investment-analysis-platform/company/${symbol}/financials`)}>
           Financials
-        </button>
+        </StockPageButton>
+        
         <select
           on:change={(e) => {
             if (e.target instanceof HTMLSelectElement && e.target.value) {
@@ -262,12 +258,10 @@
             <option value={moveListName}>{moveListName}</option>
           {/each}
         </select>
-        <button
-          on:click={() => goto(`/subprojects/investment-analysis-platform?list=${encodeURIComponent(stockItem.list_name)}`)}
-          class="rounded bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all duration-300 hover:bg-primary-700 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
-        >
+        
+        <StockPageButton onClick={() => goto(`/subprojects/investment-analysis-platform?list=${encodeURIComponent(stockItem.list_name)}`)}>
           Back to List
-        </button>
+        </StockPageButton>
       </div>
     </div>
 
