@@ -235,6 +235,19 @@
         <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">{stockItem.symbol}</h1>
       </div>
       <div class="flex items-center space-x-4">
+        <button 
+          class="rounded bg-[#3B82F6] px-4 py-2 text-sm font-medium text-white shadow-sm transition-all duration-300 hover:bg-[#2563EB] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+          on:click={() => goto(`/subprojects/investment-analysis-platform/company/${symbol}`)}
+        >
+          Go to Wiki
+        </button>
+        <button 
+          on:click={() => goto(`/subprojects/investment-analysis-platform/company/${symbol}/financials`)} 
+          class="rounded bg-gray-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all duration-300 hover:bg-gray-700 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+          aria-label="View financials for {symbol}"
+        >
+          Financials
+        </button>
         <select
           on:change={(e) => {
             if (e.target instanceof HTMLSelectElement && e.target.value) {
@@ -242,7 +255,7 @@
               moveItem(new CustomEvent('moveItem', { detail: { item: stockItem, newListName } }));
             }
           }}
-          class="rounded bg-blue-600 px-3 py-2 text-sm text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+          class="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all duration-300 hover:bg-blue-700 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
         >
           <option value="">Move to...</option>
           {#each currentAllowedMoves as moveListName}
@@ -251,7 +264,7 @@
         </select>
         <button
           on:click={() => goto(`/subprojects/investment-analysis-platform?list=${encodeURIComponent(stockItem.list_name)}`)}
-          class="rounded bg-primary-600 px-4 py-2 text-sm text-white transition-colors hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+          class="rounded bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all duration-300 hover:bg-primary-700 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
         >
           Back to List
         </button>

@@ -7,13 +7,44 @@
   import { supabase } from '$lib/supabaseClient';
   import { browser } from '$app/environment';
   import { goto } from '$app/navigation';
+  import type { ListName } from '$lib/constants/listNames';
 
   let symbol = '';
   let stockMetadata: any = null;
   let loading = true;
   let error: string | null = null;
+  let companyList: ListName | null = null;
 
   $: symbol = $page.params.symbol;
+
+  function handleFullpageNavigation() {
+    if (companyList) {
+      goto(`/subprojects/investment-analysis-platform/${companyList.toLowerCase()}/${symbol.toLowerCase()}`);
+    }
+  }
+
+  async function findCompanyList() {
+    try {
+      const { data, error: queryError } = await supabase
+        .from('user_stocks')
+        .select(`
+          list_name,
+          stock_metadata!inner (
+            symbol
+          )
+        `)
+        .eq('stock_metadata.symbol', symbol.toUpperCase())
+        .single();
+
+      if (queryError) throw queryError;
+      if (data?.list_name) {
+        companyList = data.list_name as ListName;
+      }
+    } catch (e) {
+      console.error('Error finding company list:', e);
+      companyList = null;
+    }
+  }
 
   onMount(async () => {
     try {
@@ -25,20 +56,49 @@
 
       if (fetchError) throw fetchError;
       stockMetadata = data;
+      await findCompanyList();
     } catch (err) {
       error = (err as Error).message;
     } finally {
       loading = false;
     }
   });
-
-  function navigateToFinancials() {
-    goto(`/subprojects/investment-analysis-platform/company/${symbol}/financials`);
-  }
 </script>
 
 <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
   <div class="container mx-auto px-4 py-8">
+    <!-- Navigation Buttons -->
+    <div class="flex space-x-4 mb-6">
+      <button 
+        class="bg-[#3B82F6] hover:bg-[#2563EB] text-white font-medium px-4 py-2 rounded-[0.375rem] shadow-sm transition-all duration-300 ease-in-out hover:shadow-md"
+        on:click={() => goto('/subprojects/investment-analysis-platform')}
+      >
+        Go to IAP
+      </button>
+
+      {#if companyList}
+        <button 
+          class="bg-[#3B82F6] hover:bg-[#2563EB] text-white font-medium px-4 py-2 rounded-[0.375rem] shadow-sm transition-all duration-300 ease-in-out hover:shadow-md"
+          on:click={handleFullpageNavigation}
+        >
+          Go to Fullpage
+        </button>
+      {/if}
+
+      <button 
+        class="bg-gray-600 hover:bg-gray-700 text-white font-medium px-4 py-2 rounded-[0.375rem] shadow-sm transition-all duration-300 ease-in-out hover:shadow-md cursor-default"
+      >
+        Wiki
+      </button>
+
+      <button 
+        class="bg-[#3B82F6] hover:bg-[#2563EB] text-white font-medium px-4 py-2 rounded-[0.375rem] shadow-sm transition-all duration-300 ease-in-out hover:shadow-md"
+        on:click={() => goto(`/subprojects/investment-analysis-platform/company/${symbol}/financials`)}
+      >
+        Financials
+      </button>
+    </div>
+
     {#if loading}
       <div class="flex items-center justify-center">
         <div class="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-500"></div>
@@ -49,14 +109,6 @@
       <!-- Company Info Section -->
       <CompanyInfo {stockMetadata} />
 
-      <!-- Financials Button -->
-      <button
-        class="mb-6 mt-4 rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
-        on:click={navigateToFinancials}
-      >
-        View Financial Statements
-      </button>
-
       <!-- Wiki Sections -->
       <WikiSection {symbol} section="Founding and Early History" />
       <WikiSection {symbol} section="Key Milestones" />
@@ -64,7 +116,6 @@
       <WikiSection {symbol} section="Business Model" />
       <WikiSection {symbol} section="Competitors" />
       <WikiSection {symbol} section="Risks" />
-
 
       <!-- File Upload -->
       <FileUploader {symbol} />

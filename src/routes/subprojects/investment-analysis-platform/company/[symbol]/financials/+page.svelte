@@ -11,6 +11,7 @@
     import { session } from '$lib/stores/sessionStore';
     import type { NumberFormat } from '$lib/utils/numberFormat';
     import type { FinancialData } from '$lib/types/financialStatements';
+    import type { ListName } from '$lib/constants/listNames';
 
     const symbol = $page.params.symbol;
     let financialData: FinancialData = {
@@ -30,6 +31,7 @@
     let activeTab = 'income';
     let companyName: string | null = null;
     let tableContainer: HTMLDivElement;
+    let companyList: ListName | null = null;
 
     function scrollToRight() {
         if (tableContainer) {
@@ -37,17 +39,44 @@
         }
     }
 
+    async function findCompanyList() {
+        try {
+            const { data, error: queryError } = await supabase
+                .from('user_stocks')
+                .select(`
+                    list_name,
+                    stock_metadata!inner (
+                        symbol
+                    )
+                `)
+                .eq('stock_metadata.symbol', symbol.toUpperCase())
+                .single();
+
+            if (queryError) throw queryError;
+            
+            if (data?.list_name) {
+                companyList = data.list_name as ListName;
+            }
+        } catch (e) {
+            console.error('Error finding company list:', e);
+            companyList = null;
+        }
+    }
+
+    function handleFullpageNavigation() {
+        if (companyList) {
+            goto(`/subprojects/investment-analysis-platform/${companyList.toLowerCase()}/${symbol.toLowerCase()}`);
+        }
+    }
+
     function filterDataByYears(data: FinancialData, years: number): FinancialData {
-        if (years === 0) return data; // Return all data
+        if (years === 0) return data;
 
         const filterMostRecent = (statements: any[]) => {
-            // Sort by date descending to get most recent first
             const sorted = [...statements].sort((a, b) => 
                 new Date(b.date).getTime() - new Date(a.date).getTime()
             );
-            // Take the required number of years
             const filtered = sorted.slice(0, years);
-            // Sort ascending (oldest to newest) for display
             return filtered.sort((a, b) => 
                 new Date(a.date).getTime() - new Date(b.date).getTime()
             );
@@ -130,8 +159,11 @@
 
     onMount(async () => {
         if ($session) {
-            await loadFinancialData();
-            await fetchCompanyName();
+            await Promise.all([
+                loadFinancialData(),
+                fetchCompanyName(),
+                findCompanyList()
+            ]);
         }
     });
 
@@ -146,14 +178,38 @@
     }
 </script>
 
-<!-- Rest of the component remains the same -->
 <div class="min-h-screen bg-white dark:bg-[#1F2937] p-4 space-y-4">
-    <button 
-        class="bg-[#3B82F6] hover:bg-[#2563EB] text-white font-medium px-4 py-2 rounded-[0.375rem] shadow-sm transition-all duration-300 ease-in-out hover:shadow-md"
-        on:click={() => goto('/subprojects/investment-analysis-platform')}
-    >
-        Back to Stocks
-    </button>
+    <!-- Navigation Buttons -->
+    <div class="flex space-x-4 mb-6">
+        <button 
+            class="bg-[#3B82F6] hover:bg-[#2563EB] text-white font-medium px-4 py-2 rounded-[0.375rem] shadow-sm transition-all duration-300 ease-in-out hover:shadow-md"
+            on:click={() => goto('/subprojects/investment-analysis-platform')}
+        >
+            Go to IAP
+        </button>
+
+        {#if companyList}
+            <button 
+                class="bg-[#3B82F6] hover:bg-[#2563EB] text-white font-medium px-4 py-2 rounded-[0.375rem] shadow-sm transition-all duration-300 ease-in-out hover:shadow-md"
+                on:click={handleFullpageNavigation}
+            >
+                Go to Fullpage
+            </button>
+        {/if}
+
+        <button 
+            class="bg-[#3B82F6] hover:bg-[#2563EB] text-white font-medium px-4 py-2 rounded-[0.375rem] shadow-sm transition-all duration-300 ease-in-out hover:shadow-md"
+            on:click={() => goto(`/subprojects/investment-analysis-platform/company/${symbol}`)}
+        >
+            Wiki
+        </button>
+
+        <button 
+            class="bg-gray-600 hover:bg-gray-700 text-white font-medium px-4 py-2 rounded-[0.375rem] shadow-sm transition-all duration-300 ease-in-out hover:shadow-md cursor-default"
+        >
+            Financials
+        </button>
+    </div>
 
     <FinancialsHeader
         {symbol}
