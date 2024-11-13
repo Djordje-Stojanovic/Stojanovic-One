@@ -33,6 +33,7 @@
     let companyName: string | null = null;
     let tableContainer: HTMLDivElement;
     let companyList: ListName | null = null;
+    let selectedPeriod: 'annual' | 'quarterly' = 'annual';
 
     function scrollToRight() {
         if (tableContainer) {
@@ -70,14 +71,25 @@
         }
     }
 
-    function filterDataByYears(data: FinancialData, years: number): FinancialData {
-        if (years === 0) return data;
-
+    function filterDataByPeriodAndYears(data: FinancialData, period: 'annual' | 'quarterly', years: number): FinancialData {
         const filterMostRecent = (statements: any[]) => {
-            const sorted = [...statements].sort((a, b) => 
+            // Filter by period first
+            const periodFiltered = statements.filter(stmt => 
+                period === 'annual' ? stmt.period === 'FY' : stmt.period !== 'FY'
+            );
+
+            // If no year limit is set (years === 0), return all data for the selected period
+            if (years === 0) return periodFiltered;
+
+            // Sort by date, take the most recent years, then resort chronologically
+            const sorted = [...periodFiltered].sort((a, b) => 
                 new Date(b.date).getTime() - new Date(a.date).getTime()
             );
-            const filtered = sorted.slice(0, years);
+
+            // For quarterly data, we need 4x the number of entries to cover the same time period
+            const limit = period === 'annual' ? years : years * 4;
+            const filtered = sorted.slice(0, limit);
+            
             return filtered.sort((a, b) => 
                 new Date(a.date).getTime() - new Date(b.date).getTime()
             );
@@ -130,7 +142,7 @@
             }
 
             allFinancialData = result.data;
-            financialData = filterDataByYears(allFinancialData, selectedYears);
+            financialData = filterDataByPeriodAndYears(allFinancialData, selectedPeriod, selectedYears);
             setTimeout(scrollToRight, 100);
         } catch (e) {
             error = e instanceof Error ? e.message : 'An error occurred while fetching data';
@@ -168,9 +180,9 @@
         }
     });
 
-    // Update filtered data when selectedYears changes
+    // Update filtered data when selectedYears or selectedPeriod changes
     $: if (allFinancialData && allFinancialData.income_statements.length > 0) {
-        financialData = filterDataByYears(allFinancialData, selectedYears);
+        financialData = filterDataByPeriodAndYears(allFinancialData, selectedPeriod, selectedYears);
     }
 
     // Scroll to right when switching tabs
@@ -207,9 +219,11 @@
         {loading}
         {numberFormat}
         {selectedYears}
+        period={selectedPeriod}
         on:refresh={() => loadFinancialData(true)}
         on:formatChange={(e) => numberFormat = e.detail}
         on:yearChange={(e) => selectedYears = e.detail.years}
+        on:periodChange={(e) => selectedPeriod = e.detail.period}
     />
 
     <div class="bg-white dark:bg-[#374151] rounded-[0.375rem] shadow-sm transition-all duration-300">

@@ -1,3 +1,5 @@
+export type FinancialPeriod = 'FY' | 'Q1' | 'Q2' | 'Q3' | 'Q4';
+
 export interface BaseFinancialStatement {
     symbol: string;
     date: string;
@@ -6,7 +8,7 @@ export interface BaseFinancialStatement {
     filling_date: string;
     accepted_date: string;
     calendar_year: string;
-    period: string;
+    period: FinancialPeriod;
 }
 
 export interface IncomeStatement extends BaseFinancialStatement {

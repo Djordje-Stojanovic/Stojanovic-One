@@ -8,6 +8,7 @@
     export let numberFormat: NumberFormat;
     export let selectedYears: number = 10;
     export let customYears: string = '';
+    export let period: 'annual' | 'quarterly' = 'annual';
 
     const dispatch = createEventDispatcher();
 
@@ -33,6 +34,11 @@
             dispatch('yearChange', { years });
         }
     }
+
+    function setPeriod(newPeriod: 'annual' | 'quarterly') {
+        period = newPeriod;
+        dispatch('periodChange', { period: newPeriod });
+    }
 </script>
 
 <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
@@ -55,6 +61,14 @@
                 </button>
             </div>
             <div class="flex flex-wrap items-center gap-2">
+                <div class="flex items-center gap-2 border-r dark:border-gray-600 pr-2 mr-2">
+                    <button 
+                        class="px-3 py-1 text-sm rounded transition-colors duration-300 {period === 'annual' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700'}"
+                        on:click={() => setPeriod('annual')}>Annual</button>
+                    <button 
+                        class="px-3 py-1 text-sm rounded transition-colors duration-300 {period === 'quarterly' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700'}"
+                        on:click={() => setPeriod('quarterly')}>Quarterly</button>
+                </div>
                 <div class="flex items-center gap-2">
                     <button 
                         class="px-3 py-1 text-sm rounded transition-colors duration-300 {selectedYears === 3 ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700'}"

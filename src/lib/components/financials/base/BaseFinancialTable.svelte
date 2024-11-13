@@ -10,8 +10,16 @@
         new Date(a.date).getTime() - new Date(b.date).getTime()
     );
 
-    function formatDate(date: string) {
-        return new Date(date).toLocaleDateString('en-US', { year: 'numeric' });
+    function formatDate(date: string, period: string) {
+        const dateObj = new Date(date);
+        const year = dateObj.getFullYear();
+        
+        if (period === 'FY') {
+            return year.toString();
+        }
+        
+        // For quarterly data, use the period directly (Q1, Q2, Q3, Q4)
+        return `${year} ${period}`;
     }
 
     onMount(() => {
@@ -47,7 +55,8 @@
         min-width: 250px;
         padding: 12px 16px;
         text-align: left;
-        background: inherit;
+        background: #1F2937;
+        border-right: 2px solid #4B5563;
     }
 
     .metric-name.header {
@@ -80,6 +89,27 @@
         top: 0;
         z-index: 10;
     }
+
+    /* Ensure sticky column has proper background */
+    :global(tbody tr td:first-child) {
+        position: sticky !important;
+        left: 0;
+        z-index: 1;
+        background: #1F2937 !important;
+        border-right: 2px solid #4B5563;
+    }
+
+    /* Add shadow to sticky column */
+    :global(tbody tr td:first-child::after) {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 4px;
+        background: linear-gradient(to right, rgba(0,0,0,0.1), rgba(0,0,0,0));
+        pointer-events: none;
+    }
 </style>
 
 <div class="table-container" bind:this={tableContainer}>
@@ -89,7 +119,7 @@
                 <th class="metric-name header">{tableName}</th>
                 {#each sortedStatements as statement}
                     <th class="value-cell">
-                        {formatDate(statement.date)}
+                        {formatDate(statement.date, statement.period)}
                     </th>
                 {/each}
             </tr>
