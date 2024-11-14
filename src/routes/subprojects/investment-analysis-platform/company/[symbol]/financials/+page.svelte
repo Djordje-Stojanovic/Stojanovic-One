@@ -50,6 +50,13 @@
     // Chart state
     let showChart = false;
     let selectedMetrics: ChartMetric[] = [];
+    let selectedMetricNames: string[] = [];
+
+    function clearChartState() {
+        selectedMetrics = [];
+        selectedMetricNames = [];
+        showChart = false;
+    }
 
     async function handleLoadFinancialData(forceRefresh = false) {
         if (!$session) {
@@ -121,8 +128,9 @@
                 ...selectedMetrics.slice(0, existingIndex),
                 ...selectedMetrics.slice(existingIndex + 1)
             ];
+            selectedMetricNames = selectedMetrics.map(m => m.name);
         } else {
-            // Add new metric
+            // Add new metric using the data from the event
             selectedMetrics = [...selectedMetrics, {
                 name,
                 data: dates.map((date, i) => ({
@@ -130,18 +138,39 @@
                     value: values[i]
                 }))
             }];
+            selectedMetricNames = [...selectedMetricNames, name];
         }
 
         showChart = selectedMetrics.length > 0;
+    }
+
+    function refreshMetric(name: string) {
+        if (!name) return;
+        
+        const filteredData = filterFinancialStatementsByPeriod(allFinancialData, selectedPeriod, selectedYears);
+        let values: number[] = [];
+        let dates: string[] = [];
+
+        if (activeTab === 'income') {
+            values = filteredData.income_statements.map(s => Number(s[name]) || 0);
+            dates = filteredData.income_statements.map(s => s.date);
+        } else if (activeTab === 'balance') {
+            values = filteredData.balance_sheets.map(s => Number(s[name]) || 0);
+            dates = filteredData.balance_sheets.map(s => s.date);
+        } else if (activeTab === 'cashflow') {
+            values = filteredData.cash_flow_statements.map(s => Number(s[name]) || 0);
+            dates = filteredData.cash_flow_statements.map(s => s.date);
+        }
+
+        handleMetricClick(new CustomEvent('metricClick', {
+            detail: { name, values, dates }
+        }));
     }
 
     // Check if there's any data for the current tab
     $: hasData = activeTab === 'income' ? financialData.income_statements.length > 0 :
                  activeTab === 'balance' ? financialData.balance_sheets.length > 0 :
                  financialData.cash_flow_statements.length > 0;
-
-    // Get selected metric names for highlighting
-    $: selectedMetricNames = selectedMetrics.map(m => m.name);
 </script>
 
 <div class="min-h-screen bg-white dark:bg-[#1F2937] p-4 space-y-4">
@@ -175,8 +204,14 @@
         period={selectedPeriod}
         on:refresh={() => handleLoadFinancialData(true)}
         on:formatChange={(e) => numberFormat = e.detail}
-        on:yearChange={(e) => selectedYears = e.detail.years}
-        on:periodChange={(e) => selectedPeriod = e.detail.period}
+        on:yearChange={(e) => {
+            selectedYears = e.detail.years;
+            refreshMetric(selectedMetricNames[0]);
+        }}
+        on:periodChange={(e) => {
+            selectedPeriod = e.detail.period;
+            refreshMetric(selectedMetricNames[0]);
+        }}
     />
 
     {#if showChart && selectedMetrics.length > 0}
@@ -192,7 +227,7 @@
                 </div>
                 <button 
                     class="text-sm px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white transition-colors"
-                    on:click={() => { selectedMetrics = []; showChart = false; }}
+                    on:click={clearChartState}
                 >
                     Close Chart
                 </button>

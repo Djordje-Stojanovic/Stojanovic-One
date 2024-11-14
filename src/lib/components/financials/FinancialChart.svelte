@@ -19,8 +19,105 @@
     
     let canvas: HTMLCanvasElement;
     let chart: Chart;
+    
+    // Create a unique key based on metrics to force reinit when needed
+    $: chartKey = JSON.stringify(metrics.map(m => m.name));
 
-    $: if (chart && metrics) {
+    function initChart() {
+        if (chart) {
+            chart.destroy();
+        }
+
+        const ctx = canvas?.getContext('2d');
+        if (!ctx) return;
+
+        chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: [],
+                datasets: []
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            color: darkMode ? '#F9FAFB' : '#111827',
+                            padding: 20,
+                            usePointStyle: true,
+                            pointStyle: 'circle'
+                        }
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        backgroundColor: darkMode ? '#374151' : '#F3F4F6',
+                        titleColor: darkMode ? '#F9FAFB' : '#111827',
+                        bodyColor: darkMode ? '#F9FAFB' : '#111827',
+                        borderColor: darkMode ? '#4B5563' : '#E5E7EB',
+                        borderWidth: 1,
+                        padding: 12,
+                        callbacks: {
+                            label: function(context: any) {
+                                const value = context.raw;
+                                if (value === null || typeof value !== 'number') {
+                                    return '';
+                                }
+                                return `${context.dataset.label}: ${formatValue(value)}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        border: {
+                            display: false
+                        },
+                        grid: {
+                            color: darkMode ? '#374151' : '#F3F4F6',
+                            lineWidth: 1
+                        },
+                        ticks: {
+                            color: darkMode ? '#F9FAFB' : '#111827',
+                            padding: 8,
+                            callback: function(value: any) {
+                                return formatValue(value);
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        border: {
+                            display: false
+                        },
+                        ticks: {
+                            color: darkMode ? '#F9FAFB' : '#111827',
+                            padding: 8
+                        }
+                    }
+                },
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                animation: {
+                    duration: 200
+                }
+            }
+        });
+
+        updateChartData();
+    }
+
+    function updateChartData() {
+        if (!chart || !metrics) return;
+
         // Get all unique dates across all metrics
         const allDates = [...new Set(metrics.flatMap(m => m.data.map(d => d.date)))].sort();
         
@@ -38,7 +135,8 @@
             barThickness: 32,
             maxBarThickness: 40
         }));
-        chart.update();
+        
+        chart.update('none'); // Use 'none' mode for immediate update
     }
 
     function formatDate(dateStr: string) {
@@ -63,97 +161,25 @@
         return numValue.toFixed(2);
     }
 
+    // Initialize chart when component mounts
     onMount(() => {
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-            chart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: [],
-                    datasets: []
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top',
-                            labels: {
-                                color: darkMode ? '#F9FAFB' : '#111827',
-                                padding: 20,
-                                usePointStyle: true,
-                                pointStyle: 'circle'
-                            }
-                        },
-                        tooltip: {
-                            mode: 'index',
-                            intersect: false,
-                            backgroundColor: darkMode ? '#374151' : '#F3F4F6',
-                            titleColor: darkMode ? '#F9FAFB' : '#111827',
-                            bodyColor: darkMode ? '#F9FAFB' : '#111827',
-                            borderColor: darkMode ? '#4B5563' : '#E5E7EB',
-                            borderWidth: 1,
-                            padding: 12,
-                            callbacks: {
-                                label: function(context: any) {
-                                    const value = context.raw;
-                                    if (value === null || typeof value !== 'number') {
-                                        return '';
-                                    }
-                                    return `${context.dataset.label}: ${formatValue(value)}`;
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: false,
-                            border: {
-                                display: false
-                            },
-                            grid: {
-                                color: darkMode ? '#374151' : '#F3F4F6',
-                                lineWidth: 1
-                            },
-                            ticks: {
-                                color: darkMode ? '#F9FAFB' : '#111827',
-                                padding: 8,
-                                callback: function(value: any) {
-                                    return formatValue(value);
-                                }
-                            }
-                        },
-                        x: {
-                            grid: {
-                                display: false
-                            },
-                            border: {
-                                display: false
-                            },
-                            ticks: {
-                                color: darkMode ? '#F9FAFB' : '#111827',
-                                padding: 8
-                            }
-                        }
-                    },
-                    interaction: {
-                        mode: 'index',
-                        intersect: false
-                    },
-                    animation: {
-                        duration: 200
-                    }
-                }
-            });
-        }
-
+        initChart();
         return () => {
             if (chart) {
                 chart.destroy();
             }
         };
     });
+
+    // Reinitialize chart when metrics structure changes
+    $: if (chartKey && canvas) {
+        initChart();
+    }
+
+    // Update data when metrics content changes
+    $: if (chart && metrics) {
+        updateChartData();
+    }
 </script>
 
 <div class="w-full h-[400px] bg-white dark:bg-[#1F2937] rounded-lg p-4 shadow-sm dark:shadow-lg">

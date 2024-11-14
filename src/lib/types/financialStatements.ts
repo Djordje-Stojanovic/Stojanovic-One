@@ -11,7 +11,9 @@ export interface BaseFinancialStatement {
     period: FinancialPeriod;
 }
 
+// Add index signature to allow string indexing
 export interface IncomeStatement extends BaseFinancialStatement {
+    [key: string]: string | number;
     revenue: number;
     cost_of_revenue: number;
     gross_profit: number;
@@ -43,6 +45,7 @@ export interface IncomeStatement extends BaseFinancialStatement {
 }
 
 export interface BalanceSheet extends BaseFinancialStatement {
+    [key: string]: string | number;
     cash_and_cash_equivalents: number;
     short_term_investments: number;
     cash_and_short_term_investments: number;
@@ -90,6 +93,7 @@ export interface BalanceSheet extends BaseFinancialStatement {
 }
 
 export interface CashFlowStatement extends BaseFinancialStatement {
+    [key: string]: string | number;
     net_income: number;
     depreciation_and_amortization: number;
     deferred_income_tax: number;
