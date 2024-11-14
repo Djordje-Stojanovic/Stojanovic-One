@@ -23,8 +23,9 @@
 
     $: rowClass = `
         ${indented ? 'pl-8' : ''} 
-        ${isTotal ? 'font-semibold bg-gray-700/50 dark:bg-gray-700/50 hover:bg-gray-600/50 dark:hover:bg-gray-600/50 cursor-pointer' : 'hover:bg-gray-600/20 dark:hover:bg-gray-600/40 cursor-pointer'}
+        ${isTotal ? 'total-row' : 'metric-row hover:bg-gray-600/20 dark:hover:bg-gray-600/40'}
         ${isSelected ? 'bg-blue-500/20 dark:bg-blue-500/20' : ''}
+        cursor-pointer
         transition-colors duration-200
     `;
 </script>
@@ -64,5 +65,14 @@
 
     .value-cell:last-child {
         border-right: none;
+    }
+
+    .total-row {
+        font-weight: 600;
+        background-color: #374151;
+    }
+
+    .total-row:hover {
+        background-color: #4B5563;
     }
 </style>

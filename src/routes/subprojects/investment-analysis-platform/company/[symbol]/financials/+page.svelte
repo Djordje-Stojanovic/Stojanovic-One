@@ -122,15 +122,13 @@
                 ...selectedMetrics.slice(existingIndex + 1)
             ];
         } else {
-            // Add new metric with sorted data (oldest to newest)
-            const sortedData = dates.map((date, i) => ({
-                date,
-                value: values[i]
-            })).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
+            // Add new metric
             selectedMetrics = [...selectedMetrics, {
                 name,
-                data: sortedData
+                data: dates.map((date, i) => ({
+                    date,
+                    value: values[i]
+                }))
             }];
         }
 

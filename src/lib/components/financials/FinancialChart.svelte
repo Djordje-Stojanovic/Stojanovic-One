@@ -134,8 +134,7 @@
                             ticks: {
                                 color: darkMode ? '#F9FAFB' : '#111827',
                                 padding: 8
-                            },
-                            reverse: true // Newest dates on the right
+                            }
                         }
                     },
                     interaction: {
