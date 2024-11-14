@@ -14,18 +14,16 @@
     const dispatch = createEventDispatcher();
 
     function handleClick() {
-        if (!isTotal) {
-            dispatch('metricClick', {
-                name,
-                values,
-                dates
-            });
-        }
+        dispatch('metricClick', {
+            name,
+            values,
+            dates
+        });
     }
 
     $: rowClass = `
         ${indented ? 'pl-8' : ''} 
-        ${isTotal ? 'total-row' : 'metric-row hover:bg-gray-600/20 dark:hover:bg-gray-600/40 cursor-pointer'}
+        ${isTotal ? 'font-semibold bg-gray-700/50 dark:bg-gray-700/50 hover:bg-gray-600/50 dark:hover:bg-gray-600/50 cursor-pointer' : 'hover:bg-gray-600/20 dark:hover:bg-gray-600/40 cursor-pointer'}
         ${isSelected ? 'bg-blue-500/20 dark:bg-blue-500/20' : ''}
         transition-colors duration-200
     `;
@@ -42,21 +40,12 @@
     </td>
     {#each values as value, i}
         <td class="value-cell">
-            {formatNumber(value, numberFormat).formatted}
+            {value !== null ? formatNumber(value, numberFormat).formatted : '-'}
         </td>
     {/each}
 </tr>
 
 <style>
-    .metric-row:hover {
-        background-color: rgba(75, 85, 99, 0.2);
-    }
-    
-    .total-row {
-        font-weight: 600;
-        background-color: #374151;
-    }
-
     .metric-name {
         padding: 0.5rem 1rem;
         position: sticky;
