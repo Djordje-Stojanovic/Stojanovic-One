@@ -1,80 +1,111 @@
 <script lang="ts">
-    import { formatNumber } from '$lib/utils/numberFormat';
+    import { createEventDispatcher } from 'svelte';
     import type { NumberFormat } from '$lib/utils/numberFormat';
     import type { BalanceSheet } from '$lib/types/financialStatements';
+    import type { FinancialSectionProps } from '../types';
+    import MetricRow from '../base/MetricRow.svelte';
     import SectionStyles from '../styles/SectionStyles.svelte';
 
     export let statements: BalanceSheet[] = [];
     export let numberFormat: NumberFormat;
+    export let selectedMetricNames: string[] = [];
+
+    const dispatch = createEventDispatcher();
+
+    function handleMetricClick(event: CustomEvent) {
+        dispatch('metricClick', event.detail);
+    }
+
+    // Sort statements by date (oldest to newest)
+    $: sortedStatements = [...statements].sort((a, b) => 
+        new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+
+    $: dates = sortedStatements.map(s => s.date);
 </script>
 
 <SectionStyles />
 
-<!-- Liabilities Section -->
 <tr class="section-header">
     <td class="metric-name">Liabilities</td>
-    {#each statements as statement}
+    {#each sortedStatements as statement}
         <td class="value-cell"></td>
     {/each}
 </tr>
 
 <!-- Current Liabilities -->
-<tr class="subsection-header">
-    <td class="metric-name">Current Liabilities</td>
-    {#each statements as statement}
-        <td class="value-cell"></td>
-    {/each}
-</tr>
+<MetricRow
+    name="Account Payables"
+    values={sortedStatements.map(s => s.account_payables)}
+    dates={dates}
+    {numberFormat}
+    isSelected={selectedMetricNames.includes("Account Payables")}
+    on:metricClick={handleMetricClick}
+/>
 
-<tr>
-    <td class="metric-name metric-row">Accounts Payable</td>
-    {#each statements as statement}
-        <td class="value-cell">
-            {formatNumber(statement.account_payables || 0, numberFormat).formatted}
-        </td>
-    {/each}
-</tr>
+<MetricRow
+    name="Short Term Debt"
+    values={sortedStatements.map(s => s.short_term_debt)}
+    dates={dates}
+    {numberFormat}
+    isSelected={selectedMetricNames.includes("Short Term Debt")}
+    on:metricClick={handleMetricClick}
+/>
 
-<tr>
-    <td class="metric-name metric-row">Short Term Debt</td>
-    {#each statements as statement}
-        <td class="value-cell">
-            {formatNumber(statement.short_term_debt || 0, numberFormat).formatted}
-        </td>
-    {/each}
-</tr>
+<MetricRow
+    name="Deferred Revenue"
+    values={sortedStatements.map(s => s.deferred_revenue)}
+    dates={dates}
+    {numberFormat}
+    isSelected={selectedMetricNames.includes("Deferred Revenue")}
+    on:metricClick={handleMetricClick}
+/>
 
-<tr class="total-row">
-    <td class="metric-name">Total Current Liabilities</td>
-    {#each statements as statement}
-        <td class="value-cell">
-            {formatNumber(statement.total_current_liabilities || 0, numberFormat).formatted}
-        </td>
-    {/each}
-</tr>
+<MetricRow
+    name="Total Current Liabilities"
+    values={sortedStatements.map(s => s.total_current_liabilities)}
+    dates={dates}
+    {numberFormat}
+    isTotal={true}
+    isSelected={selectedMetricNames.includes("Total Current Liabilities")}
+    on:metricClick={handleMetricClick}
+/>
 
 <!-- Non-Current Liabilities -->
-<tr class="subsection-header">
-    <td class="metric-name">Non-Current Liabilities</td>
-    {#each statements as statement}
-        <td class="value-cell"></td>
-    {/each}
-</tr>
+<MetricRow
+    name="Long Term Debt"
+    values={sortedStatements.map(s => s.long_term_debt)}
+    dates={dates}
+    {numberFormat}
+    isSelected={selectedMetricNames.includes("Long Term Debt")}
+    on:metricClick={handleMetricClick}
+/>
 
-<tr>
-    <td class="metric-name metric-row">Long Term Debt</td>
-    {#each statements as statement}
-        <td class="value-cell">
-            {formatNumber(statement.long_term_debt || 0, numberFormat).formatted}
-        </td>
-    {/each}
-</tr>
+<MetricRow
+    name="Deferred Revenue Non-Current"
+    values={sortedStatements.map(s => s.deferred_revenue_non_current)}
+    dates={dates}
+    {numberFormat}
+    isSelected={selectedMetricNames.includes("Deferred Revenue Non-Current")}
+    on:metricClick={handleMetricClick}
+/>
 
-<tr class="total-row">
-    <td class="metric-name">Total Liabilities</td>
-    {#each statements as statement}
-        <td class="value-cell">
-            {formatNumber(statement.total_liabilities || 0, numberFormat).formatted}
-        </td>
-    {/each}
-</tr>
+<MetricRow
+    name="Total Non-Current Liabilities"
+    values={sortedStatements.map(s => s.total_non_current_liabilities)}
+    dates={dates}
+    {numberFormat}
+    isTotal={true}
+    isSelected={selectedMetricNames.includes("Total Non-Current Liabilities")}
+    on:metricClick={handleMetricClick}
+/>
+
+<MetricRow
+    name="Total Liabilities"
+    values={sortedStatements.map(s => s.total_liabilities)}
+    dates={dates}
+    {numberFormat}
+    isTotal={true}
+    isSelected={selectedMetricNames.includes("Total Liabilities")}
+    on:metricClick={handleMetricClick}
+/>

@@ -1,54 +1,70 @@
 <script lang="ts">
-    import { formatNumber } from '$lib/utils/numberFormat';
+    import { createEventDispatcher } from 'svelte';
     import type { NumberFormat } from '$lib/utils/numberFormat';
     import type { IncomeStatement } from '$lib/types/financialStatements';
+    import type { FinancialSectionProps } from '../types';
+    import MetricRow from '../base/MetricRow.svelte';
     import SectionStyles from '../styles/SectionStyles.svelte';
 
     export let statements: IncomeStatement[] = [];
     export let numberFormat: NumberFormat;
+    export let selectedMetricNames: string[] = [];
+
+    const dispatch = createEventDispatcher();
+
+    function handleMetricClick(event: CustomEvent) {
+        dispatch('metricClick', event.detail);
+    }
+
+    // Sort statements by date (oldest to newest)
+    $: sortedStatements = [...statements].sort((a, b) => 
+        new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+
+    $: dates = sortedStatements.map(s => s.date);
 </script>
 
 <SectionStyles />
 
 <tr class="section-header">
     <td class="metric-name">Per Share Data</td>
-    {#each statements as statement}
+    {#each sortedStatements as statement}
         <td class="value-cell"></td>
     {/each}
 </tr>
 
-<tr>
-    <td class="metric-name metric-row">Basic EPS</td>
-    {#each statements as statement}
-        <td class="value-cell">
-            {statement.eps?.toFixed(2)}
-        </td>
-    {/each}
-</tr>
+<MetricRow
+    name="EPS"
+    values={sortedStatements.map(s => s.eps)}
+    dates={dates}
+    {numberFormat}
+    isSelected={selectedMetricNames.includes("EPS")}
+    on:metricClick={handleMetricClick}
+/>
 
-<tr>
-    <td class="metric-name metric-row">Diluted EPS</td>
-    {#each statements as statement}
-        <td class="value-cell">
-            {statement.eps_diluted?.toFixed(2)}
-        </td>
-    {/each}
-</tr>
+<MetricRow
+    name="EPS Diluted"
+    values={sortedStatements.map(s => s.eps_diluted)}
+    dates={dates}
+    {numberFormat}
+    isSelected={selectedMetricNames.includes("EPS Diluted")}
+    on:metricClick={handleMetricClick}
+/>
 
-<tr>
-    <td class="metric-name metric-row">Shares Outstanding (Basic)</td>
-    {#each statements as statement}
-        <td class="value-cell">
-            {formatNumber(statement.weighted_average_shs_out, numberFormat).formatted}
-        </td>
-    {/each}
-</tr>
+<MetricRow
+    name="Weighted Average Shares"
+    values={sortedStatements.map(s => s.weighted_average_shs_out)}
+    dates={dates}
+    {numberFormat}
+    isSelected={selectedMetricNames.includes("Weighted Average Shares")}
+    on:metricClick={handleMetricClick}
+/>
 
-<tr>
-    <td class="metric-name metric-row">Shares Outstanding (Diluted)</td>
-    {#each statements as statement}
-        <td class="value-cell">
-            {formatNumber(statement.weighted_average_shs_out_dil, numberFormat).formatted}
-        </td>
-    {/each}
-</tr>
+<MetricRow
+    name="Weighted Average Shares Diluted"
+    values={sortedStatements.map(s => s.weighted_average_shs_out_dil)}
+    dates={dates}
+    {numberFormat}
+    isSelected={selectedMetricNames.includes("Weighted Average Shares Diluted")}
+    on:metricClick={handleMetricClick}
+/>

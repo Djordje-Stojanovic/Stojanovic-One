@@ -1,64 +1,80 @@
 <script lang="ts">
-    import { formatNumber } from '$lib/utils/numberFormat';
+    import { createEventDispatcher } from 'svelte';
     import type { NumberFormat } from '$lib/utils/numberFormat';
     import type { CashFlowStatement } from '$lib/types/financialStatements';
+    import type { FinancialSectionProps } from '../types';
+    import MetricRow from '../base/MetricRow.svelte';
     import SectionStyles from '../styles/SectionStyles.svelte';
 
     export let statements: CashFlowStatement[] = [];
     export let numberFormat: NumberFormat;
+    export let selectedMetricNames: string[] = [];
+
+    const dispatch = createEventDispatcher();
+
+    function handleMetricClick(event: CustomEvent) {
+        dispatch('metricClick', event.detail);
+    }
+
+    // Sort statements by date (oldest to newest)
+    $: sortedStatements = [...statements].sort((a, b) => 
+        new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+
+    $: dates = sortedStatements.map(s => s.date);
 </script>
 
 <SectionStyles />
 
-<!-- Operating Activities -->
 <tr class="section-header">
     <td class="metric-name">Operating Activities</td>
-    {#each statements as statement}
+    {#each sortedStatements as statement}
         <td class="value-cell"></td>
     {/each}
 </tr>
 
-<tr>
-    <td class="metric-name metric-row">Net Income</td>
-    {#each statements as statement}
-        <td class="value-cell">
-            {formatNumber(statement.net_income, numberFormat).formatted}
-        </td>
-    {/each}
-</tr>
+<MetricRow
+    name="Net Income"
+    values={sortedStatements.map(s => s.net_income)}
+    dates={dates}
+    {numberFormat}
+    isSelected={selectedMetricNames.includes("Net Income")}
+    on:metricClick={handleMetricClick}
+/>
 
-<tr>
-    <td class="metric-name metric-row">Depreciation & Amortization</td>
-    {#each statements as statement}
-        <td class="value-cell">
-            {formatNumber(statement.depreciation_and_amortization, numberFormat).formatted}
-        </td>
-    {/each}
-</tr>
+<MetricRow
+    name="Depreciation & Amortization"
+    values={sortedStatements.map(s => s.depreciation_and_amortization)}
+    dates={dates}
+    {numberFormat}
+    isSelected={selectedMetricNames.includes("Depreciation & Amortization")}
+    on:metricClick={handleMetricClick}
+/>
 
-<tr>
-    <td class="metric-name metric-row">Stock Based Compensation</td>
-    {#each statements as statement}
-        <td class="value-cell">
-            {formatNumber(statement.stock_based_compensation, numberFormat).formatted}
-        </td>
-    {/each}
-</tr>
+<MetricRow
+    name="Stock Based Compensation"
+    values={sortedStatements.map(s => s.stock_based_compensation)}
+    dates={dates}
+    {numberFormat}
+    isSelected={selectedMetricNames.includes("Stock Based Compensation")}
+    on:metricClick={handleMetricClick}
+/>
 
-<tr>
-    <td class="metric-name metric-row">Change in Working Capital</td>
-    {#each statements as statement}
-        <td class="value-cell">
-            {formatNumber(statement.change_in_working_capital, numberFormat).formatted}
-        </td>
-    {/each}
-</tr>
+<MetricRow
+    name="Change in Working Capital"
+    values={sortedStatements.map(s => s.change_in_working_capital)}
+    dates={dates}
+    {numberFormat}
+    isSelected={selectedMetricNames.includes("Change in Working Capital")}
+    on:metricClick={handleMetricClick}
+/>
 
-<tr class="total-row">
-    <td class="metric-name">Operating Cash Flow</td>
-    {#each statements as statement}
-        <td class="value-cell">
-            {formatNumber(statement.net_cash_provided_by_operating_activities, numberFormat).formatted}
-        </td>
-    {/each}
-</tr>
+<MetricRow
+    name="Operating Cash Flow"
+    values={sortedStatements.map(s => s.operating_cash_flow)}
+    dates={dates}
+    {numberFormat}
+    isTotal={true}
+    isSelected={selectedMetricNames.includes("Operating Cash Flow")}
+    on:metricClick={handleMetricClick}
+/>
