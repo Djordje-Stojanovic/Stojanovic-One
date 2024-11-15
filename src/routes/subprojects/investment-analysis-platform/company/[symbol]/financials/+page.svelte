@@ -101,8 +101,10 @@
     });
 
     // Update filtered data when selectedYears or selectedPeriod changes
-    $: if (allFinancialData && allFinancialData.income_statements.length > 0) {
-        financialData = filterFinancialStatementsByPeriod(allFinancialData, selectedPeriod, selectedYears);
+    $: {
+        if (allFinancialData && allFinancialData.income_statements.length > 0) {
+            financialData = filterFinancialStatementsByPeriod(allFinancialData, selectedPeriod, selectedYears);
+        }
     }
 
     // Scroll to right when switching tabs
@@ -124,47 +126,22 @@
         
         if (existingIndex !== -1) {
             // Remove metric if already selected
-            selectedMetrics = [
-                ...selectedMetrics.slice(0, existingIndex),
-                ...selectedMetrics.slice(existingIndex + 1)
-            ];
-            selectedMetricNames = selectedMetrics.map(m => m.name);
+            selectedMetrics = selectedMetrics.filter(m => m.name !== name);
+            selectedMetricNames = selectedMetricNames.filter(n => n !== name);
         } else {
-            // Add new metric using the data from the event
-            selectedMetrics = [...selectedMetrics, {
+            // Add new metric
+            const newMetric = {
                 name,
                 data: dates.map((date, i) => ({
                     date,
                     value: values[i]
                 }))
-            }];
+            };
+            selectedMetrics = [...selectedMetrics, newMetric];
             selectedMetricNames = [...selectedMetricNames, name];
         }
 
         showChart = selectedMetrics.length > 0;
-    }
-
-    function refreshMetric(name: string) {
-        if (!name) return;
-        
-        const filteredData = filterFinancialStatementsByPeriod(allFinancialData, selectedPeriod, selectedYears);
-        let values: number[] = [];
-        let dates: string[] = [];
-
-        if (activeTab === 'income') {
-            values = filteredData.income_statements.map(s => Number(s[name]) || 0);
-            dates = filteredData.income_statements.map(s => s.date);
-        } else if (activeTab === 'balance') {
-            values = filteredData.balance_sheets.map(s => Number(s[name]) || 0);
-            dates = filteredData.balance_sheets.map(s => s.date);
-        } else if (activeTab === 'cashflow') {
-            values = filteredData.cash_flow_statements.map(s => Number(s[name]) || 0);
-            dates = filteredData.cash_flow_statements.map(s => s.date);
-        }
-
-        handleMetricClick(new CustomEvent('metricClick', {
-            detail: { name, values, dates }
-        }));
     }
 
     // Check if there's any data for the current tab
@@ -204,14 +181,8 @@
         period={selectedPeriod}
         on:refresh={() => handleLoadFinancialData(true)}
         on:formatChange={(e) => numberFormat = e.detail}
-        on:yearChange={(e) => {
-            selectedYears = e.detail.years;
-            refreshMetric(selectedMetricNames[0]);
-        }}
-        on:periodChange={(e) => {
-            selectedPeriod = e.detail.period;
-            refreshMetric(selectedMetricNames[0]);
-        }}
+        on:yearChange={(e) => selectedYears = e.detail.years}
+        on:periodChange={(e) => selectedPeriod = e.detail.period}
     />
 
     {#if showChart && selectedMetrics.length > 0}

@@ -19,11 +19,8 @@
     
     let canvas: HTMLCanvasElement;
     let chart: Chart;
-    
-    // Create a unique key based on metrics to force reinit when needed
-    $: chartKey = JSON.stringify(metrics.map(m => m.name));
 
-    function initChart() {
+    function createChart() {
         if (chart) {
             chart.destroy();
         }
@@ -31,11 +28,27 @@
         const ctx = canvas?.getContext('2d');
         if (!ctx) return;
 
+        const allDates = [...new Set(metrics.flatMap(m => m.data.map(d => d.date)))].sort();
+        const labels = allDates.map(formatDate);
+        const datasets = metrics.map((metric, index) => ({
+            label: metric.name,
+            data: allDates.map(date => {
+                const dataPoint = metric.data.find(d => d.date === date);
+                return dataPoint ? dataPoint.value : null;
+            }),
+            backgroundColor: colors[index % colors.length],
+            borderColor: colors[index % colors.length],
+            borderWidth: 1,
+            borderRadius: 4,
+            barThickness: 32,
+            maxBarThickness: 40
+        }));
+
         chart = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: [],
-                datasets: []
+                labels,
+                datasets
             },
             options: {
                 responsive: true,
@@ -111,32 +124,6 @@
                 }
             }
         });
-
-        updateChartData();
-    }
-
-    function updateChartData() {
-        if (!chart || !metrics) return;
-
-        // Get all unique dates across all metrics
-        const allDates = [...new Set(metrics.flatMap(m => m.data.map(d => d.date)))].sort();
-        
-        chart.data.labels = allDates.map(formatDate);
-        chart.data.datasets = metrics.map((metric, index) => ({
-            label: metric.name,
-            data: allDates.map(date => {
-                const dataPoint = metric.data.find(d => d.date === date);
-                return dataPoint ? dataPoint.value : null;
-            }),
-            backgroundColor: colors[index % colors.length],
-            borderColor: colors[index % colors.length],
-            borderWidth: 1,
-            borderRadius: 4,
-            barThickness: 32,
-            maxBarThickness: 40
-        }));
-        
-        chart.update('none'); // Use 'none' mode for immediate update
     }
 
     function formatDate(dateStr: string) {
@@ -163,7 +150,9 @@
 
     // Initialize chart when component mounts
     onMount(() => {
-        initChart();
+        if (metrics.length > 0) {
+            createChart();
+        }
         return () => {
             if (chart) {
                 chart.destroy();
@@ -171,14 +160,9 @@
         };
     });
 
-    // Reinitialize chart when metrics structure changes
-    $: if (chartKey && canvas) {
-        initChart();
-    }
-
-    // Update data when metrics content changes
-    $: if (chart && metrics) {
-        updateChartData();
+    // Recreate chart when metrics change
+    $: if (metrics.length > 0) {
+        createChart();
     }
 </script>
 
