@@ -120,16 +120,17 @@
 
     function handleMetricClick(event: CustomEvent<{ name: string; values: number[]; dates: string[] }>) {
         const { name, values, dates } = event.detail;
+        console.log('Metric clicked:', { name, values, dates });
         
         // Find if metric is already selected
-        const existingIndex = selectedMetrics.findIndex(m => m.name === name);
+        const existingIndex = selectedMetricNames.indexOf(name);
         
         if (existingIndex !== -1) {
             // Remove metric if already selected
             selectedMetrics = selectedMetrics.filter(m => m.name !== name);
             selectedMetricNames = selectedMetricNames.filter(n => n !== name);
         } else {
-            // Add new metric
+            // Add new metric using the values from the click event
             const newMetric = {
                 name,
                 data: dates.map((date, i) => ({
