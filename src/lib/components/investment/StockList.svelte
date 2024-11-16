@@ -160,7 +160,7 @@
                     on:drop={(e) => handleDrop(e, listName)}
                 >
                     <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">{listName}</h2>
-                    <div class="space-y-4">
+                    <div class="space-y-4 h-[calc(100vh-16rem)] overflow-y-auto pr-2">
                         {#each stocksByList[listName] as userStock (userStock.id)}
                             <div 
                                 role="listitem"
