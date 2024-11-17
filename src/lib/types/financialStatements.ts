@@ -1,4 +1,4 @@
-export type FinancialPeriod = 'FY' | 'Q1' | 'Q2' | 'Q3' | 'Q4';
+export type FinancialPeriod = 'FY' | 'Q1' | 'Q2' | 'Q3' | 'Q4' | 'TTM';
 
 export interface BaseFinancialStatement {
     symbol: string;

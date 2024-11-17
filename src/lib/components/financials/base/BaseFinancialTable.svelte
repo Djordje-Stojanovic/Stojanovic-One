@@ -17,6 +17,18 @@
         if (period === 'FY') {
             return year.toString();
         }
+
+        if (period === 'TTM') {
+            // Extract the quarter from the previous quarter's data
+            const month = dateObj.getMonth() + 1; // JavaScript months are 0-based
+            let quarter;
+            if (month <= 3) quarter = 'Q1';
+            else if (month <= 6) quarter = 'Q2';
+            else if (month <= 9) quarter = 'Q3';
+            else quarter = 'Q4';
+            
+            return `${year} ${quarter} TTM`;
+        }
         
         // For quarterly data, use the period directly (Q1, Q2, Q3, Q4)
         return `${year} ${period}`;

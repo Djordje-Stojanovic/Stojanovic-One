@@ -29,10 +29,6 @@
         '#10B981', // green
         '#F59E0B', // yellow
         '#EF4444', // red
-        '#8B5CF6', // purple
-        '#EC4899', // pink
-        '#06B6D4', // cyan
-        '#F97316'  // orange
     ];
     
     let canvas: HTMLCanvasElement;
@@ -41,11 +37,32 @@
     function createChart() {
         if (!canvas) return;
         
+        // Destroy existing chart if it exists
+        if (chart) {
+            chart.destroy();
+        }
+        
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
         // Get current theme
         const currentTheme = darkMode ? theme.dark : theme.light;
+
+        // Create gradients for each color
+        const gradients = colors.map(color => {
+            const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, `${color}FF`);
+            gradient.addColorStop(1, `${color}90`);
+            return gradient;
+        });
+
+        // Create hover gradients
+        const hoverGradients = colors.map(color => {
+            const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, color);
+            gradient.addColorStop(1, `${color}B0`);
+            return gradient;
+        });
 
         // Prepare data
         const allDates = [...new Set(metrics.flatMap(m => m.data.map(d => d.date)))].sort();
@@ -55,15 +72,17 @@
                 const dataPoint = metric.data.find(d => d.date === date);
                 return dataPoint ? dataPoint.value : null;
             }),
-            backgroundColor: colors[index % colors.length],
+            backgroundColor: gradients[index % gradients.length],
+            hoverBackgroundColor: hoverGradients[index % hoverGradients.length],
             borderColor: colors[index % colors.length],
-            borderWidth: 2,
-            borderRadius: 4,
-            barThickness: 32,
-            maxBarThickness: 40
+            borderWidth: 0,
+            borderRadius: 3,
+            barThickness: 14,
+            maxBarThickness: 14,
+            barPercentage: 0.9,
+            categoryPercentage: 0.8,
+            order: index
         }));
-
-        console.log('Creating chart with data:', { allDates, datasets });
 
         // Create chart
         chart = new Chart(ctx, {
@@ -93,16 +112,42 @@
                         }
                     },
                     tooltip: {
+                        enabled: true,
+                        position: 'nearest',
                         mode: 'index',
                         intersect: false,
-                        backgroundColor: currentTheme.secondary,
+                        backgroundColor: currentTheme.background,
                         titleColor: currentTheme.text,
                         bodyColor: currentTheme.text,
                         borderColor: currentTheme.border,
                         borderWidth: 1,
-                        padding: 12,
+                        padding: {
+                            top: 10,
+                            right: 15,
+                            bottom: 10,
+                            left: 15
+                        },
                         cornerRadius: 4,
+                        titleFont: {
+                            size: 13,
+                            weight: 600
+                        },
+                        bodyFont: {
+                            size: 12
+                        },
+                        displayColors: true,
+                        boxWidth: 8,
+                        boxHeight: 8,
+                        boxPadding: 4,
                         callbacks: {
+                            title: function(items: any[]) {
+                                if (!items.length) return '';
+                                const date = new Date(items[0].label);
+                                return date.toLocaleDateString('en-US', { 
+                                    year: 'numeric',
+                                    month: 'long'
+                                });
+                            },
                             label: function(context: any) {
                                 const value = context.raw;
                                 if (value === null || typeof value !== 'number') {
@@ -115,6 +160,7 @@
                 },
                 scales: {
                     x: {
+                        stacked: true,
                         grid: {
                             display: false
                         },
@@ -124,16 +170,18 @@
                         ticks: {
                             color: currentTheme.text,
                             font: {
-                                size: 12
+                                size: 11
                             },
-                            padding: 8
+                            padding: 8,
+                            maxRotation: 0
                         }
                     },
                     y: {
+                        stacked: true,
                         position: 'right',
                         grid: {
-                            color: currentTheme.secondary,
-                            lineWidth: 1,
+                            color: `${currentTheme.border}20`,
+                            lineWidth: 0.5,
                             display: true
                         },
                         border: {
@@ -141,13 +189,17 @@
                         },
                         ticks: {
                             color: currentTheme.text,
-                            padding: 8,
+                            padding: 12,
+                            align: 'center',
+                            crossAlign: 'center',
                             font: {
-                                size: 12
+                                size: 11,
+                                weight: 500
                             },
                             callback: function(value: any) {
                                 return formatValue(value);
-                            }
+                            },
+                            maxTicksLimit: 6
                         }
                     }
                 },
@@ -155,45 +207,24 @@
                     mode: 'index',
                     intersect: false
                 },
+                hover: {
+                    mode: 'index',
+                    intersect: false
+                },
                 animation: {
-                    duration: 200
+                    duration: 200,
+                    easing: 'easeOutQuart'
                 },
                 layout: {
                     padding: {
                         top: 20,
-                        right: 20,
+                        right: 15,
                         bottom: 0,
-                        left: 0
+                        left: 10
                     }
                 }
             }
         });
-    }
-
-    function updateChart() {
-        if (!chart || !metrics.length) return;
-
-        const allDates = [...new Set(metrics.flatMap(m => m.data.map(d => d.date)))].sort();
-        
-        const datasets = metrics.map((metric, index) => ({
-            label: metric.name,
-            data: allDates.map(date => {
-                const dataPoint = metric.data.find(d => d.date === date);
-                return dataPoint ? dataPoint.value : null;
-            }),
-            backgroundColor: colors[index % colors.length],
-            borderColor: colors[index % colors.length],
-            borderWidth: 2,
-            borderRadius: 4,
-            barThickness: 32,
-            maxBarThickness: 40
-        }));
-
-        console.log('Updating chart with data:', { allDates, datasets });
-
-        chart.data.labels = allDates.map(formatDate);
-        chart.data.datasets = datasets;
-        chart.update('none');
     }
 
     function formatDate(dateStr: string) {
@@ -208,11 +239,12 @@
         const numValue = typeof value === 'string' ? parseFloat(value) : value;
         if (isNaN(numValue)) return '';
         
-        if (Math.abs(numValue) >= 1e9) {
+        const absValue = Math.abs(numValue);
+        if (absValue >= 1e9) {
             return `${(numValue / 1e9).toFixed(1)}B`;
-        } else if (Math.abs(numValue) >= 1e6) {
+        } else if (absValue >= 1e6) {
             return `${(numValue / 1e6).toFixed(1)}M`;
-        } else if (Math.abs(numValue) >= 1e3) {
+        } else if (absValue >= 1e3) {
             return `${(numValue / 1e3).toFixed(1)}K`;
         }
         return numValue.toFixed(1);
@@ -220,7 +252,6 @@
 
     onMount(() => {
         if (metrics.length > 0) {
-            console.log('Mounting chart with metrics:', metrics);
             createChart();
         }
         return () => {
@@ -231,15 +262,8 @@
     });
 
     // Watch metrics changes
-    $: {
-        console.log('Metrics changed:', metrics);
-        if (metrics.length > 0) {
-            if (!chart) {
-                createChart();
-            } else {
-                updateChart();
-            }
-        }
+    $: if (metrics.length > 0) {
+        createChart();
     }
 </script>
 

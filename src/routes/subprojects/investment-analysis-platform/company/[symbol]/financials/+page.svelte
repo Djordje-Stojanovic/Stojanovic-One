@@ -44,7 +44,7 @@
     let activeTab: 'income' | 'balance' | 'cashflow' = 'income';
     let companyName: string | null = null;
     let companyList: ListName | null = null;
-    let selectedPeriod: 'annual' | 'quarterly' = 'annual';
+    let selectedPeriod: 'annual' | 'quarterly' | 'ttm' = 'annual';
     let tablesComponent: FinancialStatementTables;
 
     // Chart state

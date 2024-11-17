@@ -8,7 +8,7 @@
     export let numberFormat: NumberFormat;
     export let selectedYears: number = 10;
     export let customYears: string = '';
-    export let period: 'annual' | 'quarterly' = 'annual';
+    export let period: 'annual' | 'quarterly' | 'ttm' = 'annual';
 
     const dispatch = createEventDispatcher();
 
@@ -35,7 +35,7 @@
         }
     }
 
-    function setPeriod(newPeriod: 'annual' | 'quarterly') {
+    function setPeriod(newPeriod: 'annual' | 'quarterly' | 'ttm') {
         period = newPeriod;
         dispatch('periodChange', { period: newPeriod });
     }
@@ -68,6 +68,9 @@
                     <button 
                         class="px-3 py-1 text-sm rounded transition-colors duration-300 {period === 'quarterly' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700'}"
                         on:click={() => setPeriod('quarterly')}>Quarterly</button>
+                    <button 
+                        class="px-3 py-1 text-sm rounded transition-colors duration-300 {period === 'ttm' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700'}"
+                        on:click={() => setPeriod('ttm')}>TTM</button>
                 </div>
                 <div class="flex items-center gap-2">
                     <button 
