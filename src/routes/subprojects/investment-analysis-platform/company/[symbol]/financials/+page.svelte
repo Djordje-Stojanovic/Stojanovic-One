@@ -15,17 +15,6 @@
     import { filterFinancialStatementsByPeriod } from '$lib/utils/financialStatementFilters';
     import { findCompanyList, fetchCompanyName, loadFinancialData } from '$lib/services/companyFinancialsService';
 
-    const colors = [
-        '#3B82F6', // blue
-        '#10B981', // green
-        '#F59E0B', // yellow
-        '#EF4444', // red
-        '#8B5CF6', // purple
-        '#EC4899', // pink
-        '#06B6D4', // cyan
-        '#F97316'  // orange
-    ];
-
     const symbol = $page.params.symbol;
     let financialData: FinancialData = {
         income_statements: [],
@@ -120,7 +109,6 @@
 
     function handleMetricClick(event: CustomEvent<{ name: string; values: number[]; dates: string[] }>) {
         const { name, values, dates } = event.detail;
-        console.log('Metric clicked:', { name, values, dates });
         
         // Find if metric is already selected
         const existingIndex = selectedMetricNames.indexOf(name);
@@ -188,15 +176,7 @@
 
     {#if showChart && selectedMetrics.length > 0}
         <div class="mb-4 bg-white dark:bg-[#1F2937] rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-            <div class="flex justify-between items-center mb-2">
-                <div class="flex items-center gap-4">
-                    {#each selectedMetrics as metric, i}
-                        <div class="flex items-center gap-2">
-                            <span class="w-3 h-3 rounded-full" style="background-color: {colors[i % colors.length]}"></span>
-                            <span class="text-sm font-medium text-gray-900 dark:text-white">{metric.name}</span>
-                        </div>
-                    {/each}
-                </div>
+            <div class="flex justify-end">
                 <button 
                     class="text-sm px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white transition-colors"
                     on:click={clearChartState}

@@ -37,7 +37,6 @@
     function createChart() {
         if (!canvas) return;
         
-        // Destroy existing chart if it exists
         if (chart) {
             chart.destroy();
         }
@@ -45,22 +44,21 @@
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
-        // Get current theme
         const currentTheme = darkMode ? theme.dark : theme.light;
 
         // Create gradients for each color
         const gradients = colors.map(color => {
-            const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-            gradient.addColorStop(0, `${color}FF`);
-            gradient.addColorStop(1, `${color}90`);
+            const gradient = ctx.createLinearGradient(0, 0, 0, 500);
+            gradient.addColorStop(0, `${color}E6`);
+            gradient.addColorStop(1, `${color}99`);
             return gradient;
         });
 
         // Create hover gradients
         const hoverGradients = colors.map(color => {
-            const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-            gradient.addColorStop(0, color);
-            gradient.addColorStop(1, `${color}B0`);
+            const gradient = ctx.createLinearGradient(0, 0, 0, 500);
+            gradient.addColorStop(0, `${color}FF`);
+            gradient.addColorStop(1, `${color}CC`);
             return gradient;
         });
 
@@ -77,10 +75,10 @@
             borderColor: colors[index % colors.length],
             borderWidth: 0,
             borderRadius: 3,
-            barThickness: 14,
+            barThickness: 14, // Thinner bars
             maxBarThickness: 14,
-            barPercentage: 0.9,
-            categoryPercentage: 0.8,
+            barPercentage: 0.8, // More space between bar groups
+            categoryPercentage: 0.6, // More space between categories
             order: index
         }));
 
@@ -96,12 +94,25 @@
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
+                        display: true,
                         position: 'top',
                         align: 'start',
+                        onClick: function(e, legendItem, legend) {
+                            const index = legendItem.datasetIndex;
+                            const ci = legend.chart;
+                            if (typeof index === 'number') {
+                                if (ci.isDatasetVisible(index)) {
+                                    ci.hide(index);
+                                } else {
+                                    ci.show(index);
+                                }
+                                ci.update();
+                            }
+                        },
                         labels: {
                             boxWidth: 12,
                             boxHeight: 12,
-                            padding: 20,
+                            padding: 15,
                             color: currentTheme.text,
                             font: {
                                 size: 12,
@@ -122,18 +133,18 @@
                         borderColor: currentTheme.border,
                         borderWidth: 1,
                         padding: {
-                            top: 10,
-                            right: 15,
-                            bottom: 10,
-                            left: 15
+                            top: 8,
+                            right: 12,
+                            bottom: 8,
+                            left: 12
                         },
                         cornerRadius: 4,
                         titleFont: {
-                            size: 13,
+                            size: 12,
                             weight: 600
                         },
                         bodyFont: {
-                            size: 12
+                            size: 11
                         },
                         displayColors: true,
                         boxWidth: 8,
@@ -153,14 +164,16 @@
                                 if (value === null || typeof value !== 'number') {
                                     return '';
                                 }
-                                return `${context.dataset.label}: ${formatValue(value)}`;
+                                const formattedValue = formatValue(value);
+                                const percentChange = calculateGrowth(context.dataset.data, context.dataIndex);
+                                return `${context.dataset.label}: ${formattedValue}${percentChange}`;
                             }
                         }
                     }
                 },
                 scales: {
                     x: {
-                        stacked: true,
+                        stacked: false,
                         grid: {
                             display: false
                         },
@@ -172,17 +185,19 @@
                             font: {
                                 size: 11
                             },
-                            padding: 8,
+                            padding: 6,
                             maxRotation: 0
                         }
                     },
                     y: {
-                        stacked: true,
+                        stacked: false,
                         position: 'right',
                         grid: {
-                            color: `${currentTheme.border}20`,
+                            color: `${currentTheme.border}15`,
                             lineWidth: 0.5,
-                            display: true
+                            display: true,
+                            tickLength: 0,
+                            drawTicks: false
                         },
                         border: {
                             display: false
@@ -190,8 +205,8 @@
                         ticks: {
                             color: currentTheme.text,
                             padding: 12,
-                            align: 'center',
-                            crossAlign: 'center',
+                            align: 'end',
+                            crossAlign: 'far',
                             font: {
                                 size: 11,
                                 weight: 500
@@ -199,7 +214,7 @@
                             callback: function(value: any) {
                                 return formatValue(value);
                             },
-                            maxTicksLimit: 6
+                            count: 8
                         }
                     }
                 },
@@ -219,12 +234,32 @@
                     padding: {
                         top: 20,
                         right: 15,
-                        bottom: 0,
-                        left: 10
+                        bottom: 5,
+                        left: 5
                     }
                 }
             }
         });
+    }
+
+    function calculateGrowth(data: number[], currentIndex: number): string {
+        if (currentIndex < 0 || !data[currentIndex]) return '';
+        
+        // For YoY comparison, look back 4 quarters
+        const prevIndex = currentIndex - 4;
+        if (prevIndex < 0 || !data[prevIndex]) {
+            // If no YoY data, try QoQ
+            const prevQuarterIndex = currentIndex - 1;
+            if (prevQuarterIndex < 0 || !data[prevQuarterIndex]) return '';
+            
+            const qoqGrowth = ((data[currentIndex] - data[prevQuarterIndex]) / Math.abs(data[prevQuarterIndex])) * 100;
+            const qoqSign = qoqGrowth > 0 ? '+' : '';
+            return ` (QoQ: ${qoqSign}${qoqGrowth.toFixed(1)}%)`;
+        }
+        
+        const yoyGrowth = ((data[currentIndex] - data[prevIndex]) / Math.abs(data[prevIndex])) * 100;
+        const yoySign = yoyGrowth > 0 ? '+' : '';
+        return ` (YoY: ${yoySign}${yoyGrowth.toFixed(1)}%)`;
     }
 
     function formatDate(dateStr: string) {
@@ -267,6 +302,6 @@
     }
 </script>
 
-<div class="w-full h-[400px] bg-white dark:bg-[#1F2937] rounded-lg p-4 shadow-sm dark:shadow-lg">
+<div class="w-full h-[500px] bg-white dark:bg-[#1F2937] rounded-lg p-2 shadow-sm dark:shadow-lg">
     <canvas bind:this={canvas}></canvas>
 </div>
