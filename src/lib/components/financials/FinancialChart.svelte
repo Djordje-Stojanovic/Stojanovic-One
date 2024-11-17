@@ -4,9 +4,11 @@
     import type { ChartProps } from './types';
     import { formatDate, formatValue, calculateGrowth } from './utils/chartUtils';
     import { theme, colors, createChartOptions } from './utils/chartConfig';
+    import GrowthRates from './GrowthRates.svelte';
     
     export let metrics: ChartProps['metrics'] = [];
     export let darkMode: ChartProps['darkMode'] = true;
+    export let showGrowthRates: boolean = false;
     
     let canvas: HTMLCanvasElement;
     let chart: Chart;
@@ -136,6 +138,12 @@
     }
 </script>
 
-<div class="w-full h-[500px] bg-white dark:bg-[#1F2937] rounded-lg p-2 shadow-sm dark:shadow-lg">
-    <canvas bind:this={canvas}></canvas>
+<div class="w-full bg-white dark:bg-[#1F2937] rounded-lg p-2 shadow-sm dark:shadow-lg">
+    <div class="h-[500px]">
+        <canvas bind:this={canvas}></canvas>
+    </div>
+    
+    {#if showGrowthRates && metrics.length > 0}
+        <GrowthRates {metrics} />
+    {/if}
 </div>

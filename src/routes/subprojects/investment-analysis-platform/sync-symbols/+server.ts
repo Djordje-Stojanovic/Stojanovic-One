@@ -2,6 +2,7 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { createClient } from '@supabase/supabase-js';
 import { PRIVATE_SUPABASE_URL, PRIVATE_SUPABASE_SERVICE_ROLE_KEY, VITE_FMP_API_KEY } from '$env/static/private';
+import { getExchangeRate, convertToUSD } from '$lib/utils/currencyConverter';
 
 const supabaseUrl = PRIVATE_SUPABASE_URL;
 const supabaseServiceRoleKey = PRIVATE_SUPABASE_SERVICE_ROLE_KEY;
@@ -18,6 +19,29 @@ if (!fmpApiKey) {
 }
 
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey);
+
+interface StockMetadata {
+    id: number;
+    symbol: string;
+    currency: string;
+    market_cap?: number;
+    price?: number;
+    dcf?: number;
+    [key: string]: unknown;
+}
+
+async function convertMetadataToUSD(metadata: StockMetadata, exchangeRate: number): Promise<StockMetadata> {
+    const fieldsToConvert = ['market_cap', 'price', 'dcf'];
+    const converted = { ...metadata };
+    
+    for (const field of fieldsToConvert) {
+        if (typeof converted[field] === 'number') {
+            converted[field] = convertToUSD(converted[field] as number, exchangeRate);
+        }
+    }
+    
+    return converted;
+}
 
 export const POST: RequestHandler = async ({ request }) => {
     // Check authentication
@@ -67,12 +91,65 @@ export const POST: RequestHandler = async ({ request }) => {
             console.log(`Upserted ${i + batch.length} / ${symbols.length} symbols`);
         }
 
-        console.log('Sync completed successfully');
+        // Convert stock metadata currencies to USD
+        console.log('Converting stock metadata currencies to USD...');
+        const { data: stockMetadata, error: fetchError } = await supabaseAdmin
+            .from('stock_metadata')
+            .select('*')
+            .not('currency', 'eq', 'USD');
+
+        if (fetchError) {
+            throw fetchError;
+        }
+
+        if (stockMetadata && stockMetadata.length > 0) {
+            const typedMetadata = stockMetadata as StockMetadata[];
+            console.log(`Found ${typedMetadata.length} stocks to convert to USD`);
+            
+            // Process in batches
+            for (let i = 0; i < typedMetadata.length; i += batchSize) {
+                const batch = typedMetadata.slice(i, i + batchSize);
+                
+                // Group by currency for efficient exchange rate fetching
+                const byCurrency = batch.reduce<Record<string, StockMetadata[]>>((acc, stock) => {
+                    if (!acc[stock.currency]) acc[stock.currency] = [];
+                    acc[stock.currency].push(stock);
+                    return acc;
+                }, {});
+
+                // Convert each currency group
+                for (const [currency, stocks] of Object.entries(byCurrency)) {
+                    try {
+                        console.log(`Converting ${stocks.length} stocks from ${currency} to USD`);
+                        const exchangeRate = await getExchangeRate(currency);
+                        
+                        for (const stock of stocks) {
+                            const converted = await convertMetadataToUSD(stock, exchangeRate);
+                            const { error: updateError } = await supabaseAdmin
+                                .from('stock_metadata')
+                                .update(converted)
+                                .eq('id', stock.id);
+
+                            if (updateError) {
+                                console.error(`Error updating stock ${stock.symbol}:`, updateError);
+                            }
+                        }
+                    } catch (error) {
+                        console.error(`Error converting ${currency} to USD:`, error);
+                    }
+                }
+                
+                console.log(`Converted ${i + batch.length} / ${typedMetadata.length} stocks to USD`);
+            }
+        }
+
+        console.log('Sync and currency conversion completed successfully');
 
         return json({ 
             success: true, 
-            count: symbols.length,
-            message: `Successfully synced ${symbols.length} symbols`
+            symbolsCount: symbols.length,
+            convertedCount: stockMetadata?.length || 0,
+            message: `Successfully synced ${symbols.length} symbols and converted ${stockMetadata?.length || 0} stocks to USD`
         });
     } catch (error) {
         console.error('Error in sync process:', error);

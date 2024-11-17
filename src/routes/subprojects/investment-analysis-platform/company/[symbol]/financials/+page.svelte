@@ -186,6 +186,7 @@
             </div>
             <FinancialChart 
                 metrics={selectedMetrics}
+                showGrowthRates={selectedPeriod === 'ttm'}
             />
         </div>
     {/if}

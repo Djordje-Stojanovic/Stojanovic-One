@@ -40,3 +40,37 @@ export function calculateGrowth(data: number[], currentIndex: number): string {
     const yoySign = yoyGrowth > 0 ? '+' : '';
     return ` (YoY: ${yoySign}${yoyGrowth.toFixed(1)}%)`;
 }
+
+export function calculateMultiYearGrowth(data: { date: string; value: number }[], years: number): number | null {
+    if (!data || data.length < 2) return null;
+    
+    // Sort data by date in ascending order
+    const sortedData = [...data].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    
+    // Get the most recent value
+    const mostRecent = sortedData[sortedData.length - 1];
+    
+    // Find the value closest to X years ago
+    const targetDate = new Date(mostRecent.date);
+    targetDate.setFullYear(targetDate.getFullYear() - years);
+    
+    // Find the closest data point to our target date
+    const historicalData = sortedData.reduce((closest, current) => {
+        const currentDiff = Math.abs(new Date(current.date).getTime() - targetDate.getTime());
+        const closestDiff = Math.abs(new Date(closest.date).getTime() - targetDate.getTime());
+        return currentDiff < closestDiff ? current : closest;
+    });
+    
+    // Calculate CAGR
+    const yearDiff = (new Date(mostRecent.date).getTime() - new Date(historicalData.date).getTime()) / (1000 * 60 * 60 * 24 * 365);
+    if (yearDiff < years * 0.75) return null; // Ensure we have at least 75% of the requested time period
+    
+    const cagr = (Math.pow(mostRecent.value / historicalData.value, 1 / yearDiff) - 1) * 100;
+    return isFinite(cagr) ? Number(cagr.toFixed(2)) : null;
+}
+
+export function formatGrowthRate(rate: number | null): string {
+    if (rate === null) return 'N/A';
+    const sign = rate > 0 ? '+' : '';
+    return `${sign}${rate.toFixed(2)}%`;
+}

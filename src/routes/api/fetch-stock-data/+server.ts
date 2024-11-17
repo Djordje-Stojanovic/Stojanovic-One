@@ -2,6 +2,144 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { supabase } from '$lib/supabaseClient';
 import { VITE_FMP_API_KEY } from '$env/static/private';
+import { getExchangeRate, convertToUSD } from '$lib/utils/currencyConverter';
+
+interface FMPStockData {
+    symbol: string;
+    companyName: string;
+    currency: string;
+    mktCap: number;
+    price: number;
+    dcf: number;
+    sector: string;
+    exchange: string;
+    country: string;
+    image: string;
+    isin: string;
+    volAvg: number;
+    website: string;
+    phone: string;
+    ipoDate: string;
+    beta: number;
+    lastDiv: number;
+    range: string;
+    changes: number;
+    cik: string | null;
+    cusip: string | null;
+    exchangeShortName: string;
+    industry: string;
+    description: string;
+    ceo: string;
+    fullTimeEmployees: string;
+    address: string;
+    city: string;
+    state: string | null;
+    zip: string;
+    dcfDiff: number;
+    isEtf: boolean;
+    isActivelyTrading: boolean;
+    isAdr: boolean;
+    isFund: boolean;
+}
+
+async function convertMetadataToUSD(stockData: FMPStockData): Promise<Record<string, unknown>> {
+    if (stockData.currency === 'USD') {
+        return {
+            symbol: stockData.symbol,
+            company_name: stockData.companyName,
+            sector: stockData.sector,
+            market_cap: stockData.mktCap,
+            exchange: stockData.exchange,
+            currency: stockData.currency,
+            country: stockData.country,
+            logo_url: stockData.image,
+            isin: stockData.isin,
+            share_outstanding: stockData.volAvg,
+            weburl: stockData.website,
+            phone: stockData.phone,
+            ipo: stockData.ipoDate,
+            price: stockData.price,
+            beta: stockData.beta,
+            vol_avg: stockData.volAvg,
+            last_div: stockData.lastDiv,
+            price_range: stockData.range,
+            changes: stockData.changes,
+            cik: stockData.cik,
+            cusip: stockData.cusip,
+            exchange_short_name: stockData.exchangeShortName,
+            industry: stockData.industry,
+            description: stockData.description,
+            ceo: stockData.ceo,
+            full_time_employees: parseInt(stockData.fullTimeEmployees),
+            address: stockData.address,
+            city: stockData.city,
+            state: stockData.state,
+            zip: stockData.zip,
+            dcf_diff: stockData.dcfDiff,
+            dcf: stockData.dcf,
+            is_etf: stockData.isEtf,
+            is_actively_trading: stockData.isActivelyTrading,
+            is_adr: stockData.isAdr,
+            is_fund: stockData.isFund
+        };
+    }
+
+    console.log(`Converting ${stockData.symbol} from ${stockData.currency} to USD...`);
+    const exchangeRate = await getExchangeRate(stockData.currency);
+    console.log(`Exchange rate for ${stockData.currency}/USD: ${exchangeRate}`);
+
+    // Convert numeric values
+    const marketCapUSD = convertToUSD(stockData.mktCap, exchangeRate);
+    const priceUSD = convertToUSD(stockData.price, exchangeRate);
+    const dcfUSD = convertToUSD(stockData.dcf, exchangeRate);
+    const lastDivUSD = convertToUSD(stockData.lastDiv, exchangeRate);
+
+    console.log(`Converted values for ${stockData.symbol}:
+        Market Cap: ${stockData.mktCap} ${stockData.currency} -> ${marketCapUSD} USD
+        Price: ${stockData.price} ${stockData.currency} -> ${priceUSD} USD
+        DCF: ${stockData.dcf} ${stockData.currency} -> ${dcfUSD} USD
+        Last Div: ${stockData.lastDiv} ${stockData.currency} -> ${lastDivUSD} USD
+    `);
+
+    return {
+        symbol: stockData.symbol,
+        company_name: stockData.companyName,
+        sector: stockData.sector,
+        market_cap: marketCapUSD,
+        exchange: stockData.exchange,
+        currency: stockData.currency,
+        country: stockData.country,
+        logo_url: stockData.image,
+        isin: stockData.isin,
+        share_outstanding: stockData.volAvg,
+        weburl: stockData.website,
+        phone: stockData.phone,
+        ipo: stockData.ipoDate,
+        price: priceUSD,
+        beta: stockData.beta,
+        vol_avg: stockData.volAvg,
+        last_div: lastDivUSD,
+        price_range: stockData.range,
+        changes: stockData.changes,
+        cik: stockData.cik,
+        cusip: stockData.cusip,
+        exchange_short_name: stockData.exchangeShortName,
+        industry: stockData.industry,
+        description: stockData.description,
+        ceo: stockData.ceo,
+        full_time_employees: parseInt(stockData.fullTimeEmployees),
+        address: stockData.address,
+        city: stockData.city,
+        state: stockData.state,
+        zip: stockData.zip,
+        dcf_diff: stockData.dcfDiff,
+        dcf: dcfUSD,
+        is_etf: stockData.isEtf,
+        is_actively_trading: stockData.isActivelyTrading,
+        is_adr: stockData.isAdr,
+        is_fund: stockData.isFund
+    };
+}
 
 export const POST: RequestHandler = async ({ request }) => {
     try {
@@ -52,51 +190,13 @@ export const POST: RequestHandler = async ({ request }) => {
                 return json({ error: 'No stock data found' }, { status: 404 });
             }
 
-            const stockData = stockDataArray[0];
+            // Convert the data to USD before inserting
+            const convertedData = await convertMetadataToUSD(stockDataArray[0] as FMPStockData);
 
             // Insert into stock_metadata
             const { data: newStockMetadata, error: insertError } = await supabase
                 .from('stock_metadata')
-                .insert([
-                    {
-                        symbol: stockData.symbol,
-                        company_name: stockData.companyName,
-                        sector: stockData.sector,
-                        market_cap: stockData.mktCap,
-                        exchange: stockData.exchange,
-                        currency: stockData.currency,
-                        country: stockData.country,
-                        logo_url: stockData.image,
-                        isin: stockData.isin,
-                        share_outstanding: stockData.volAvg,
-                        weburl: stockData.website,
-                        phone: stockData.phone,
-                        ipo: stockData.ipoDate,
-                        price: stockData.price,
-                        beta: stockData.beta,
-                        vol_avg: stockData.volAvg,
-                        last_div: stockData.lastDiv,
-                        price_range: stockData.range,
-                        changes: stockData.changes,
-                        cik: stockData.cik,
-                        cusip: stockData.cusip,
-                        exchange_short_name: stockData.exchangeShortName,
-                        industry: stockData.industry,
-                        description: stockData.description,
-                        ceo: stockData.ceo,
-                        full_time_employees: parseInt(stockData.fullTimeEmployees),
-                        address: stockData.address,
-                        city: stockData.city,
-                        state: stockData.state,
-                        zip: stockData.zip,
-                        dcf_diff: stockData.dcfDiff,
-                        dcf: stockData.dcf,
-                        is_etf: stockData.isEtf,
-                        is_actively_trading: stockData.isActivelyTrading,
-                        is_adr: stockData.isAdr,
-                        is_fund: stockData.isFund
-                    }
-                ])
+                .insert([convertedData])
                 .select()
                 .single();
 
