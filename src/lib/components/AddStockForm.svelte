@@ -3,205 +3,73 @@
     import { createEventDispatcher } from 'svelte';
     import type { ListName } from '$lib/constants/listNames';
     import { session } from '$lib/stores/sessionStore';
-    import { supabase } from '$lib/supabaseClient';
+    import { stockForm, isFormValid } from '$lib/stores/stockFormStore';
 
     const dispatch = createEventDispatcher();
 
-    let identifier = '';
-    let notes = '';
     export let activeList: ListName;
-    let isValid = false;
-    let errorMessage = '';
-    let isLoading = false;
-    let suggestions: string[] = [];
-    let showSuggestions = false;
-    let suggestionIndex = -1;
     let inputElement: HTMLInputElement;
 
     function handleEscape(event: KeyboardEvent) {
         if (event.key === 'Escape') {
-            showSuggestions = false;
+            $stockForm.showSuggestions = false;
             dispatch('close');
         }
     }
 
-    async function searchSymbols(query: string) {
-        if (!query) {
-            suggestions = [];
-            return;
-        }
-
-        try {
-            // First, try to find exact matches
-            const { data: exactMatches, error: exactError } = await supabase
-                .from('available_symbols')
-                .select('symbol')
-                .ilike('symbol', query)
-                .limit(5);
-
-            if (exactError) throw exactError;
-
-            // Then, find symbols that start with the query
-            const { data: startsWithMatches, error: startsWithError } = await supabase
-                .from('available_symbols')
-                .select('symbol')
-                .ilike('symbol', `${query}%`)
-                .not('symbol', 'ilike', query) // Exclude exact matches
-                .limit(5);
-
-            if (startsWithError) throw startsWithError;
-
-            // Finally, find symbols that contain the query anywhere
-            const { data: containsMatches, error: containsError } = await supabase
-                .from('available_symbols')
-                .select('symbol')
-                .ilike('symbol', `%${query}%`)
-                .not('symbol', 'ilike', `${query}%`) // Exclude exact and starts-with matches
-                .limit(5);
-
-            if (containsError) throw containsError;
-
-            // Combine results in priority order
-            suggestions = [
-                ...(exactMatches || []).map(item => item.symbol),
-                ...(startsWithMatches || []).map(item => item.symbol),
-                ...(containsMatches || []).map(item => item.symbol)
-            ].slice(0, 5); // Limit to 5 total results
-
-            showSuggestions = suggestions.length > 0;
-            suggestionIndex = -1;
-        } catch (error) {
-            console.error('Error searching symbols:', error);
-            suggestions = [];
-            showSuggestions = false;
-        }
-    }
-
-    async function validateIdentifier() {
-        if (!$session?.user) {
-            errorMessage = 'Please log in to add stocks';
-            isValid = false;
-            return;
-        }
-
-        if (!identifier) {
-            isValid = false;
-            errorMessage = '';
-            suggestions = [];
-            showSuggestions = false;
-            return;
-        }
-
-        isLoading = true;
-        try {
-            const response = await fetch(`/api/check-symbol?symbol=${identifier}`, {
-                headers: {
-                    'Authorization': `Bearer ${$session.access_token}`
-                }
-            });
-            
-            if (!response.ok) {
-                const data = await response.json();
-                throw new Error(data.error || 'Failed to validate symbol');
-            }
-            
-            const data = await response.json();
-            isValid = data.isValid;
-            errorMessage = data.error || '';
-        } catch (error) {
-            console.error('Error validating symbol:', error);
-            errorMessage = error instanceof Error ? error.message : 'Failed to validate symbol';
-            isValid = false;
-        } finally {
-            isLoading = false;
-        }
-    }
-
     function handleInput() {
-        searchSymbols(identifier);
-        validateIdentifier();
-    }
-
-    function selectSuggestion(symbol: string) {
-        identifier = symbol;
-        suggestions = [];
-        showSuggestions = false;
-        validateIdentifier();
+        stockForm.updateSuggestions($stockForm.identifier);
+        if ($session?.access_token) {
+            stockForm.validateIdentifier($session.access_token);
+        }
     }
 
     function handleKeydown(event: KeyboardEvent) {
-        if (!showSuggestions) return;
+        if (!$stockForm.showSuggestions) return;
 
         switch (event.key) {
             case 'ArrowDown':
                 event.preventDefault();
-                suggestionIndex = Math.min(suggestionIndex + 1, suggestions.length - 1);
+                stockForm.navigateSuggestions('down');
                 break;
             case 'ArrowUp':
                 event.preventDefault();
-                suggestionIndex = Math.max(suggestionIndex - 1, -1);
+                stockForm.navigateSuggestions('up');
                 break;
             case 'Enter':
                 event.preventDefault();
-                if (suggestionIndex >= 0) {
-                    selectSuggestion(suggestions[suggestionIndex]);
+                if ($stockForm.suggestionIndex >= 0) {
+                    stockForm.selectSuggestion($stockForm.suggestions[$stockForm.suggestionIndex]);
+                    if ($session?.access_token) {
+                        stockForm.validateIdentifier($session.access_token);
+                    }
                 }
                 break;
             case 'Escape':
                 event.preventDefault();
-                showSuggestions = false;
+                stockForm.hideSuggestions();
                 break;
         }
     }
 
     async function handleSubmit() {
-        if (!$session?.user) {
-            errorMessage = 'Please log in to add stocks';
+        if (!$session?.access_token) {
+            stockForm.setErrorMessage('Please log in to add stocks');
             return;
         }
 
-        if (!isValid) {
-            errorMessage = 'Please enter a valid symbol';
+        if (!$stockForm.isValid) {
+            stockForm.setErrorMessage('Please enter a valid symbol');
             return;
         }
 
-        isLoading = true;
-        try {
-            const response = await fetch('/api/fetch-stock-data', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${$session.access_token}`
-                },
-                body: JSON.stringify({
-                    identifier,
-                    identifierType: 'symbol',
-                    notes,
-                    listName: activeList
-                })
-            });
-
-            if (!response.ok) {
-                const data = await response.json();
-                throw new Error(data.error || 'Failed to add stock');
-            }
-
-            const result = await response.json();
-            dispatch('stockAdded', { id: result.data.id });
-            
-            identifier = '';
-            notes = '';
-            isValid = false;
-            errorMessage = '';
-            
+        const stockId = await stockForm.submitForm(activeList, $session.access_token);
+        if (stockId) {
+            dispatch('stockAdded', { id: stockId });
+            stockForm.reset();
             setTimeout(() => {
                 dispatch('close');
             }, 100);
-        } catch (error) {
-            console.error('Error adding stock:', error);
-            errorMessage = error instanceof Error ? error.message : 'Failed to add stock';
-        } finally {
-            isLoading = false;
         }
     }
 </script>
@@ -251,7 +119,7 @@
                                     <input
                                         type="text"
                                         id="identifier"
-                                        bind:value={identifier}
+                                        bind:value={$stockForm.identifier}
                                         bind:this={inputElement}
                                         on:input={handleInput}
                                         on:keydown={handleKeydown}
@@ -260,14 +128,19 @@
                                         class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:text-sm p-2"
                                         placeholder="e.g., AAPL"
                                     >
-                                    {#if showSuggestions}
+                                    {#if $stockForm.showSuggestions}
                                         <div class="absolute z-10 mt-1 w-full rounded-md bg-white shadow-lg dark:bg-gray-700">
                                             <div class="max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
-                                                {#each suggestions as symbol, i}
+                                                {#each $stockForm.suggestions as symbol, i}
                                                     <button
                                                         type="button"
-                                                        class="w-full text-left px-4 py-2 text-gray-900 hover:bg-primary-100 dark:text-white dark:hover:bg-gray-600 {i === suggestionIndex ? 'bg-primary-100 dark:bg-gray-600' : ''}"
-                                                        on:click={() => selectSuggestion(symbol)}
+                                                        class="w-full text-left px-4 py-2 text-gray-900 hover:bg-primary-100 dark:text-white dark:hover:bg-gray-600 {i === $stockForm.suggestionIndex ? 'bg-primary-100 dark:bg-gray-600' : ''}"
+                                                        on:click={() => {
+                                                            stockForm.selectSuggestion(symbol);
+                                                            if ($session?.access_token) {
+                                                                stockForm.validateIdentifier($session.access_token);
+                                                            }
+                                                        }}
                                                     >
                                                         {symbol}
                                                     </button>
@@ -275,7 +148,7 @@
                                             </div>
                                         </div>
                                     {/if}
-                                    {#if isValid}
+                                    {#if $stockForm.isValid}
                                         <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                                             <svg class="h-5 w-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                                                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
@@ -285,15 +158,15 @@
                                 </div>
                             </div>
 
-                            {#if errorMessage}
-                                <p class="mt-2 text-sm text-red-600 dark:text-red-400" role="alert">{errorMessage}</p>
+                            {#if $stockForm.errorMessage}
+                                <p class="mt-2 text-sm text-red-600 dark:text-red-400" role="alert">{$stockForm.errorMessage}</p>
                             {/if}
 
                             <div>
                                 <label for="notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Notes</label>
                                 <textarea
                                     id="notes"
-                                    bind:value={notes}
+                                    bind:value={$stockForm.notes}
                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:text-sm p-2"
                                     rows="4"
                                 ></textarea>
@@ -303,9 +176,9 @@
                                 <button
                                     type="submit"
                                     class="inline-flex w-full justify-center rounded-md border border-transparent bg-primary-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                                    disabled={!isValid || isLoading || !$session?.user}
+                                    disabled={!$isFormValid}
                                 >
-                                    {isLoading ? 'Adding...' : 'Add Stock'}
+                                    {$stockForm.isLoading ? 'Adding...' : 'Add Stock'}
                                 </button>
                                 <button
                                     type="button"
