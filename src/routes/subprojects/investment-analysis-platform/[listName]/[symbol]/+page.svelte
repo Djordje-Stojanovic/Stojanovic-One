@@ -98,6 +98,13 @@
 
       if (error) throw error;
 
+      // Update local state before navigation
+      stockItem = {
+        ...stockItem,
+        list_name: newListName
+      };
+
+      // Navigate to the new route
       goto(
         `/subprojects/investment-analysis-platform/${encodeURIComponent(newListName)}/${encodeURIComponent(
           stockItem.symbol.toLowerCase()
@@ -106,6 +113,17 @@
     } catch (e) {
       console.error('Error moving item:', e);
       alert('Failed to move item');
+    }
+  }
+
+  // Update when URL params change
+  $: {
+    const newListName = decodeURIComponent($page.params.listName);
+    const newSymbol = $page.params.symbol.toUpperCase();
+    if (newListName !== listName || newSymbol !== symbol) {
+      listName = capitalizeWords(newListName);
+      symbol = newSymbol;
+      loadData(listName, symbol);
     }
   }
 </script>

@@ -1,7 +1,8 @@
 <script lang="ts">
-  import { writable } from 'svelte/store';
   import { supabase } from '$lib/supabaseClient';
   import { session } from '$lib/stores/sessionStore';
+  import { onMount } from 'svelte';
+  import { writable, type Writable } from 'svelte/store';
 
   export let stockItem: any;
   export let questions: any[] = [];
@@ -11,76 +12,100 @@
     text_answer?: string;
   }
 
-  const answers = writable<{ [key: string]: AnswerData }>({});
-  const saveStatus = writable<{ [key: string]: 'saving' | 'saved' | 'error' | '' }>({});
+  interface SaveStatus {
+    [key: string]: 'saving' | 'saved' | 'error' | '';
+  }
 
-  // Load initial answers
-  export async function loadAnswers() {
-    const { data: answersData, error: answersError } = await supabase
-      .from('stock_answers')
-      .select('*')
-      .eq('user_id', $session?.user?.id)
-      .eq('stock_item_id', stockItem.id);
+  interface AnswersStore {
+    [key: string]: AnswerData;
+  }
 
-    if (!answersError && answersData) {
-      answers.update(current => {
-        return answersData.reduce((acc, answer) => {
-          acc[answer.question_id] = {
-            answer: answer.answer,
-            text_answer: answer.text_answer,
-          };
-          return acc;
-        }, {});
-      });
+  const answers: Writable<AnswersStore> = writable({});
+  const saveStatus: Writable<SaveStatus> = writable({});
+
+  // Load initial answers on mount and when stockItem changes
+  $: if (stockItem && stockItem.id) {
+    loadAnswers();
+  }
+
+  async function loadAnswers() {
+    try {
+      const { data: answersData, error: answersError } = await supabase
+        .from('stock_answers')
+        .select('*')
+        .eq('user_id', $session?.user?.id)
+        .eq('stock_item_id', stockItem.id)
+        .eq('list_name', stockItem.list_name);
+
+      if (answersError) throw answersError;
+
+      // Map answers to a dictionary
+      const answersMap = answersData.reduce((acc: { [key: string]: AnswerData }, answer) => {
+        acc[answer.question_id] = {
+          answer: answer.answer,
+          text_answer: answer.text_answer || '',
+        };
+        return acc;
+      }, {});
+
+      answers.set(answersMap);
+    } catch (error) {
+      console.error('Error loading answers:', error);
     }
   }
 
-  function updateAnswer(questionId: string, answerValue: boolean, textAnswer: string) {
-    answers.update(current => {
+  async function updateAnswer(questionId: string, answerValue: boolean, textAnswer: string) {
+    // Update local state immediately (optimistic update)
+    answers.update((current: AnswersStore) => {
       current[questionId] = { answer: answerValue, text_answer: textAnswer };
       return current;
     });
     
-    saveStatus.update(current => {
+    saveStatus.update((current: SaveStatus) => {
       current[questionId] = 'saving';
       return current;
     });
 
-    supabase
-      .from('stock_answers')
-      .upsert({
-        question_id: questionId,
-        stock_item_id: stockItem.id,
-        list_name: stockItem.list_name,
-        answer: answerValue,
-        text_answer: textAnswer,
-        user_id: $session?.user?.id
-      })
-      .select()
-      .single()
-      .then(({ error }) => {
-        if (error) {
-          console.error('Error updating answer:', error);
-          saveStatus.update(current => {
-            current[questionId] = 'error';
-            return current;
-          });
-        } else {
-          saveStatus.update(current => {
-            current[questionId] = 'saved';
-            return current;
-          });
-          
-          setTimeout(() => {
-            saveStatus.update(current => {
-              if (current[questionId] === 'saved') {
-                delete current[questionId];
-              }
-              return current;
-            });
-          }, 5000);
-        }
+    try {
+      const { error } = await supabase
+        .from('stock_answers')
+        .upsert({
+          question_id: questionId,
+          stock_item_id: stockItem.id,
+          list_name: stockItem.list_name,
+          answer: answerValue,
+          text_answer: textAnswer,
+          user_id: $session?.user?.id
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      saveStatus.update((current: SaveStatus) => {
+        current[questionId] = 'saved';
+        return current;
       });
+      
+      // Remove the save status after 5 seconds
+      setTimeout(() => {
+        saveStatus.update((current: SaveStatus) => {
+          if (current[questionId] === 'saved') {
+            delete current[questionId];
+          }
+          return current;
+        });
+      }, 5000);
+    } catch (error) {
+      console.error('Error updating answer:', error);
+      saveStatus.update((current: SaveStatus) => {
+        current[questionId] = 'error';
+        return current;
+      });
+
+      // Revert local state on error
+      loadAnswers();
+    }
   }
 </script>
 
