@@ -39,7 +39,7 @@ You can preview the production build with `npm run preview`.
 
 ## Deployment
 
-This project is deployed on Vercel:
+This project is deployed on Coolify with a hetzner VPS:
 
-- Production URL: https://stojanovic-one.vercel.app
+- Production URL: https://stojanovic-one.com
 - Preview deployments are created for each pull request and commit

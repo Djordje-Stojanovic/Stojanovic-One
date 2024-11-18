@@ -16,7 +16,7 @@ Also always provide file paths as outlined in @AI.MD like if you say lets update
    - Frontend & Backend: SvelteKit
    - Database: PostgreSQL (via Supabase)
    - UI Styling: Tailwind CSS
-   - Deployment: Vercel
+   - Deployment: Coolify Self Host with Hetzner VPS
    - Authentication: Supabase Auth
 
 2. Follow Elon Musk's Algorithm for Efficiency:
