@@ -35,7 +35,7 @@
             errorMessage = '';
             const redirectTo = import.meta.env.DEV
                 ? 'http://localhost:5173/auth/callback'
-                : 'https://stojanovic-one.vercel.app/auth/callback';
+                : 'https://stojanovic-one.com/auth/callback';
                 
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
