@@ -7,12 +7,14 @@
    - Is this feature truly necessary?
    - Does it solve a real user problem?
    - Can we achieve the same result with existing features?
+   - ALWAYS check if we already have a component/solution before creating new ones
 
 2. Delete unnecessary parts
    - Remove redundant code
    - Eliminate unused features
    - Simplify complex implementations
    - Break files exceeding 200 lines into focused, single-responsibility modules
+   - Never duplicate functionality - reuse existing components
 
 3. Simplify and optimize
    - Make code more readable

@@ -3,6 +3,9 @@
   import { supabase } from '$lib/supabaseClient';
   import { goto } from '$app/navigation';
   import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
+  import StockPageButton from '$lib/components/StockPageButton.svelte';
+  import AddStockForm from '$lib/components/AddStockForm.svelte';
+  import CountrySelect from '$lib/components/CountrySelect.svelte';
 
   interface StockMetadata {
     id: string;
@@ -11,16 +14,45 @@
     sector: string;
     market_cap: number;
     exchange: string;
-    parqet_logo_url: string;
     logo_url: string;
+    country: string;
   }
+
+  type MarketCapCategory = 'Micro' | 'Small' | 'Mid' | 'Large' | 'Mega' | '';
+
+  const marketCapRanges = {
+    Micro: { max: 2_000_000_000 },
+    Small: { min: 2_000_000_000, max: 10_000_000_000 },
+    Mid: { min: 10_000_000_000, max: 50_000_000_000 },
+    Large: { min: 50_000_000_000, max: 500_000_000_000 },
+    Mega: { min: 500_000_000_000 }
+  };
 
   let stocks: StockMetadata[] = [];
   let loading = true;
   let error: string | null = null;
   let searchQuery = '';
-  let sortColumn: keyof StockMetadata = 'symbol';
-  let sortDirection = 1; // 1 for ascending, -1 for descending
+  let sortColumn: keyof StockMetadata = 'market_cap';
+  let sortDirection = -1; // -1 for descending (largest first), 1 for ascending
+  let sectorFilter = '';
+  let exchangeFilter = '';
+  let marketCapFilter: MarketCapCategory = '';
+  let countryFilter = '';
+  let showAddForm = false;
+  let selectedStock: StockMetadata | null = null;
+
+  // Get unique values for filters
+  $: sectors = [...new Set(stocks.map(stock => stock.sector).filter(Boolean))].sort();
+  $: exchanges = [...new Set(stocks.map(stock => stock.exchange).filter(Boolean))].sort();
+  $: countries = [...new Set(stocks.map(stock => stock.country).filter(Boolean))].sort();
+
+  function getMarketCapCategory(marketCap: number): MarketCapCategory {
+    if (marketCap < marketCapRanges.Micro.max) return 'Micro';
+    if (marketCap < marketCapRanges.Small.max) return 'Small';
+    if (marketCap < marketCapRanges.Mid.max) return 'Mid';
+    if (marketCap < marketCapRanges.Large.max) return 'Large';
+    return 'Mega';
+  }
 
   async function loadStocks() {
     loading = true;
@@ -29,12 +61,10 @@
     try {
       const { data, error: loadError } = await supabase
         .from('stock_metadata')
-        .select('*');
+        .select('*')
+        .order('market_cap', { ascending: false });
 
-      if (loadError) {
-        throw loadError;
-      }
-
+      if (loadError) throw loadError;
       stocks = data ?? [];
     } catch (err: unknown) {
       console.error('Error loading stocks:', err);
@@ -48,180 +78,183 @@
     loadStocks();
   });
 
-  function handleSort(column: keyof StockMetadata) {
-    if (sortColumn === column) {
-      sortDirection *= -1;
-    } else {
-      sortColumn = column;
-      sortDirection = 1;
+  function formatMarketCap(value: number): string {
+    if (!value) return 'N/A';
+    if (value >= 1_000_000_000_000) return `$${(value / 1_000_000_000_000).toFixed(2)}T`;
+    if (value >= 1_000_000_000) return `$${(value / 1_000_000_000).toFixed(2)}B`;
+    if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(2)}M`;
+    return `$${value.toLocaleString()}`;
+  }
+
+  function compareValues(a: string | number | null | undefined, b: string | number | null | undefined, direction: number): number {
+    if (a === null || a === undefined) return 1;
+    if (b === null || b === undefined) return -1;
+    if (typeof a === 'string' && typeof b === 'string') {
+      return direction * a.localeCompare(b);
     }
+    if (typeof a === 'number' && typeof b === 'number') {
+      return direction * (a - b);
+    }
+    return 0;
   }
 
   $: filteredStocks = stocks
     .filter((stock) => {
       const query = searchQuery.toLowerCase();
-      return (
+      const matchesSearch = 
         stock.symbol.toLowerCase().includes(query) ||
-        stock.company_name.toLowerCase().includes(query) ||
-        stock.sector?.toLowerCase().includes(query) ||
-        stock.exchange?.toLowerCase().includes(query)
-      );
+        stock.company_name.toLowerCase().includes(query);
+      const matchesSector = !sectorFilter || stock.sector === sectorFilter;
+      const matchesExchange = !exchangeFilter || stock.exchange === exchangeFilter;
+      const matchesCountry = !countryFilter || stock.country === countryFilter;
+      const matchesMarketCap = !marketCapFilter || getMarketCapCategory(stock.market_cap) === marketCapFilter;
+      return matchesSearch && matchesSector && matchesExchange && matchesCountry && matchesMarketCap;
     })
-    .sort((a, b) => {
-      const aValue = a[sortColumn] ?? '';
-      const bValue = b[sortColumn] ?? '';
-      if (typeof aValue === 'string' && typeof bValue === 'string') {
-        return sortDirection * aValue.localeCompare(bValue);
-      }
-      if (typeof aValue === 'number' && typeof bValue === 'number') {
-        return sortDirection * (aValue - bValue);
-      }
-      return 0;
-    });
-
-  function viewDetails(stock: StockMetadata) {
-    goto(`/subprojects/investment-analysis-platform/company/${encodeURIComponent(stock.symbol)}`);
-  }
-
-  function viewFinancials(stock: StockMetadata) {
-    goto(`/subprojects/investment-analysis-platform/company/${encodeURIComponent(stock.symbol)}/financials`);
-  }
+    .sort((a, b) => compareValues(a[sortColumn], b[sortColumn], sortDirection));
 </script>
 
-<svelte:head>
-  <title>Global Stock Lookup - Investment Analysis Platform</title>
-</svelte:head>
-
-<div class="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900">
+<div class="min-h-screen bg-[#1F2937]">
   <div class="container mx-auto px-4 py-8">
-    <h1 class="mb-6 text-4xl font-bold text-gray-800 dark:text-gray-100">Global Stock Lookup</h1>
-    <div class="mb-6 rounded-lg bg-white p-6 shadow-md dark:bg-gray-800">
+    <StockPageButton onClick={() => goto('/subprojects/investment-analysis-platform')} class="mb-6">
+      Go to IAP
+    </StockPageButton>
+
+    <h1 class="text-3xl font-bold text-white mb-8">Global Stock Lookup</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
       <input
         type="text"
-        placeholder="Search stocks..."
+        placeholder="Search by symbol or company name..."
         bind:value={searchQuery}
-        class="w-full rounded-md border border-gray-300 bg-white px-4 py-2 text-gray-700 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:focus:border-primary-400 dark:focus:ring-primary-400"
+        class="w-full px-4 py-2 rounded bg-gray-700 text-white placeholder-gray-400 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
+      
+      <select
+        bind:value={marketCapFilter}
+        class="w-full px-4 py-2 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
+        <option value="">All Market Caps</option>
+        <option value="Mega">Mega Cap (>$500B)</option>
+        <option value="Large">Large Cap ($50B-$500B)</option>
+        <option value="Mid">Mid Cap ($10B-$50B)</option>
+        <option value="Small">Small Cap ($2B-$10B)</option>
+        <option value="Micro">Micro Cap (&lt;$2B)</option>
+      </select>
+
+      <select
+        bind:value={sectorFilter}
+        class="w-full px-4 py-2 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
+        <option value="">All Sectors</option>
+        {#each sectors as sector}
+          <option value={sector}>{sector}</option>
+        {/each}
+      </select>
+      
+      <select
+        bind:value={exchangeFilter}
+        class="w-full px-4 py-2 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
+        <option value="">All Exchanges</option>
+        {#each exchanges as exchange}
+          <option value={exchange}>{exchange}</option>
+        {/each}
+      </select>
+
+      <CountrySelect bind:value={countryFilter} {countries} />
     </div>
+
     {#if loading}
-      <div class="flex justify-center">
+      <div class="flex justify-center items-center min-h-[400px]">
         <LoadingSpinner />
       </div>
     {:else if error}
-      <div class="rounded-lg bg-red-100 p-4 text-red-700 dark:bg-red-900 dark:text-red-100">
-        <p>{error}</p>
+      <div class="bg-red-900 border border-red-700 text-red-100 px-4 py-3 rounded mb-4">
+        <p class="font-medium">Error loading stocks</p>
+        <p class="text-sm">{error}</p>
+      </div>
+    {:else if filteredStocks.length === 0}
+      <div class="bg-yellow-900 border border-yellow-700 text-yellow-100 px-4 py-3 rounded">
+        <p>No stocks found matching your criteria.</p>
       </div>
     {:else}
-      <div class="overflow-hidden rounded-lg bg-white shadow-md dark:bg-gray-800">
-        <div class="overflow-x-auto">
-          <table class="w-full min-w-max text-left text-sm text-gray-700 dark:text-gray-200">
-            <thead>
-              <tr class="bg-gray-50 text-xs uppercase leading-normal text-gray-600 dark:bg-gray-700 dark:text-gray-300">
-                <th class="cursor-pointer py-3 px-6" on:click={() => handleSort('symbol')}>
-                  <div class="flex items-center">
-                    Symbol
-                    {#if sortColumn === 'symbol'}
-                      <svg class="ml-1 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                        {#if sortDirection === 1}
-                          <path d="M5 15l5-5 5 5H5z" />
-                        {:else}
-                          <path d="M5 10l5 5 5-5H5z" />
-                        {/if}
-                      </svg>
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="text-xs uppercase text-gray-400 border-b border-gray-700">
+              <th class="text-left py-3 px-4">Symbol</th>
+              <th class="text-left py-3 px-4">Company Name</th>
+              <th class="text-left py-3 px-4">Sector</th>
+              <th class="text-left py-3 px-4">Market Cap ▼</th>
+              <th class="text-left py-3 px-4">Country</th>
+              <th class="text-left py-3 px-4">Exchange</th>
+              <th class="text-left py-3 px-4">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {#each filteredStocks as stock}
+              <tr class="border-b border-gray-700 hover:bg-gray-800">
+                <td class="py-3 px-4">
+                  <div class="flex items-center space-x-3">
+                    {#if stock.logo_url}
+                      <img
+                        src={stock.logo_url}
+                        alt=""
+                        class="h-6 w-6"
+                        on:error={(e) => {
+                          if (e.target instanceof HTMLImageElement) {
+                            e.target.style.display = 'none';
+                          }
+                        }}
+                      />
                     {/if}
+                    <span class="text-white font-medium">{stock.symbol}</span>
                   </div>
-                </th>
-                <th class="cursor-pointer py-3 px-6" on:click={() => handleSort('company_name')}>
-                  <div class="flex items-center">
-                    Company Name
-                    {#if sortColumn === 'company_name'}
-                      <svg class="ml-1 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                        {#if sortDirection === 1}
-                          <path d="M5 15l5-5 5 5H5z" />
-                        {:else}
-                          <path d="M5 10l5 5 5-5H5z" />
-                        {/if}
-                      </svg>
-                    {/if}
-                  </div>
-                </th>
-                <th class="cursor-pointer py-3 px-6" on:click={() => handleSort('sector')}>
-                  <div class="flex items-center">
-                    Sector
-                    {#if sortColumn === 'sector'}
-                      <svg class="ml-1 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                        {#if sortDirection === 1}
-                          <path d="M5 15l5-5 5 5H5z" />
-                        {:else}
-                          <path d="M5 10l5 5 5-5H5z" />
-                        {/if}
-                      </svg>
-                    {/if}
-                  </div>
-                </th>
-                <th class="cursor-pointer py-3 px-6" on:click={() => handleSort('market_cap')}>
-                  <div class="flex items-center">
-                    Market Cap
-                    {#if sortColumn === 'market_cap'}
-                      <svg class="ml-1 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                        {#if sortDirection === 1}
-                          <path d="M5 15l5-5 5 5H5z" />
-                        {:else}
-                          <path d="M5 10l5 5 5-5H5z" />
-                        {/if}
-                      </svg>
-                    {/if}
-                  </div>
-                </th>
-                <th class="cursor-pointer py-3 px-6" on:click={() => handleSort('exchange')}>
-                  <div class="flex items-center">
-                    Exchange
-                    {#if sortColumn === 'exchange'}
-                      <svg class="ml-1 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                        {#if sortDirection === 1}
-                          <path d="M5 15l5-5 5 5H5z" />
-                        {:else}
-                          <path d="M5 10l5 5 5-5H5z" />
-                        {/if}
-                      </svg>
-                    {/if}
-                  </div>
-                </th>
-                <th class="py-3 px-6">Actions</th>
+                </td>
+                <td class="py-3 px-4 text-gray-300">{stock.company_name}</td>
+                <td class="py-3 px-4 text-gray-300">{stock.sector || 'N/A'}</td>
+                <td class="py-3 px-4 text-gray-300">{formatMarketCap(stock.market_cap)}</td>
+                <td class="py-3 px-4 text-gray-300">
+                  {#if stock.country}
+                    <div class="flex items-center">
+                      <span class="fi fi-{stock.country.toLowerCase()}"></span>
+                      <span class="ml-2">{stock.country}</span>
+                    </div>
+                  {:else}
+                    <span>N/A</span>
+                  {/if}
+                </td>
+                <td class="py-3 px-4 text-gray-300">{stock.exchange}</td>
+                <td class="py-3 px-4">
+                  <button
+                    class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800"
+                    on:click={() => {
+                      selectedStock = stock;
+                      showAddForm = true;
+                    }}
+                  >
+                    Add to Watchlist
+                  </button>
+                </td>
               </tr>
-            </thead>
-            <tbody class="text-sm font-light">
-              {#each filteredStocks as stock}
-                <tr class="border-b border-gray-200 hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-700">
-                  <td class="py-3 px-6">{stock.symbol}</td>
-                  <td class="py-3 px-6">{stock.company_name}</td>
-                  <td class="py-3 px-6">{stock.sector}</td>
-                  <td class="py-3 px-6">${stock.market_cap?.toLocaleString()}</td>
-                  <td class="py-3 px-6">{stock.exchange}</td>
-                  <td class="py-3 px-6 flex space-x-2">
-                    <button
-                      class="rounded bg-primary-500 px-4 py-2 text-white transition-colors hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-offset-gray-800"
-                      on:click={() => viewDetails(stock)}
-                    >
-                      View Details
-                    </button>
-                    <button
-                      class="rounded bg-secondary-500 px-4 py-2 text-white transition-colors hover:bg-secondary-600 focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:ring-offset-2 dark:bg-secondary-600 dark:hover:bg-secondary-700 dark:focus:ring-offset-gray-800"
-                      on:click={() => viewFinancials(stock)}
-                    >
-                      View Financials
-                    </button>
-                  </td>
-                </tr>
-              {/each}
-            </tbody>
-          </table>
-        </div>
+            {/each}
+          </tbody>
+        </table>
       </div>
+    {/if}
+
+    {#if showAddForm}
+      <AddStockForm
+        activeList="Watchlist"
+        on:close={() => {
+          showAddForm = false;
+          selectedStock = null;
+        }}
+        on:stockAdded={() => {
+          showAddForm = false;
+          selectedStock = null;
+        }}
+      />
     {/if}
   </div>
 </div>
-
-<style>
-  /* Add any additional custom styles here */
-</style>
