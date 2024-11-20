@@ -18,6 +18,8 @@
     let userStocks: Array<{symbol: string, company_name: string}> = [];
     let filteredStocks: Array<{symbol: string, company_name: string}> = [];
     let showDropdown = false;
+    let searchGlobal = false;
+    let loading = false;
 
     onMount(async () => {
         if ($session) {
@@ -45,14 +47,40 @@
         }
     });
 
+    async function searchGlobalStocks(term: string) {
+        loading = true;
+        try {
+            const { data, error } = await supabase
+                .from('stock_metadata')
+                .select('symbol, company_name')
+                .or(`symbol.ilike.%${term}%,company_name.ilike.%${term}%`)
+                .limit(10);
+
+            if (error) throw error;
+            return data || [];
+        } catch (err) {
+            console.error('Error searching stocks:', err);
+            return [];
+        } finally {
+            loading = false;
+        }
+    }
+
     $: {
         if (searchTerm) {
-            const term = searchTerm.toLowerCase();
-            filteredStocks = userStocks.filter(stock => 
-                stock.symbol.toLowerCase().includes(term) || 
-                stock.company_name.toLowerCase().includes(term)
-            );
-            showDropdown = true;
+            if (searchGlobal) {
+                searchGlobalStocks(searchTerm).then(results => {
+                    filteredStocks = results;
+                    showDropdown = true;
+                });
+            } else {
+                const term = searchTerm.toLowerCase();
+                filteredStocks = userStocks.filter(stock => 
+                    stock.symbol.toLowerCase().includes(term) || 
+                    stock.company_name.toLowerCase().includes(term)
+                );
+                showDropdown = true;
+            }
         } else {
             filteredStocks = [];
             showDropdown = false;
@@ -63,7 +91,6 @@
         searchTerm = '';
         showDropdown = false;
         
-        // Navigate to the new URL and force a page reload
         await goto(`/subprojects/investment-analysis-platform/company/${symbol}/financials`, {
             invalidateAll: true
         });
@@ -80,12 +107,37 @@
 <svelte:window on:click={handleClickOutside} />
 
 <div class="search-container relative w-full max-w-md">
-    <input
-        type="text"
-        bind:value={searchTerm}
-        placeholder="Search your stocks..."
-        class="w-full px-4 py-2 rounded bg-gray-700 text-white placeholder-gray-400 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-    />
+    <div class="flex items-center gap-4 mb-2">
+        <label class="flex items-center cursor-pointer select-none">
+            <div class="relative">
+                <input
+                    type="checkbox"
+                    bind:checked={searchGlobal}
+                    class="sr-only"
+                >
+                <div class="w-10 h-6 bg-gray-700 rounded-full shadow-inner"></div>
+                <div class="dot absolute w-4 h-4 bg-white rounded-full transition transform {searchGlobal ? 'translate-x-5' : 'translate-x-1'} top-1"></div>
+            </div>
+            <span class="ml-2 text-sm text-gray-300">
+                {searchGlobal ? 'Search All Stocks' : 'Search Your Stocks'}
+            </span>
+        </label>
+    </div>
+
+    <div class="relative">
+        <input
+            type="text"
+            bind:value={searchTerm}
+            placeholder={searchGlobal ? "Search all stocks..." : "Search your stocks..."}
+            class="w-full px-4 py-2 rounded bg-gray-700 text-white placeholder-gray-400 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        
+        {#if loading}
+            <div class="absolute right-3 top-2.5">
+                <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
+            </div>
+        {/if}
+    </div>
     
     {#if showDropdown && filteredStocks.length > 0}
         <div class="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-700 rounded shadow-lg max-h-60 overflow-y-auto">
@@ -101,3 +153,9 @@
         </div>
     {/if}
 </div>
+
+<style>
+    .dot {
+        transition: transform 0.3s ease-in-out;
+    }
+</style>
