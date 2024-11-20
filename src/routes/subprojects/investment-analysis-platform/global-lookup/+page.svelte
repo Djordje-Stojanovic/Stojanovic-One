@@ -132,11 +132,12 @@
 
 <div class="min-h-screen bg-[#1F2937]">
   <div class="container mx-auto px-4 py-8">
-    <StockPageButton onClick={() => goto('/subprojects/investment-analysis-platform')} class="mb-6">
-      Go to IAP
-    </StockPageButton>
-
-    <h1 class="text-3xl font-bold text-white mb-8">Global Stock Lookup</h1>
+    <div class="flex items-center justify-between mb-8">
+      <h1 class="text-3xl font-bold text-[#F9FAFB]">Global Stock Lookup</h1>
+      <StockPageButton onClick={() => goto('/subprojects/investment-analysis-platform')}>
+        Go to IAP
+      </StockPageButton>
+    </div>
 
     <StockFilters
       bind:searchQuery

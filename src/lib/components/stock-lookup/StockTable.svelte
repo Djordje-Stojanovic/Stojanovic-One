@@ -96,24 +96,24 @@
     <p>No stocks found matching your criteria.</p>
   </div>
 {:else}
-  <div class="overflow-x-auto">
+  <div class="overflow-x-auto rounded-[0.375rem] border-2 border-[#4B5563]">
     <table class="w-full">
-      <thead>
-        <tr class="text-xs uppercase text-gray-400 border-b border-gray-700">
-          <th class="text-left py-3 px-4">Symbol</th>
-          <th class="text-left py-3 px-4">Company Name</th>
-          <th class="text-left py-3 px-4">Sector</th>
-          <th class="text-left py-3 px-4">Market Cap ▼</th>
-          <th class="text-left py-3 px-4">Country</th>
-          <th class="text-left py-3 px-4">Exchange</th>
-          <th class="text-left py-3 px-4">Action</th>
+      <thead class="bg-[#374151] border-b-2 border-[#4B5563]">
+        <tr class="text-xs uppercase tracking-wider">
+          <th class="text-left py-4 px-4 text-[#60A5FA] font-semibold">Symbol</th>
+          <th class="text-left py-4 px-4 text-[#60A5FA] font-semibold border-l border-[#374151]">Company Name</th>
+          <th class="text-left py-4 px-4 text-[#60A5FA] font-semibold border-l border-[#374151]">Sector</th>
+          <th class="text-left py-4 px-4 text-[#60A5FA] font-semibold border-l border-[#374151]">Market Cap ▼</th>
+          <th class="text-left py-4 px-4 text-[#60A5FA] font-semibold border-l border-[#374151]">Country</th>
+          <th class="text-left py-4 px-4 text-[#60A5FA] font-semibold border-l border-[#374151]">Exchange</th>
+          <th class="text-left py-4 px-4 text-[#60A5FA] font-semibold border-l border-[#374151]">Action</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody class="bg-[#1F2937]">
         {#each filteredStocks as stock}
           {@const existingList = getStockListName(stock.id)}
-          <tr class="border-b border-gray-700 hover:bg-gray-800">
-            <td class="py-3 px-4">
+          <tr class="border-b border-[#374151] hover:bg-[#4B5563] transition-colors duration-200">
+            <td class="py-4 px-4">
               <div class="flex items-center space-x-3">
                 {#if stock.logo_url}
                   <img
@@ -127,13 +127,13 @@
                     }}
                   />
                 {/if}
-                <span class="text-white font-medium">{stock.symbol}</span>
+                <span class="text-[#F9FAFB] font-medium">{stock.symbol}</span>
               </div>
             </td>
-            <td class="py-3 px-4 text-gray-300">{stock.company_name}</td>
-            <td class="py-3 px-4 text-gray-300">{stock.sector || 'N/A'}</td>
-            <td class="py-3 px-4 text-gray-300">{formatMarketCap(stock.market_cap)}</td>
-            <td class="py-3 px-4 text-gray-300">
+            <td class="py-4 px-4 text-[#F9FAFB] border-l border-[#374151]">{stock.company_name}</td>
+            <td class="py-4 px-4 text-[#F9FAFB] border-l border-[#374151]">{stock.sector || 'N/A'}</td>
+            <td class="py-4 px-4 text-[#F9FAFB] border-l border-[#374151]">{formatMarketCap(stock.market_cap)}</td>
+            <td class="py-4 px-4 text-[#F9FAFB] border-l border-[#374151]">
               {#if stock.country}
                 <div class="flex items-center">
                   <span class="fi fi-{stock.country.toLowerCase()}"></span>
@@ -143,11 +143,11 @@
                 <span>N/A</span>
               {/if}
             </td>
-            <td class="py-3 px-4 text-gray-300">{stock.exchange}</td>
-            <td class="py-3 px-4">
+            <td class="py-4 px-4 text-[#F9FAFB] border-l border-[#374151]">{stock.exchange}</td>
+            <td class="py-4 px-4 border-l border-[#374151]">
               {#if existingList}
                 <button
-                  class="px-4 py-2 bg-gray-600 text-gray-300 rounded cursor-not-allowed"
+                  class="px-4 py-2 bg-[#374151] text-[#F9FAFB] rounded-[0.375rem] cursor-not-allowed"
                   disabled
                   title={`Already in ${existingList}`}
                 >
@@ -155,14 +155,14 @@
                 </button>
               {:else if addingStockId === stock.id}
                 <button
-                  class="px-4 py-2 bg-blue-400 text-white rounded cursor-wait"
+                  class="px-4 py-2 bg-[#3B82F6] text-white rounded-[0.375rem] cursor-wait"
                   disabled
                 >
                   Adding...
                 </button>
               {:else}
                 <button
-                  class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800"
+                  class="px-4 py-2 bg-[#3B82F6] text-white rounded-[0.375rem] hover:bg-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:ring-offset-2 focus:ring-offset-[#1F2937] transition-colors duration-200"
                   on:click={() => addToWatchlist(stock)}
                 >
                   Add to Watchlist
