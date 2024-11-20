@@ -98,7 +98,12 @@
             {#each [...listNames] as listName (listName)}
                 {#if stocksByList[listName].length > 0}
                     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border-2 border-gray-200 dark:border-gray-700 transition-all duration-300">
-                        <h2 class="text-xl font-semibold p-4 text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700">{listName}</h2>
+                        <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+                            <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">{listName}</h2>
+                            <span class="px-2 py-1 text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full">
+                                {stocksByList[listName].length} {stocksByList[listName].length === 1 ? 'stock' : 'stocks'}
+                            </span>
+                        </div>
                         <div class="overflow-y-auto max-h-[calc(100vh-24rem)]">
                             <div class="min-w-full align-middle inline-block">
                                 <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -199,7 +204,12 @@
                     on:dragleave={handleDragLeave}
                     on:drop={(e) => handleDrop(e, listName)}
                 >
-                    <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">{listName}</h2>
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">{listName}</h2>
+                        <span class="px-2 py-1 text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full">
+                            {stocksByList[listName].length} {stocksByList[listName].length === 1 ? 'stock' : 'stocks'}
+                        </span>
+                    </div>
                     <div class="space-y-4 h-[calc(100vh-16rem)] overflow-y-auto pr-2">
                         {#each stocksByList[listName] as userStock (userStock.id)}
                             <div 

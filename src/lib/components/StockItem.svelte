@@ -22,7 +22,7 @@
         const newListName = (event.target as HTMLSelectElement).value as ListName;
         if (newListName) {
             dispatch('moveItem', { stockId: userStock.id, newListName });
-            (event.target as HTMLSelectElement).value = ''; // Reset select
+            (event.target as HTMLSelectElement).value = '';
         }
     }
     
@@ -56,33 +56,42 @@
 
 {#if item && userStock}
 <div 
-    class="rounded-lg border bg-white p-6 shadow-md transition-all duration-100 hover:shadow-lg dark:border-gray-700 dark:bg-gray-800"
+    class="group relative rounded-lg border bg-white px-4 py-3 shadow-sm transition-all duration-200 hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
     draggable="true"
     role="listitem"
     aria-label="Stock item for {item.symbol}"
     on:dragstart={handleDragStart}
     on:dragend={handleDragEnd}
 >
-    <div class="mb-3 flex items-center">
-        <img src={item.logo_url} alt="{item.symbol} logo" class="mr-3 h-8 w-8">
-        <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
-            {item.symbol}
-        </h3>
+    <!-- Header with logo and symbol -->
+    <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+            <img src={item.logo_url} alt="{item.symbol} logo" class="h-6 w-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                {item.symbol}
+            </h3>
+        </div>
     </div>
-    <p class="mb-2 text-gray-700 dark:text-gray-300">{item.company_name}</p>
-    <p class="mb-2 text-gray-600 dark:text-gray-400">Sector: {item.sector}</p>
-    <div class="mb-2 flex justify-between">
-        <span class="text-gray-600 dark:text-gray-400">Market Cap:</span>
-        <span class="font-semibold text-gray-900 dark:text-gray-100">${item.market_cap?.toLocaleString() ?? 'N/A'}</span>
-    </div>
-    <div class="mb-4 flex justify-between">
-        <span class="text-gray-600 dark:text-gray-400">Exchange:</span>
-        <span class="font-semibold text-gray-900 dark:text-gray-100">{item.exchange}</span>
-    </div>
-    <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">{userStock.notes}</p>
 
-    <!-- Actions section with consistent spacing and grouping -->
-    <div class="space-y-2">
+    <!-- Company info -->
+    <div class="mt-2 space-y-1">
+        <p class="text-sm text-gray-700 dark:text-gray-300">{item.company_name}</p>
+        <div class="flex items-center gap-4 text-xs">
+            <span class="text-gray-600 dark:text-gray-400">Sector: {item.sector}</span>
+            <span class="text-gray-600 dark:text-gray-400">Exchange: {item.exchange}</span>
+        </div>
+        <div class="text-xs text-gray-600 dark:text-gray-400">
+            Market Cap: <span class="font-medium">${item.market_cap?.toLocaleString() ?? 'N/A'}</span>
+        </div>
+    </div>
+
+    <!-- Notes -->
+    {#if userStock.notes}
+        <p class="mt-2 text-xs text-gray-600 dark:text-gray-400">{userStock.notes}</p>
+    {/if}
+
+    <!-- Actions -->
+    <div class="mt-3 space-y-2">
         <!-- List management actions -->
         <div class="flex gap-2">
             {#if allowedMoves[userStock.list_name] && allowedMoves[userStock.list_name].length > 0}
@@ -106,7 +115,7 @@
             </StockPageButton>
         </div>
 
-        <!-- Navigation actions in a grid -->
+        <!-- Navigation actions -->
         <div class="grid grid-cols-3 gap-2">
             <StockPageButton 
                 variant="secondary"
@@ -133,7 +142,7 @@
     </div>
 </div>
 {:else}
-<div class="rounded-lg border bg-white p-6 shadow-md dark:border-gray-700 dark:bg-gray-800">
-    <p class="text-gray-600 dark:text-gray-400">Error loading stock data</p>
+<div class="rounded-lg border bg-white px-4 py-3 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+    <p class="text-sm text-gray-600 dark:text-gray-400">Error loading stock data</p>
 </div>
 {/if}
