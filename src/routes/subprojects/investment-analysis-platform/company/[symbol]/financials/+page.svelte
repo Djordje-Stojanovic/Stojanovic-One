@@ -1,6 +1,6 @@
 <script lang="ts">
     import { page } from '$app/stores';
-    import { onMount } from 'svelte';
+    import { onMount, afterUpdate } from 'svelte';
     import { goto } from '$app/navigation';
     import { session } from '$lib/stores/sessionStore';
     import { supabase } from '$lib/supabaseClient';
@@ -12,10 +12,13 @@
     import FinancialsHeader from '$lib/components/FinancialsHeader.svelte';
     import FinancialStatementTables from '$lib/components/financials/FinancialStatementTables.svelte';
     import FinancialChart from '$lib/components/financials/FinancialChart.svelte';
+    import UserStockSearch from '$lib/components/financials/UserStockSearch.svelte';
     import { filterFinancialStatementsByPeriod } from '$lib/utils/financialStatementFilters';
     import { findCompanyList, fetchCompanyName, loadFinancialData } from '$lib/services/companyFinancialsService';
 
-    const symbol = $page.params.symbol;
+    let symbol: string;
+    $: symbol = $page.params.symbol;
+
     let financialData: FinancialData = {
         income_statements: [],
         balance_sheets: [],
@@ -79,8 +82,17 @@
         loading = false;
     }
 
+    // Watch for symbol changes and reload data
+    $: if (symbol) {
+        Promise.all([
+            handleLoadFinancialData(),
+            fetchCompanyName(symbol).then(name => companyName = name),
+            findCompanyList(symbol).then(list => companyList = list)
+        ]);
+    }
+
     onMount(async () => {
-        if ($session) {
+        if ($session && symbol) {
             await Promise.all([
                 handleLoadFinancialData(),
                 fetchCompanyName(symbol).then(name => companyName = name),
@@ -110,15 +122,12 @@
     function handleMetricClick(event: CustomEvent<{ name: string; values: number[]; dates: string[] }>) {
         const { name, values, dates } = event.detail;
         
-        // Find if metric is already selected
         const existingIndex = selectedMetricNames.indexOf(name);
         
         if (existingIndex !== -1) {
-            // Remove metric if already selected
             selectedMetrics = selectedMetrics.filter(m => m.name !== name);
             selectedMetricNames = selectedMetricNames.filter(n => n !== name);
         } else {
-            // Add new metric using the values from the click event
             const newMetric = {
                 name,
                 data: dates.map((date, i) => ({
@@ -159,6 +168,11 @@
         <StockPageButton variant="disabled">
             Financials
         </StockPageButton>
+    </div>
+
+    <!-- Stock Search -->
+    <div class="mb-6">
+        <UserStockSearch />
     </div>
 
     <FinancialsHeader
