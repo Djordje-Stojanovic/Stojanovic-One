@@ -4,8 +4,10 @@
   import { goto } from '$app/navigation';
   import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
   import StockPageButton from '$lib/components/StockPageButton.svelte';
-  import AddStockForm from '$lib/components/AddStockForm.svelte';
   import CountrySelect from '$lib/components/CountrySelect.svelte';
+  import { session } from '$lib/stores/sessionStore';
+  import { stockForm } from '$lib/stores/stockFormStore';
+  import { listNames, type ListName } from '$lib/constants/listNames';
 
   interface StockMetadata {
     id: string;
@@ -16,6 +18,11 @@
     exchange: string;
     logo_url: string;
     country: string;
+  }
+
+  interface UserStock {
+    stock_metadata_id: number;
+    list_name: ListName;
   }
 
   type MarketCapCategory = 'Micro' | 'Small' | 'Mid' | 'Large' | 'Mega' | '';
@@ -29,17 +36,17 @@
   };
 
   let stocks: StockMetadata[] = [];
+  let userStocks: UserStock[] = [];
   let loading = true;
   let error: string | null = null;
   let searchQuery = '';
   let sortColumn: keyof StockMetadata = 'market_cap';
-  let sortDirection = -1; // -1 for descending (largest first), 1 for ascending
+  let sortDirection = -1;
   let sectorFilter = '';
   let exchangeFilter = '';
   let marketCapFilter: MarketCapCategory = '';
   let countryFilter = '';
-  let showAddForm = false;
-  let selectedStock: StockMetadata | null = null;
+  let addingStockId: string | null = null;
 
   // Get unique values for filters
   $: sectors = [...new Set(stocks.map(stock => stock.sector).filter(Boolean))].sort();
@@ -74,8 +81,73 @@
     }
   }
 
+  async function loadUserStocks() {
+    if (!$session?.user?.id) return;
+
+    try {
+      const { data, error: loadError } = await supabase
+        .from('user_stocks')
+        .select('stock_metadata_id, list_name')
+        .eq('user_id', $session.user.id);
+
+      if (loadError) throw loadError;
+      userStocks = data ?? [];
+    } catch (err) {
+      console.error('Error loading user stocks:', err);
+    }
+  }
+
+  function getStockListName(stockId: string): ListName | null {
+    const userStock = userStocks.find(stock => stock.stock_metadata_id === parseInt(stockId));
+    return userStock?.list_name ?? null;
+  }
+
+  async function addToWatchlist(stock: StockMetadata) {
+    if (!$session?.access_token) {
+      error = 'Please log in to add stocks to your watchlist';
+      return;
+    }
+
+    const existingList = getStockListName(stock.id);
+    if (existingList) {
+      error = `This stock is already in your ${existingList} list`;
+      return;
+    }
+
+    try {
+      error = null;
+      addingStockId = stock.id;
+
+      // Optimistically update UI
+      userStocks = [...userStocks, {
+        stock_metadata_id: parseInt(stock.id),
+        list_name: 'Watchlist'
+      }];
+
+      // Then sync with database
+      stockForm.reset();
+      stockForm.setIdentifier(stock.symbol);
+      await stockForm.validateIdentifier($session.access_token);
+      const stockId = await stockForm.submitForm('Watchlist', $session.access_token);
+      
+      if (!stockId) {
+        // Revert optimistic update on failure
+        userStocks = userStocks.filter(s => s.stock_metadata_id !== parseInt(stock.id));
+        throw new Error('Failed to add stock');
+      }
+
+    } catch (err) {
+      // Revert optimistic update and show error
+      userStocks = userStocks.filter(s => s.stock_metadata_id !== parseInt(stock.id));
+      error = err instanceof Error ? err.message : 'Failed to add stock to watchlist';
+    } finally {
+      addingStockId = null;
+    }
+  }
+
   onMount(() => {
     loadStocks();
+    loadUserStocks();
   });
 
   function formatMarketCap(value: number): string {
@@ -170,7 +242,7 @@
       </div>
     {:else if error}
       <div class="bg-red-900 border border-red-700 text-red-100 px-4 py-3 rounded mb-4">
-        <p class="font-medium">Error loading stocks</p>
+        <p class="font-medium">Error</p>
         <p class="text-sm">{error}</p>
       </div>
     {:else if filteredStocks.length === 0}
@@ -193,6 +265,7 @@
           </thead>
           <tbody>
             {#each filteredStocks as stock}
+              {@const existingList = getStockListName(stock.id)}
               <tr class="border-b border-gray-700 hover:bg-gray-800">
                 <td class="py-3 px-4">
                   <div class="flex items-center space-x-3">
@@ -226,35 +299,35 @@
                 </td>
                 <td class="py-3 px-4 text-gray-300">{stock.exchange}</td>
                 <td class="py-3 px-4">
-                  <button
-                    class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800"
-                    on:click={() => {
-                      selectedStock = stock;
-                      showAddForm = true;
-                    }}
-                  >
-                    Add to Watchlist
-                  </button>
+                  {#if existingList}
+                    <button
+                      class="px-4 py-2 bg-gray-600 text-gray-300 rounded cursor-not-allowed"
+                      disabled
+                      title={`Already in ${existingList}`}
+                    >
+                      In {existingList}
+                    </button>
+                  {:else if addingStockId === stock.id}
+                    <button
+                      class="px-4 py-2 bg-blue-400 text-white rounded cursor-wait"
+                      disabled
+                    >
+                      Adding...
+                    </button>
+                  {:else}
+                    <button
+                      class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800"
+                      on:click={() => addToWatchlist(stock)}
+                    >
+                      Add to Watchlist
+                    </button>
+                  {/if}
                 </td>
               </tr>
             {/each}
           </tbody>
         </table>
       </div>
-    {/if}
-
-    {#if showAddForm}
-      <AddStockForm
-        activeList="Watchlist"
-        on:close={() => {
-          showAddForm = false;
-          selectedStock = null;
-        }}
-        on:stockAdded={() => {
-          showAddForm = false;
-          selectedStock = null;
-        }}
-      />
     {/if}
   </div>
 </div>
