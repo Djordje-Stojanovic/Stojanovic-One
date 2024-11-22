@@ -1,4 +1,4 @@
-import { VITE_FMP_API_KEY } from '$env/static/private';
+import { VITE_FMP_API_KEY } from '$env/static/public';
 
 export async function getExchangeRate(fromCurrency: string): Promise<number> {
     if (fromCurrency === 'USD') return 1;
