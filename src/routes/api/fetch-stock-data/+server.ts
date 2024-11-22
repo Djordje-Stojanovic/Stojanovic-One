@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { supabase } from '$lib/supabaseClient';
-import { VITE_FMP_API_KEY } from '$env/static/private';
+import { FMP_API_KEY } from '$env/static/private';
 import { getExchangeRate, convertToUSD } from '$lib/utils/currencyConverter';
 
 interface FMPStockData {
@@ -177,7 +177,7 @@ export const POST: RequestHandler = async ({ request }) => {
         } else {
             // Fetch stock data from Financial Modeling Prep
             const fmpResponse = await fetch(
-                `https://financialmodelingprep.com/api/v3/profile/${identifier}?apikey=${VITE_FMP_API_KEY}`
+                `https://financialmodelingprep.com/api/v3/profile/${identifier}?apikey=${FMP_API_KEY}`
             );
 
             if (!fmpResponse.ok) {
