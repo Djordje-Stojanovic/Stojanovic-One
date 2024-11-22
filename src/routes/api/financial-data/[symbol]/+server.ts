@@ -1,13 +1,13 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { createClient } from '@supabase/supabase-js';
-import { PRIVATE_SUPABASE_URL, PRIVATE_SUPABASE_SERVICE_ROLE_KEY, VITE_FMP_API_KEY } from '$env/static/private';
+import { VITE_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, FMP_API_KEY } from '$env/static/private';
 import { getExchangeRate, convertStatementToUSD } from '$lib/utils/currencyConverter';
 import type { FMPIncomeStatement, FMPBalanceSheet, FMPCashFlowStatement } from './types/fmpTypes';
 import { transformIncomeStatement, transformBalanceSheet, transformCashFlow } from './types/transformers';
 import type { IncomeStatement, BalanceSheet, CashFlowStatement } from '$lib/types/financialStatements';
 
-const supabase = createClient(PRIVATE_SUPABASE_URL, PRIVATE_SUPABASE_SERVICE_ROLE_KEY);
+const supabase = createClient(VITE_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 type FinancialStatement = {
     reportedCurrency?: string;
@@ -23,9 +23,9 @@ type TransformerFunction<T extends FinancialStatement, R> = (
 
 async function fetchFinancialData(symbol: string, period: 'annual' | 'quarter') {
     const [incomeStmtsRes, balanceSheetsRes, cashFlowStmtsRes] = await Promise.all([
-        fetch(`https://financialmodelingprep.com/api/v3/income-statement/${symbol}?period=${period}&apikey=${VITE_FMP_API_KEY}`),
-        fetch(`https://financialmodelingprep.com/api/v3/balance-sheet-statement/${symbol}?period=${period}&apikey=${VITE_FMP_API_KEY}`),
-        fetch(`https://financialmodelingprep.com/api/v3/cash-flow-statement/${symbol}?period=${period}&apikey=${VITE_FMP_API_KEY}`)
+        fetch(`https://financialmodelingprep.com/api/v3/income-statement/${symbol}?period=${period}&apikey=${FMP_API_KEY}`),
+        fetch(`https://financialmodelingprep.com/api/v3/balance-sheet-statement/${symbol}?period=${period}&apikey=${FMP_API_KEY}`),
+        fetch(`https://financialmodelingprep.com/api/v3/cash-flow-statement/${symbol}?period=${period}&apikey=${FMP_API_KEY}`)
     ]);
 
     const [incomeStmts, balanceSheets, cashFlowStmts] = await Promise.all([
