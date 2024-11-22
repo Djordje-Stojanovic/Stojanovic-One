@@ -225,6 +225,13 @@ export const POST: RequestHandler = async ({ request }) => {
             .single();
 
         if (userStockError) {
+            // Check for unique constraint violation
+            if (userStockError.code === '23505') {
+                return json({ 
+                    error: `This stock is already in your ${listName} list`,
+                    code: 'DUPLICATE_ENTRY'
+                }, { status: 409 });
+            }
             return json({ error: userStockError.message }, { status: 500 });
         }
 

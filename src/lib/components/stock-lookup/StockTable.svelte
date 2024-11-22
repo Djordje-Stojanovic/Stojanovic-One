@@ -64,12 +64,18 @@
       stockForm.reset();
       stockForm.setIdentifier(stock.symbol);
       await stockForm.validateIdentifier($session.access_token);
-      const stockId = await stockForm.submitForm('Watchlist', $session.access_token);
+      const result = await stockForm.submitForm('Watchlist', $session.access_token);
       
-      if (!stockId) {
+      if (!result.success) {
         // Revert optimistic update on failure
         userStocks = userStocks.filter(s => s.stock_metadata_id !== parseInt(stock.id));
-        throw new Error('Failed to add stock');
+        
+        // Handle specific error codes
+        if (result.code === 'DUPLICATE_ENTRY') {
+          error = `This stock is already in your Watchlist`;
+        } else {
+          throw new Error(result.error || 'Failed to add stock');
+        }
       }
 
     } catch (err) {

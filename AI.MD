@@ -45,6 +45,34 @@ const { subscribe, set, update } = writable(initialState);
 export { subscribe }; // Only expose what's needed
 ```
 
+## Supabase CLI Access
+```bash
+# Project Details
+Project URL: https://ztwbgnoykjmhqcooiosr.supabase.co
+Project Reference: ztwbgnoykjmhqcooiosr
+
+# Access Tokens
+Access Token Name: stojanovic-one
+Access Token: sbp_a1c2a9ba4eb7fdb44ffe9179deef7c9811743568
+
+# Database
+DB Password: Djordje1992_01
+DB Connection: postgresql://postgres.ztwbgnoykjmhqcooiosr:[YOUR-PASSWORD]@aws-0-eu-central-1.pooler.supabase.com:6543/postgres
+
+# CLI Commands
+# Install CLI locally
+npm install supabase --save-dev
+
+# Initialize project
+npx supabase init
+
+# Link to project
+SUPABASE_ACCESS_TOKEN=sbp_a1c2a9ba4eb7fdb44ffe9179deef7c9811743568 npx supabase link --project-ref ztwbgnoykjmhqcooiosr
+
+# Run SQL commands
+PGPASSWORD=Djordje1992_01 psql -h aws-0-eu-central-1.pooler.supabase.com -p 6543 -U postgres.ztwbgnoykjmhqcooiosr -d postgres -c "YOUR SQL COMMAND"
+```
+
 ## UI/UX Standards
 
 ### Theme

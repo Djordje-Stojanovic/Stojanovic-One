@@ -63,13 +63,17 @@
             return;
         }
 
-        const stockId = await stockForm.submitForm(activeList, $session.access_token);
-        if (stockId) {
-            dispatch('stockAdded', { id: stockId });
+        const result = await stockForm.submitForm(activeList, $session.access_token);
+        if (result.success) {
+            dispatch('stockAdded', { id: result.id });
             stockForm.reset();
             setTimeout(() => {
                 dispatch('close');
             }, 100);
+        } else if (result.code === 'DUPLICATE_ENTRY') {
+            stockForm.setErrorMessage(`This stock is already in your ${activeList} list`);
+        } else {
+            stockForm.setErrorMessage(result.error || 'Failed to add stock');
         }
     }
 </script>

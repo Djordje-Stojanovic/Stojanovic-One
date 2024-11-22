@@ -14,6 +14,13 @@ type FormState = {
     suggestionIndex: number;
 };
 
+interface SubmitResult {
+    success: boolean;
+    id?: string;
+    error?: string;
+    code?: string;
+}
+
 function createStockFormStore() {
     const store = writable<FormState>({
         identifier: '',
@@ -107,7 +114,7 @@ function createStockFormStore() {
             showSuggestions: false
         })),
 
-        submitForm: async (listName: ListName, accessToken: string) => {
+        submitForm: async (listName: ListName, accessToken: string): Promise<SubmitResult> => {
             update(state => ({ ...state, isLoading: true }));
 
             try {
@@ -119,17 +126,16 @@ function createStockFormStore() {
                     accessToken
                 });
 
-                if (!result.success) {
-                    throw new Error(result.error);
-                }
-
-                return result.id;
+                return result;
             } catch (error) {
                 update(state => ({
                     ...state,
                     errorMessage: error instanceof Error ? error.message : 'Failed to add stock'
                 }));
-                return null;
+                return {
+                    success: false,
+                    error: error instanceof Error ? error.message : 'Failed to add stock'
+                };
             } finally {
                 update(state => ({ ...state, isLoading: false }));
             }
