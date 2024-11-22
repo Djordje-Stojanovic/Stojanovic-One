@@ -145,29 +145,31 @@
             </td>
             <td class="py-4 px-4 text-[#F9FAFB] border-l border-[#374151]">{stock.exchange}</td>
             <td class="py-4 px-4 border-l border-[#374151]">
-              {#if existingList}
-                <button
-                  class="px-4 py-2 bg-[#374151] text-[#F9FAFB] rounded-[0.375rem] cursor-not-allowed"
-                  disabled
-                  title={`Already in ${existingList}`}
-                >
-                  In {existingList}
-                </button>
-              {:else if addingStockId === stock.id}
-                <button
-                  class="px-4 py-2 bg-[#3B82F6] text-white rounded-[0.375rem] cursor-wait"
-                  disabled
-                >
-                  Adding...
-                </button>
-              {:else}
-                <button
-                  class="px-4 py-2 bg-[#3B82F6] text-white rounded-[0.375rem] hover:bg-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:ring-offset-2 focus:ring-offset-[#1F2937] transition-colors duration-200"
-                  on:click={() => addToWatchlist(stock)}
-                >
-                  Add to Watchlist
-                </button>
-              {/if}
+              <div class="w-[160px]"> <!-- Fixed width container for consistent button sizing -->
+                {#if existingList}
+                  <button
+                    class="w-full px-4 py-2 bg-[#374151] text-[#F9FAFB] rounded-[0.375rem] cursor-not-allowed font-medium text-sm"
+                    disabled
+                    title={`Already in ${existingList}`}
+                  >
+                    In {existingList}
+                  </button>
+                {:else if addingStockId === stock.id}
+                  <button
+                    class="w-full px-4 py-2 bg-[#3B82F6] text-white rounded-[0.375rem] cursor-wait font-medium text-sm"
+                    disabled
+                  >
+                    Adding...
+                  </button>
+                {:else}
+                  <button
+                    class="w-full px-4 py-2 bg-[#3B82F6] text-white rounded-[0.375rem] hover:bg-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:ring-offset-2 focus:ring-offset-[#1F2937] transition-colors duration-200 font-medium text-sm"
+                    on:click={() => addToWatchlist(stock)}
+                  >
+                    Add to Watchlist
+                  </button>
+                {/if}
+              </div>
             </td>
           </tr>
         {/each}
