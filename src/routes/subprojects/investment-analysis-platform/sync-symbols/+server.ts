@@ -1,12 +1,12 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { createClient } from '@supabase/supabase-js';
-import { PRIVATE_SUPABASE_URL, PRIVATE_SUPABASE_SERVICE_ROLE_KEY, VITE_FMP_API_KEY } from '$env/static/private';
+import { VITE_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, FMP_API_KEY } from '$env/static/private';
 import { getExchangeRate, convertToUSD } from '$lib/utils/currencyConverter';
 
-const supabaseUrl = PRIVATE_SUPABASE_URL;
-const supabaseServiceRoleKey = PRIVATE_SUPABASE_SERVICE_ROLE_KEY;
-const fmpApiKey = VITE_FMP_API_KEY;
+const supabaseUrl = VITE_PUBLIC_SUPABASE_URL;
+const supabaseServiceRoleKey = SUPABASE_SERVICE_ROLE_KEY;
+const fmpApiKey = FMP_API_KEY;
 
 if (!supabaseUrl || !supabaseServiceRoleKey) {
     console.error('Missing Supabase environment variables');
