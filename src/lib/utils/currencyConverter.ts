@@ -1,11 +1,11 @@
-import { VITE_FMP_API_KEY } from '$env/static/public';
+import { env } from '$env/dynamic/public';
 
 export async function getExchangeRate(fromCurrency: string): Promise<number> {
     if (fromCurrency === 'USD') return 1;
     
     try {
         const response = await fetch(
-            `https://financialmodelingprep.com/api/v3/quote/${fromCurrency}USD?apikey=${VITE_FMP_API_KEY}`
+            `https://financialmodelingprep.com/api/v3/quote/${fromCurrency}USD?apikey=${env.PUBLIC_FMP_API_KEY}`
         );
         const data = await response.json();
         
