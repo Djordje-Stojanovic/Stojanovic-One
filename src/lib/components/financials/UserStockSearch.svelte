@@ -15,39 +15,13 @@
     }
 
     let searchTerm = '';
-    let userStocks: Array<{symbol: string, company_name: string}> = [];
     let filteredStocks: Array<{symbol: string, company_name: string}> = [];
     let showDropdown = false;
-    let searchGlobal = false;
     let loading = false;
+    let selectedIndex = -1;
+    let searchInput: HTMLInputElement;
 
-    onMount(async () => {
-        if ($session) {
-            const { data, error } = await db
-                .from('user_stocks')
-                .select(`
-                    stock_metadata:stock_metadata_id (
-                        symbol,
-                        company_name
-                    )
-                `)
-                .eq('user_id', $session.user.id);
-
-            if (!error && data) {
-                const stocksData = data as unknown as UserStockResponse[];
-                userStocks = stocksData
-                    .map(stock => ({
-                        symbol: stock.stock_metadata.symbol,
-                        company_name: stock.stock_metadata.company_name
-                    }))
-                    .filter((stock): stock is {symbol: string, company_name: string} => 
-                        stock.symbol !== null && stock.company_name !== null
-                    );
-            }
-        }
-    });
-
-    async function searchGlobalStocks(term: string) {
+    async function searchStocks(term: string) {
         loading = true;
         try {
             const { data, error } = await db
@@ -68,38 +42,64 @@
 
     $: {
         if (searchTerm) {
-            if (searchGlobal) {
-                searchGlobalStocks(searchTerm).then(results => {
-                    filteredStocks = results;
-                    showDropdown = true;
-                });
-            } else {
-                const term = searchTerm.toLowerCase();
-                filteredStocks = userStocks.filter(stock => 
-                    stock.symbol.toLowerCase().includes(term) || 
-                    stock.company_name.toLowerCase().includes(term)
-                );
+            searchStocks(searchTerm).then(results => {
+                filteredStocks = results;
                 showDropdown = true;
-            }
+                selectedIndex = -1; // Reset selection when results change
+            });
         } else {
             filteredStocks = [];
             showDropdown = false;
+            selectedIndex = -1;
         }
     }
 
     async function handleStockSelect(symbol: string) {
         searchTerm = '';
         showDropdown = false;
+        selectedIndex = -1;
         
         await goto(`/subprojects/investment-analysis-platform/company/${symbol}/financials`, {
             invalidateAll: true
         });
     }
 
+    function handleKeydown(event: KeyboardEvent) {
+        if (!showDropdown || filteredStocks.length === 0) return;
+
+        switch (event.key) {
+            case 'ArrowDown':
+                event.preventDefault();
+                selectedIndex = (selectedIndex + 1) % filteredStocks.length;
+                break;
+            case 'ArrowUp':
+                event.preventDefault();
+                selectedIndex = selectedIndex <= 0 ? filteredStocks.length - 1 : selectedIndex - 1;
+                break;
+            case 'Tab':
+                event.preventDefault();
+                selectedIndex = (selectedIndex + 1) % filteredStocks.length;
+                break;
+            case 'Enter':
+                event.preventDefault();
+                if (selectedIndex >= 0) {
+                    handleStockSelect(filteredStocks[selectedIndex].symbol);
+                }
+                break;
+            case 'Escape':
+                event.preventDefault();
+                showDropdown = false;
+                selectedIndex = -1;
+                searchInput?.blur();
+                break;
+        }
+    }
+
     function handleClickOutside(event: MouseEvent) {
         const target = event.target as HTMLElement;
         if (!target.closest('.search-container')) {
             showDropdown = false;
+            selectedIndex = -1;
         }
     }
 </script>
@@ -107,28 +107,13 @@
 <svelte:window on:click={handleClickOutside} />
 
 <div class="search-container relative w-full max-w-md">
-    <div class="flex items-center gap-4 mb-2">
-        <label class="flex items-center cursor-pointer select-none">
-            <div class="relative">
-                <input
-                    type="checkbox"
-                    bind:checked={searchGlobal}
-                    class="sr-only"
-                >
-                <div class="w-10 h-6 bg-gray-700 rounded-full shadow-inner"></div>
-                <div class="dot absolute w-4 h-4 bg-white rounded-full transition transform {searchGlobal ? 'translate-x-5' : 'translate-x-1'} top-1"></div>
-            </div>
-            <span class="ml-2 text-sm text-gray-300">
-                {searchGlobal ? 'Search All Stocks' : 'Search Your Stocks'}
-            </span>
-        </label>
-    </div>
-
     <div class="relative">
         <input
+            bind:this={searchInput}
             type="text"
             bind:value={searchTerm}
-            placeholder={searchGlobal ? "Search all stocks..." : "Search your stocks..."}
+            on:keydown={handleKeydown}
+            placeholder="Search any stock symbol or company name..."
             class="w-full px-4 py-2 rounded bg-gray-700 text-white placeholder-gray-400 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         
@@ -141,10 +126,11 @@
     
     {#if showDropdown && filteredStocks.length > 0}
         <div class="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-700 rounded shadow-lg max-h-60 overflow-y-auto">
-            {#each filteredStocks as stock}
+            {#each filteredStocks as stock, i}
                 <button
-                    class="w-full px-4 py-2 text-left hover:bg-gray-700 text-white flex flex-col"
+                    class="w-full px-4 py-2 text-left hover:bg-gray-700 text-white flex flex-col {i === selectedIndex ? 'bg-gray-700' : ''}"
                     on:click={() => handleStockSelect(stock.symbol)}
+                    on:mouseenter={() => selectedIndex = i}
                 >
                     <span class="font-semibold">{stock.symbol}</span>
                     <span class="text-sm text-gray-400">{stock.company_name}</span>
@@ -153,9 +139,3 @@
         </div>
     {/if}
 </div>
-
-<style>
-    .dot {
-        transition: transform 0.3s ease-in-out;
-    }
-</style>
