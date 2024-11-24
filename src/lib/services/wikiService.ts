@@ -1,5 +1,10 @@
-import { db } from '$lib/supabaseClient';
+import { db, getSingle } from '$lib/supabaseClient';
 import type { WikiContent } from '../types/wiki';
+
+interface UserProfile {
+    full_name: string | null;
+    username: string | null;
+}
 
 export async function loadWikiContent(symbol: string, section: string): Promise<WikiContent | null> {
     const { data, error } = await db
@@ -88,14 +93,11 @@ async function cleanupHistory(symbol: string, section: string) {
     }
 }
 
-export async function loadUserData(userId: string) {
-    const { data, error } = await db
-        .from('profiles')
-        .select('full_name, username')
-        .eq('id', userId)
-        .single();
-
-    if (error) throw error;
+export async function loadUserData(userId: string): Promise<UserProfile> {
+    const data = await getSingle<UserProfile>('profiles', { id: userId });
+    if (!data) {
+        return { full_name: null, username: null };
+    }
     return data;
 }
 

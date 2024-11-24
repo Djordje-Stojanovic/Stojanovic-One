@@ -52,7 +52,9 @@ export const db = createClient(dbUrl, dbKey, {
   },
   global: {
     headers: {
-      apikey: dbKey
+      apikey: dbKey,
+      // Remove application/vnd.pgrst.object+json from Accept header
+      Accept: 'application/json'
     }
   }
 })
@@ -65,8 +67,51 @@ export const getSession = async () => {
 
 // Create a new database client with auth token
 export const getDbClient = async () => {
-  // Always return the same database client with service role key
+  const session = await getSession()
+  if (session?.access_token) {
+    // Create a new client with the user's access token
+    return createClient(dbUrl, dbKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+        detectSessionInUrl: false
+      },
+      global: {
+        headers: {
+          apikey: dbKey,
+          Authorization: `Bearer ${session.access_token}`,
+          Accept: 'application/json'
+        }
+      }
+    })
+  }
+  // Fall back to service role client
   return db
+}
+
+type QueryFilter = {
+  [key: string]: string | number | boolean | null;
+}
+
+// Helper for single-object queries
+export const getSingle = async <T>(
+  table: string,
+  query: QueryFilter,
+  options: { client?: typeof db } = {}
+): Promise<T | null> => {
+  const client = options.client || db
+  const { data, error } = await client
+    .from(table)
+    .select('*')
+    .match(query)
+    .maybeSingle()
+
+  if (error) {
+    console.error(`Error fetching from ${table}:`, error)
+    return null
+  }
+
+  return data as T
 }
 
 // Debug function to test database connection
