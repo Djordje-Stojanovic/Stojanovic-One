@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { supabase } from '$lib/supabaseClient';
+  import { db } from '$lib/supabaseClient';
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
   import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
@@ -33,7 +33,7 @@
     error = null;
     try {
       // Fetch user_stocks and stock_metadata
-      const { data: userStockData, error: userStockError } = await supabase
+      const { data: userStockData, error: userStockError } = await db
         .from('user_stocks')
         .select(`
           *,
@@ -55,7 +55,7 @@
       };
 
       // Fetch meta questions for the current list
-      const { data: questionsData, error: questionsError } = await supabase
+      const { data: questionsData, error: questionsError } = await db
         .from('meta_questions')
         .select('*')
         .eq('user_id', $session?.user?.id)
@@ -89,7 +89,7 @@
     if (!newListName) return;
 
     try {
-      const { error } = await supabase
+      const { error } = await db
         .from('user_stocks')
         .update({ list_name: newListName })
         .eq('id', stockItem.id)

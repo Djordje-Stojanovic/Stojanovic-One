@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { supabase } from '$lib/supabaseClient';
+	import { db } from '$lib/supabaseClient';
 	import type { CompanyInfo } from '$lib/types';
 
 	export let stockItemId: string;
@@ -8,7 +8,7 @@
 
 	async function loadCompanyInfo() {
 		console.log('Loading company info for stock_item_id:', stockItemId);
-		const { data, error } = await supabase
+		const { data, error } = await db
 			.from('company_info')
 			.select('*')
 			.eq('stock_item_id', stockItemId);

@@ -1,6 +1,6 @@
 import type { ListName } from '$lib/constants/listNames';
 import type { UserStock } from '$lib/types';
-import { supabase } from '$lib/supabaseClient';
+import { supabase, db } from '$lib/supabaseClient';
 
 export const allowedMoves: Record<ListName, ListName[]> = {
     'Watchlist': ['Due Diligence', 'Too Expensive', 'Pass For Now', 'Permanent Pass'],
@@ -17,7 +17,7 @@ export const allowedMoves: Record<ListName, ListName[]> = {
 
 export async function moveStock(stockId: string, newList: ListName): Promise<{ data: UserStock | null; error: Error | null }> {
     try {
-        // Get current session
+        // Get current session from hosted Supabase
         const { data: { session } } = await supabase.auth.getSession();
         if (!session?.user) {
             throw new Error('Not authenticated');
@@ -25,8 +25,8 @@ export async function moveStock(stockId: string, newList: ListName): Promise<{ d
 
         console.log('Moving stock:', { stockId, newList });
         
-        // Update the stock's list directly using Supabase client
-        const { data, error } = await supabase
+        // Update the stock's list using VPS database
+        const { data, error } = await db
             .from('user_stocks')
             .update({ 
                 list_name: newList,
@@ -41,7 +41,7 @@ export async function moveStock(stockId: string, newList: ListName): Promise<{ d
             .single();
 
         if (error) {
-            console.error('Supabase error:', error);
+            console.error('Database error:', error);
             throw error;
         }
 

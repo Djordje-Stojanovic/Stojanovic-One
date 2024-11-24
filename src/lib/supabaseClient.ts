@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { browser } from '$app/environment'
 
 // Auth client using hosted Supabase
 const authUrl = import.meta.env.VITE_PUBLIC_SUPABASE_URL
@@ -12,12 +13,33 @@ if (!authUrl || !authKey) {
   throw new Error('Missing Supabase auth environment variables')
 }
 
+// Custom storage implementation that checks for browser environment
+const customStorage = {
+  getItem: (key: string) => {
+    if (browser) {
+      return localStorage.getItem(key)
+    }
+    return null
+  },
+  setItem: (key: string, value: string) => {
+    if (browser) {
+      localStorage.setItem(key, value)
+    }
+  },
+  removeItem: (key: string) => {
+    if (browser) {
+      localStorage.removeItem(key)
+    }
+  }
+}
+
 // Auth client for authentication only
 export const supabase = createClient(authUrl, authKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true
+    detectSessionInUrl: true,
+    storage: customStorage
   }
 })
 

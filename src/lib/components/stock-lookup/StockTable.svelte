@@ -2,6 +2,9 @@
   import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
   import { session } from '$lib/stores/sessionStore';
   import { stockForm } from '$lib/stores/stockFormStore';
+  import { createEventDispatcher } from 'svelte';
+
+  const dispatch = createEventDispatcher();
 
   interface StockMetadata {
     id: string;
@@ -15,7 +18,7 @@
   }
 
   interface UserStock {
-    stock_metadata_id: number;
+    stock_metadata_id: string | number;
     list_name: string;
   }
 
@@ -34,7 +37,13 @@
   }
 
   function getStockListName(stockId: string) {
-    const userStock = userStocks.find(stock => stock.stock_metadata_id === parseInt(stockId));
+    const numericStockId = parseInt(stockId);
+    const userStock = userStocks.find(stock => {
+      const stockMetadataId = typeof stock.stock_metadata_id === 'string' 
+        ? parseInt(stock.stock_metadata_id) 
+        : stock.stock_metadata_id;
+      return stockMetadataId === numericStockId;
+    });
     return userStock?.list_name ?? null;
   }
 
@@ -54,12 +63,6 @@
       error = null;
       addingStockId = stock.id;
 
-      // Optimistically update UI
-      userStocks = [...userStocks, {
-        stock_metadata_id: parseInt(stock.id),
-        list_name: 'Watchlist'
-      }];
-
       // Then sync with database
       stockForm.reset();
       stockForm.setIdentifier(stock.symbol);
@@ -67,20 +70,18 @@
       const result = await stockForm.submitForm('Watchlist', $session.access_token);
       
       if (!result.success) {
-        // Revert optimistic update on failure
-        userStocks = userStocks.filter(s => s.stock_metadata_id !== parseInt(stock.id));
-        
         // Handle specific error codes
         if (result.code === 'DUPLICATE_ENTRY') {
           error = `This stock is already in your Watchlist`;
         } else {
           throw new Error(result.error || 'Failed to add stock');
         }
+      } else {
+        // Dispatch event to reload user stocks after successful addition
+        dispatch('reloadUserStocks');
       }
 
     } catch (err) {
-      // Revert optimistic update and show error
-      userStocks = userStocks.filter(s => s.stock_metadata_id !== parseInt(stock.id));
       error = err instanceof Error ? err.message : 'Failed to add stock to watchlist';
     } finally {
       addingStockId = null;
@@ -116,8 +117,7 @@
         </tr>
       </thead>
       <tbody class="bg-[#1F2937]">
-        {#each filteredStocks as stock}
-          {@const existingList = getStockListName(stock.id)}
+        {#each filteredStocks as stock (stock.id)}
           <tr class="border-b border-[#374151] hover:bg-[#4B5563] transition-colors duration-200">
             <td class="py-4 px-4">
               <div class="flex items-center space-x-3">
@@ -151,30 +151,32 @@
             </td>
             <td class="py-4 px-4 text-[#F9FAFB] border-l border-[#374151]">{stock.exchange}</td>
             <td class="py-4 px-4 border-l border-[#374151]">
-              <div class="w-[160px]"> <!-- Fixed width container for consistent button sizing -->
-                {#if existingList}
-                  <button
-                    class="w-full px-4 py-2 bg-[#374151] text-[#F9FAFB] rounded-[0.375rem] cursor-not-allowed font-medium text-sm"
-                    disabled
-                    title={`Already in ${existingList}`}
-                  >
-                    In {existingList}
-                  </button>
-                {:else if addingStockId === stock.id}
-                  <button
-                    class="w-full px-4 py-2 bg-[#3B82F6] text-white rounded-[0.375rem] cursor-wait font-medium text-sm"
-                    disabled
-                  >
-                    Adding...
-                  </button>
-                {:else}
-                  <button
-                    class="w-full px-4 py-2 bg-[#3B82F6] text-white rounded-[0.375rem] hover:bg-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:ring-offset-2 focus:ring-offset-[#1F2937] transition-colors duration-200 font-medium text-sm"
-                    on:click={() => addToWatchlist(stock)}
-                  >
-                    Add to Watchlist
-                  </button>
-                {/if}
+              <div class="w-[160px]">
+                {#key userStocks}
+                  {#if getStockListName(stock.id)}
+                    <button
+                      class="w-full px-4 py-2 bg-[#374151] text-[#F9FAFB] rounded-[0.375rem] cursor-not-allowed font-medium text-sm"
+                      disabled
+                      title={`Already in ${getStockListName(stock.id)}`}
+                    >
+                      In {getStockListName(stock.id)}
+                    </button>
+                  {:else if addingStockId === stock.id}
+                    <button
+                      class="w-full px-4 py-2 bg-[#3B82F6] text-white rounded-[0.375rem] cursor-wait font-medium text-sm"
+                      disabled
+                    >
+                      Adding...
+                    </button>
+                  {:else}
+                    <button
+                      class="w-full px-4 py-2 bg-[#3B82F6] text-white rounded-[0.375rem] hover:bg-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:ring-offset-2 focus:ring-offset-[#1F2937] transition-colors duration-200 font-medium text-sm"
+                      on:click={() => addToWatchlist(stock)}
+                    >
+                      Add to Watchlist
+                    </button>
+                  {/if}
+                {/key}
               </div>
             </td>
           </tr>

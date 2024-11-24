@@ -1,7 +1,7 @@
 <!-- E:\Stojanovic-One\src\routes\subprojects\investment-analysis-platform\meta-questions\+page.svelte -->
 
 <script lang="ts">
-  import { supabase } from '$lib/supabaseClient';
+  import { db } from '$lib/supabaseClient';
   import { session } from '$lib/stores/sessionStore';
   import { listNames } from '$lib/constants/listNames';
   import { onMount } from 'svelte';
@@ -38,7 +38,7 @@
   async function loadQuestions() {
     if (!$session || !selectedList) return;
     loading = true;
-    const { data, error: loadError } = await supabase
+    const { data, error: loadError } = await db
       .from('meta_questions')
       .select('*')
       .eq('user_id', $session.user.id)
@@ -55,7 +55,7 @@
 
   async function addQuestion() {
     if (!$session || !newQuestionText.trim()) return;
-    const { data, error: addError } = await supabase
+    const { data, error: addError } = await db
       .from('meta_questions')
       .insert({
         user_id: $session.user.id,
@@ -78,7 +78,7 @@
       return;
     }
 
-    const { error: deleteError } = await supabase
+    const { error: deleteError } = await db
       .from('meta_questions')
       .delete()
       .eq('id', id);
@@ -90,7 +90,7 @@
   }
 
   async function updateQuestion(id: string, newText: string) {
-    const { data, error: updateError } = await supabase
+    const { data, error: updateError } = await db
       .from('meta_questions')
       .update({ question: newText })
       .eq('id', id)

@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { supabase } from '$lib/supabaseClient';
+import { db } from '$lib/supabaseClient';
 
 export const GET: RequestHandler = async ({ request }) => {
     // Verify the cron job secret
@@ -25,7 +25,7 @@ export const GET: RequestHandler = async ({ request }) => {
         }
 
         // Clear existing symbols and insert new ones
-        const { error: deleteError } = await supabase
+        const { error: deleteError } = await db
             .from('available_symbols')
             .delete()
             .neq('id', 0); // Delete all records
@@ -38,7 +38,7 @@ export const GET: RequestHandler = async ({ request }) => {
         const batchSize = 1000;
         for (let i = 0; i < symbols.length; i += batchSize) {
             const batch = symbols.slice(i, i + batchSize).map(symbol => ({ symbol }));
-            const { error: insertError } = await supabase
+            const { error: insertError } = await db
                 .from('available_symbols')
                 .insert(batch);
 

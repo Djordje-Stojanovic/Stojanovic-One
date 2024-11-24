@@ -1,6 +1,6 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
-    import { supabase } from '$lib/supabaseClient';
+    import { db } from '$lib/supabaseClient';
     import { onMount } from 'svelte';
     import { session } from '$lib/stores/sessionStore';
     import { invalidate } from '$app/navigation';
@@ -23,7 +23,7 @@
 
     onMount(async () => {
         if ($session) {
-            const { data, error } = await supabase
+            const { data, error } = await db
                 .from('user_stocks')
                 .select(`
                     stock_metadata:stock_metadata_id (
@@ -50,7 +50,7 @@
     async function searchGlobalStocks(term: string) {
         loading = true;
         try {
-            const { data, error } = await supabase
+            const { data, error } = await db
                 .from('stock_metadata')
                 .select('symbol, company_name')
                 .or(`symbol.ilike.%${term}%,company_name.ilike.%${term}%`)

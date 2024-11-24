@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { supabase } from '$lib/supabaseClient';
+  import { db } from '$lib/supabaseClient';
   import { goto } from '$app/navigation';
   import StockPageButton from '$lib/components/StockPageButton.svelte';
   import StockFilters from '$lib/components/stock-lookup/StockFilters.svelte';
@@ -19,7 +19,7 @@
   }
 
   interface UserStock {
-    stock_metadata_id: number;
+    stock_metadata_id: string | number;
     list_name: string;
   }
 
@@ -54,6 +54,11 @@
   $: exchanges = [...new Set(stocks.map(stock => stock.exchange).filter(Boolean))].sort();
   $: countries = [...new Set(stocks.map(stock => stock.country).filter(Boolean))].sort();
 
+  // Load user stocks whenever session changes
+  $: if ($session?.user?.id) {
+    loadUserStocks();
+  }
+
   function getMarketCapCategory(marketCap: number): MarketCapCategory {
     if (marketCap < marketCapRanges.Micro.max) return 'Micro';
     if (marketCap < marketCapRanges.Small.max) return 'Small';
@@ -67,7 +72,7 @@
     error = null;
 
     try {
-      const { data, error: loadError } = await supabase
+      const { data, error: loadError } = await db
         .from('stock_metadata')
         .select('*')
         .order('market_cap', { ascending: false });
@@ -86,16 +91,21 @@
     if (!$session?.user?.id) return;
 
     try {
-      const { data, error: loadError } = await supabase
+      const { data, error: loadError } = await db
         .from('user_stocks')
         .select('stock_metadata_id, list_name')
         .eq('user_id', $session.user.id);
 
       if (loadError) throw loadError;
-      userStocks = data ?? [];
+      // Create a new array reference to trigger reactivity
+      userStocks = data ? [...data] : [];
     } catch (err) {
       console.error('Error loading user stocks:', err);
     }
+  }
+
+  function handleReloadUserStocks() {
+    loadUserStocks();
   }
 
   function compareValues(a: string | number | null | undefined, b: string | number | null | undefined, direction: number): number {
@@ -126,7 +136,9 @@
 
   onMount(() => {
     loadStocks();
-    loadUserStocks();
+    if ($session?.user?.id) {
+      loadUserStocks();
+    }
   });
 </script>
 
@@ -151,11 +163,12 @@
     />
 
     <StockTable
-      bind:userStocks
+      {userStocks}
       {loading}
       bind:error
       bind:addingStockId
       {filteredStocks}
+      on:reloadUserStocks={handleReloadUserStocks}
     />
   </div>
 </div>

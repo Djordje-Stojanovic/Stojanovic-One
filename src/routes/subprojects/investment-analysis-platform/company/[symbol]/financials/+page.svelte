@@ -3,7 +3,6 @@
     import { onMount, afterUpdate } from 'svelte';
     import { goto } from '$app/navigation';
     import { session } from '$lib/stores/sessionStore';
-    import { supabase } from '$lib/supabaseClient';
     import type { NumberFormat } from '$lib/utils/numberFormat';
     import type { FinancialData } from '$lib/types/financialStatements';
     import type { ListName } from '$lib/constants/listNames';
@@ -60,14 +59,7 @@
         loading = true;
         error = null;
 
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
-        if (!currentSession) {
-            error = 'No active session';
-            loading = false;
-            return;
-        }
-
-        const result = await loadFinancialData(symbol, currentSession.access_token, forceRefresh);
+        const result = await loadFinancialData(symbol, $session.access_token, forceRefresh);
         
         if (result.error) {
             error = result.error;
@@ -75,7 +67,13 @@
             allFinancialData = result.data;
             financialData = filterFinancialStatementsByPeriod(allFinancialData, selectedPeriod, selectedYears);
             if (tablesComponent) {
-                setTimeout(() => tablesComponent.scrollToRight(), 100);
+                setTimeout(() => {
+                    try {
+                        tablesComponent.scrollToRight();
+                    } catch (e) {
+                        console.warn('Could not scroll tables:', e);
+                    }
+                }, 100);
             }
         }
         
@@ -83,7 +81,7 @@
     }
 
     // Watch for symbol changes and reload data
-    $: if (symbol) {
+    $: if (symbol && $session) {
         Promise.all([
             handleLoadFinancialData(),
             fetchCompanyName(symbol).then(name => companyName = name),
@@ -110,7 +108,13 @@
 
     // Scroll to right when switching tabs
     $: if (activeTab && tablesComponent) {
-        setTimeout(() => tablesComponent.scrollToRight(), 100);
+        setTimeout(() => {
+            try {
+                tablesComponent.scrollToRight();
+            } catch (e) {
+                console.warn('Could not scroll tables:', e);
+            }
+        }, 100);
     }
 
     function navigateToFullpage() {

@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount } from 'svelte';
-    import { supabase } from '$lib/supabaseClient';
+    import { db } from '$lib/supabaseClient';
     import WikiDiff from './WikiDiff.svelte';
 
     export let symbol: string;
@@ -20,7 +20,7 @@
     async function loadHistory() {
         loadingHistory = true;
         try {
-            const { data, error: historyError } = await supabase
+            const { data, error: historyError } = await db
                 .from('company_wiki_history')
                 .select('id, content, updated_at, user_id')
                 .eq('symbol', symbol)
@@ -34,7 +34,7 @@
                 // Fetch user data separately for each history entry
                 historyEntries = await Promise.all(
                     data.map(async (entry) => {
-                        const { data: userData } = await supabase
+                        const { data: userData } = await db
                             .from('profiles')
                             .select('full_name, username')
                             .eq('id', entry.user_id)

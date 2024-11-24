@@ -4,7 +4,7 @@
   import FileUploader from '$lib/components/FileUploader.svelte';
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
-  import { supabase } from '$lib/supabaseClient';
+  import { supabase, db } from '$lib/supabaseClient';
   import { browser } from '$app/environment';
   import { goto } from '$app/navigation';
   import type { ListName } from '$lib/constants/listNames';
@@ -26,7 +26,7 @@
 
   async function findCompanyList() {
     try {
-      const { data, error: queryError } = await supabase
+      const { data, error: queryError } = await db
         .from('user_stocks')
         .select(`
           list_name,
@@ -49,7 +49,7 @@
 
   onMount(async () => {
     try {
-      const { data, error: fetchError } = await supabase
+      const { data, error: fetchError } = await db
         .from('stock_metadata')
         .select('*')
         .eq('symbol', symbol)

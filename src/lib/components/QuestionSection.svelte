@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { supabase } from '$lib/supabaseClient';
+  import { db } from '$lib/supabaseClient';
   import { session } from '$lib/stores/sessionStore';
   import { onMount } from 'svelte';
   import { writable, type Writable } from 'svelte/store';
@@ -30,7 +30,7 @@
 
   async function loadAnswers() {
     try {
-      const { data: answersData, error: answersError } = await supabase
+      const { data: answersData, error: answersError } = await db
         .from('stock_answers')
         .select('*')
         .eq('user_id', $session?.user?.id)
@@ -67,7 +67,7 @@
     });
 
     try {
-      const { error } = await supabase
+      const { error } = await db
         .from('stock_answers')
         .upsert({
           question_id: questionId,

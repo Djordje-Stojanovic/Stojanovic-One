@@ -1,27 +1,47 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { supabase } from '$lib/supabaseClient';
+	import { db } from '$lib/supabaseClient';
 	import { session } from '$lib/stores/sessionStore';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 
-	let stockItem;
-	let companyInfo;
+	interface StockItem {
+		id: string;
+		symbol: string;
+		list_name: string;
+	}
+
+	interface CompanyInfo {
+		id: string;
+		stock_item_id: string;
+		description: string;
+		industry: string;
+		employees: number;
+		founded: string;
+		headquarters: string;
+		website: string;
+		notes: string;
+	}
+
+	let stockItem: StockItem | null = null;
+	let companyInfo: CompanyInfo | null = null;
 	let loading = true;
-	let error = null;
+	let error: string | null = null;
 
 	$: {
 		const { listName, symbol } = $page.params;
-		loadData(listName, symbol);
+		if (listName && symbol) {
+			loadData(listName, symbol);
+		}
 	}
 
-	async function loadData(listName, symbol) {
+	async function loadData(listName: string, symbol: string) {
 		loading = true;
 		error = null;
 
 		try {
-			const { data: stockData, error: stockError } = await supabase
+			const { data: stockData, error: stockError } = await db
 				.from('stock_items')
 				.select('*')
 				.eq('list_name', listName)
@@ -29,20 +49,25 @@
 				.single();
 
 			if (stockError) throw stockError;
+			if (!stockData) throw new Error('Stock not found');
 
-			stockItem = stockData;
+			const stock = stockData as StockItem;
+			stockItem = stock;
 
-			const { data: companyData, error: companyError } = await supabase
+			const { data: companyData, error: companyError } = await db
 				.from('company_info')
 				.select('*')
-				.eq('stock_item_id', stockItem.id)
+				.eq('stock_item_id', stock.id)
 				.single();
 
 			if (companyError) throw companyError;
+			if (!companyData) throw new Error('Company info not found');
 
-			companyInfo = companyData;
+			companyInfo = companyData as CompanyInfo;
 		} catch (e) {
-			error = e.message;
+			error = e instanceof Error ? e.message : 'An unknown error occurred';
+			stockItem = null;
+			companyInfo = null;
 		} finally {
 			loading = false;
 		}
@@ -61,7 +86,7 @@
 	<div class="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900">
 		<p class="text-red-500">{error}</p>
 	</div>
-{:else}
+{:else if stockItem && companyInfo}
 	<div class="container mx-auto px-4 py-8">
 		<h1 class="mb-6 text-3xl font-bold text-gray-900 dark:text-gray-100">{stockItem.symbol}</h1>
 		<div class="space-y-4">

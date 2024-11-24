@@ -1,15 +1,26 @@
+import { browser } from '$app/environment';
 import { supabase } from '$lib/supabaseClient';
-import type { LayoutLoad } from './$types';
-import { redirect } from '@sveltejs/kit';
+import { sessionStore } from '$lib/stores/sessionStore';
 
-export const load: LayoutLoad = async ({ url }) => {
-	const { data: { session } } = await supabase.auth.getSession();
+export const ssr = false;
 
-	if (!session && !url.pathname.startsWith('/login') && !url.pathname.startsWith('/register')) {
-		throw redirect(303, `/login?redirected=true&from=${url.pathname}`);
-	}
+// Handle auth state changes
+if (browser) {
+    supabase.auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_OUT') {
+            sessionStore.set(null);
+        } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+            sessionStore.set(session);
+        }
+    });
 
-	return {
-		session
-	};
+    // Initialize session on page load
+    supabase.auth.getSession().then(({ data: { session } }) => {
+        sessionStore.set(session);
+    });
+}
+
+// This disables SSR for all routes and makes the app fully client-side
+export const load = async () => {
+    return {};
 };
