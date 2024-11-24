@@ -1,10 +1,10 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import Chart from 'chart.js/auto';
-    import type { ChartConfiguration, TooltipItem } from 'chart.js';
+    import type { ChartConfiguration, TooltipItem, ChartOptions } from 'chart.js';
     import type { ChartProps } from './types';
     import { formatDate, formatValue, calculateGrowth } from './utils/chartUtils';
-    import { theme, colors, createChartOptions } from './utils/chartConfig';
+    import { theme, colors } from './utils/chartConfig';
     import GrowthRates from './GrowthRates.svelte';
     
     export let metrics: ChartProps['metrics'] = [];
@@ -12,14 +12,10 @@
     export let showGrowthRates: boolean = false;
     
     let canvas: HTMLCanvasElement;
-    let chart: Chart;
+    let chart: Chart | null = null;
 
-    function createChart() {
-        if (!canvas) return;
-        
-        if (chart) {
-            chart.destroy();
-        }
+    function updateChart() {
+        if (!canvas || !metrics.length) return;
         
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
@@ -29,7 +25,7 @@
         // Get all unique dates and sort them
         const allDates = [...new Set(metrics.flatMap(m => m.data.map(d => d.date)))].sort();
 
-        // Create datasets with Chart.js 4.4.6 configuration
+        // Create datasets
         const datasets = metrics.map((metric, index) => {
             const dateValueMap = new Map(metric.data.map(d => [d.date, d.value]));
             
@@ -48,91 +44,100 @@
             };
         });
 
-        // Chart.js 4.4.6 configuration
+        const chartOptions: ChartOptions<'bar'> = {
+            responsive: true,
+            maintainAspectRatio: false,
+            normalized: true,
+            animation: {
+                duration: 0
+            },
+            interaction: {
+                mode: 'index',
+                intersect: false
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        title(items: TooltipItem<'bar'>[]) {
+                            if (!items.length) return '';
+                            const date = new Date(items[0].label);
+                            return date.toLocaleDateString('en-US', { 
+                                year: 'numeric',
+                                month: 'long'
+                            });
+                        },
+                        label(context: TooltipItem<'bar'>) {
+                            const value = context.raw;
+                            if (value === null || typeof value !== 'number') return '';
+                            const formattedValue = formatValue(value);
+                            const percentChange = calculateGrowth(context.dataset.data as number[], context.dataIndex);
+                            return `${context.dataset.label}: ${formattedValue}${percentChange}`;
+                        }
+                    }
+                },
+                legend: {
+                    position: 'top',
+                    labels: {
+                        color: currentTheme.text
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        color: currentTheme.border
+                    },
+                    ticks: {
+                        color: currentTheme.text
+                    }
+                },
+                y: {
+                    grid: {
+                        color: currentTheme.border
+                    },
+                    ticks: {
+                        color: currentTheme.text,
+                        callback: (value: any) => formatValue(value)
+                    }
+                }
+            }
+        };
+
         const config: ChartConfiguration<'bar'> = {
             type: 'bar',
             data: {
                 labels: allDates.map(formatDate),
                 datasets
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                normalized: true,
-                animation: {
-                    duration: 0
-                },
-                interaction: {
-                    mode: 'index',
-                    intersect: false
-                },
-                plugins: {
-                    tooltip: {
-                        callbacks: {
-                            title(items: TooltipItem<'bar'>[]) {
-                                if (!items.length) return '';
-                                const date = new Date(items[0].label);
-                                return date.toLocaleDateString('en-US', { 
-                                    year: 'numeric',
-                                    month: 'long'
-                                });
-                            },
-                            label(context: TooltipItem<'bar'>) {
-                                const value = context.raw;
-                                if (value === null || typeof value !== 'number') return '';
-                                const formattedValue = formatValue(value);
-                                const percentChange = calculateGrowth(context.dataset.data as number[], context.dataIndex);
-                                return `${context.dataset.label}: ${formattedValue}${percentChange}`;
-                            }
-                        }
-                    },
-                    legend: {
-                        position: 'top',
-                        labels: {
-                            color: currentTheme.text
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        grid: {
-                            color: currentTheme.border
-                        },
-                        ticks: {
-                            color: currentTheme.text
-                        }
-                    },
-                    y: {
-                        grid: {
-                            color: currentTheme.border
-                        },
-                        ticks: {
-                            color: currentTheme.text,
-                            callback: (value: any) => formatValue(value)
-                        }
-                    }
-                }
-            }
+            options: chartOptions
         };
 
-        // Create chart with Chart.js 4.4.6
-        chart = new Chart(ctx, config);
+        if (chart) {
+            // Update existing chart
+            chart.data = config.data;
+            chart.options = chartOptions;
+            chart.update('none');
+        } else {
+            // Create new chart
+            chart = new Chart(ctx, config);
+        }
     }
 
     onMount(() => {
         if (metrics.length > 0) {
-            createChart();
+            updateChart();
         }
         return () => {
             if (chart) {
                 chart.destroy();
+                chart = null;
             }
         };
     });
 
     // Watch metrics changes
     $: if (metrics.length > 0) {
-        createChart();
+        updateChart();
     }
 </script>
 

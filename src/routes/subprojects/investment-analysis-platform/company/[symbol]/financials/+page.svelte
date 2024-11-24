@@ -1,34 +1,23 @@
 <script lang="ts">
     import { page } from '$app/stores';
     import { onMount } from 'svelte';
-    import { goto } from '$app/navigation';
     import { session } from '$lib/stores/sessionStore';
     import type { NumberFormat } from '$lib/utils/numberFormat';
     import type { FinancialData } from '$lib/types/financialStatements';
     import type { ListName } from '$lib/constants/listNames';
-    import type { ChartMetric } from '$lib/components/financials/types';
-    import StockPageButton from '$lib/components/StockPageButton.svelte';
     import FinancialsHeader from '$lib/components/FinancialsHeader.svelte';
     import FinancialStatementTables from '$lib/components/financials/FinancialStatementTables.svelte';
-    import FinancialChart from '$lib/components/financials/FinancialChart.svelte';
     import UserStockSearch from '$lib/components/financials/UserStockSearch.svelte';
+    import ChartSection from '$lib/components/financials/ChartSection.svelte';
+    import FinancialNavigation from '$lib/components/financials/FinancialNavigation.svelte';
+    import { loadFinancialPageData } from '$lib/services/financialPageService';
+    import { chartStore } from '$lib/stores/chartStore';
     import { filterFinancialStatementsByPeriod } from '$lib/utils/financialStatementFilters';
-    import { findCompanyList, fetchCompanyName, loadFinancialData } from '$lib/services/companyFinancialsService';
-    import { loadShowChart, saveShowChart, loadSelectedMetrics, saveSelectedMetrics } from '$lib/components/financials/state/chartState';
+    import { loadSelectedPeriod, saveSelectedPeriod } from '$lib/components/financials/state/chartState';
 
-    let symbol: string;
-    $: symbol = $page.params.symbol;
-
-    let financialData: FinancialData = {
-        income_statements: [],
-        balance_sheets: [],
-        cash_flow_statements: []
-    };
-    let allFinancialData: FinancialData = {
-        income_statements: [],
-        balance_sheets: [],
-        cash_flow_statements: []
-    };
+    let symbol = $page.params.symbol;
+    let financialData: FinancialData = { income_statements: [], balance_sheets: [], cash_flow_statements: [] };
+    let allFinancialData: FinancialData = { income_statements: [], balance_sheets: [], cash_flow_statements: [] };
     let loading = false;
     let error: string | null = null;
     let numberFormat: NumberFormat = 'abbreviated';
@@ -36,158 +25,79 @@
     let activeTab: 'income' | 'balance' | 'cashflow' = 'income';
     let companyName: string | null = null;
     let companyList: ListName | null = null;
-    let selectedPeriod: 'annual' | 'quarterly' | 'ttm' = 'annual';
+    let selectedPeriod: 'annual' | 'quarterly' | 'ttm' = loadSelectedPeriod();
     let tablesComponent: FinancialStatementTables;
 
-    // Chart state
-    let showChart = loadShowChart();
-    let selectedMetrics: ChartMetric[] = [];
-    let selectedMetricNames: string[] = loadSelectedMetrics();
-
-    function clearChartState() {
-        selectedMetrics = [];
-        selectedMetricNames = [];
-        showChart = false;
-        saveShowChart(false);
-        saveSelectedMetrics([]);
-    }
-
-    function updateChartMetrics() {
-        if (selectedMetricNames.length > 0 && financialData) {
-            const statements = activeTab === 'income' ? financialData.income_statements :
-                             activeTab === 'balance' ? financialData.balance_sheets :
-                             financialData.cash_flow_statements;
-
-            selectedMetrics = selectedMetricNames.map(name => {
-                const data = statements.map(statement => ({
-                    date: statement.date,
-                    value: statement[name.toLowerCase() as keyof typeof statement] as number
-                })).filter(d => typeof d.value === 'number');
-
-                return { name, data };
-            });
-        }
-    }
-
-    async function handleLoadFinancialData(forceRefresh = false) {
-        if (!$session) {
-            const returnUrl = encodeURIComponent($page.url.pathname);
-            goto(`/login?returnUrl=${returnUrl}`);
-            return;
-        }
-
+    async function loadData(forceRefresh = false) {
+        if (!$session) return;
+        
         loading = true;
         error = null;
 
-        const result = await loadFinancialData(symbol, $session.access_token, forceRefresh);
+        const result = await loadFinancialPageData(
+            symbol,
+            $session.access_token,
+            selectedPeriod,
+            selectedYears,
+            forceRefresh
+        );
+
+        ({ financialData, allFinancialData, companyName, companyList, error } = result);
         
-        if (result.error) {
-            error = result.error;
-        } else if (result.data) {
-            allFinancialData = result.data;
-            financialData = filterFinancialStatementsByPeriod(allFinancialData, selectedPeriod, selectedYears);
-            if (tablesComponent) {
-                setTimeout(() => {
-                    try {
-                        tablesComponent.scrollToRight();
-                    } catch (e) {
-                        console.warn('Could not scroll tables:', e);
-                    }
-                }, 100);
-            }
-            updateChartMetrics();
+        if (!error && financialData) {
+            chartStore.updateMetrics(financialData, activeTab);
         }
-        
+
         loading = false;
     }
 
-    // Watch for symbol changes and reload data
-    $: if (symbol && $session) {
-        Promise.all([
-            handleLoadFinancialData(),
-            fetchCompanyName(symbol).then(name => companyName = name),
-            findCompanyList(symbol).then(list => companyList = list)
-        ]);
-    }
-
-    onMount(async () => {
-        if ($session && symbol) {
-            await Promise.all([
-                handleLoadFinancialData(),
-                fetchCompanyName(symbol).then(name => companyName = name),
-                findCompanyList(symbol).then(list => companyList = list)
-            ]);
-        }
-    });
-
-    // Update filtered data when selectedYears or selectedPeriod changes
-    $: {
-        if (allFinancialData && allFinancialData.income_statements.length > 0) {
-            financialData = filterFinancialStatementsByPeriod(allFinancialData, selectedPeriod, selectedYears);
-            updateChartMetrics();
-        }
-    }
-
-    function navigateToFullpage() {
-        if (companyList) {
-            goto(`/subprojects/investment-analysis-platform/${companyList.toLowerCase()}/${symbol.toLowerCase()}`);
-        }
+    function updateData() {
+        if (!allFinancialData?.income_statements.length) return;
+        
+        financialData = filterFinancialStatementsByPeriod(allFinancialData, selectedPeriod, selectedYears);
+        chartStore.updateMetrics(financialData, activeTab);
     }
 
     function handleMetricClick(event: CustomEvent<{ name: string; values: number[]; dates: string[] }>) {
-        const { name, values, dates } = event.detail;
-        
-        const existingIndex = selectedMetricNames.indexOf(name);
-        
-        if (existingIndex !== -1) {
-            selectedMetrics = selectedMetrics.filter(m => m.name !== name);
-            selectedMetricNames = selectedMetricNames.filter(n => n !== name);
-        } else {
-            const newMetric = {
-                name,
-                data: dates.map((date, i) => ({
-                    date,
-                    value: values[i]
-                }))
-            };
-            selectedMetrics = [...selectedMetrics, newMetric];
-            selectedMetricNames = [...selectedMetricNames, name];
-        }
-
-        showChart = selectedMetrics.length > 0;
-        saveShowChart(showChart);
-        saveSelectedMetrics(selectedMetricNames);
+        chartStore.handleMetricClick(event.detail.name, event.detail.values, event.detail.dates);
     }
 
-    // Check if there's any data for the current tab
+    function handlePeriodChange(event: CustomEvent<{ period: 'annual' | 'quarterly' | 'ttm' }>) {
+        selectedPeriod = event.detail.period;
+        saveSelectedPeriod(selectedPeriod);
+        updateData();
+    }
+
+    function handleYearChange(event: CustomEvent<{ years: number }>) {
+        selectedYears = event.detail.years;
+        updateData();
+    }
+
+    // Watch for symbol changes
+    $: if ($page.params.symbol !== symbol) {
+        symbol = $page.params.symbol;
+        loadData();
+    }
+
+    // Watch for tab changes
+    $: if (activeTab && financialData) {
+        chartStore.updateMetrics(financialData, activeTab);
+    }
+
+    onMount(() => {
+        if ($session && symbol) {
+            loadData();
+        }
+    });
+
     $: hasData = activeTab === 'income' ? financialData.income_statements.length > 0 :
                  activeTab === 'balance' ? financialData.balance_sheets.length > 0 :
                  financialData.cash_flow_statements.length > 0;
 </script>
 
 <div class="min-h-screen bg-white dark:bg-[#1F2937] p-4 space-y-4">
-    <!-- Navigation Buttons -->
-    <div class="flex space-x-4 mb-6">
-        <StockPageButton onClick={() => goto('/subprojects/investment-analysis-platform')}>
-            Go to IAP
-        </StockPageButton>
-
-        {#if companyList}
-            <StockPageButton onClick={navigateToFullpage}>
-                Go to Fullpage
-            </StockPageButton>
-        {/if}
-
-        <StockPageButton onClick={() => goto(`/subprojects/investment-analysis-platform/company/${symbol}`)}>
-            Wiki
-        </StockPageButton>
-
-        <StockPageButton variant="disabled">
-            Financials
-        </StockPageButton>
-    </div>
-
-    <!-- Stock Search -->
+    <FinancialNavigation {symbol} {companyList} />
+    
     <div class="mb-6">
         <UserStockSearch />
     </div>
@@ -199,28 +109,13 @@
         {numberFormat}
         {selectedYears}
         period={selectedPeriod}
-        on:refresh={() => handleLoadFinancialData(true)}
+        on:refresh={() => loadData(true)}
         on:formatChange={(e) => numberFormat = e.detail}
-        on:yearChange={(e) => selectedYears = e.detail.years}
-        on:periodChange={(e) => selectedPeriod = e.detail.period}
+        on:yearChange={handleYearChange}
+        on:periodChange={handlePeriodChange}
     />
 
-    {#if showChart && selectedMetrics.length > 0}
-        <div class="mb-4 bg-white dark:bg-[#1F2937] rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-            <div class="flex justify-end">
-                <button 
-                    class="text-sm px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white transition-colors"
-                    on:click={clearChartState}
-                >
-                    Close Chart
-                </button>
-            </div>
-            <FinancialChart 
-                metrics={selectedMetrics}
-                showGrowthRates={selectedPeriod === 'ttm'}
-            />
-        </div>
-    {/if}
+    <ChartSection {selectedPeriod} />
 
     {#if !hasData && !loading && !error}
         <div class="p-4 bg-yellow-100 dark:bg-yellow-900 border border-yellow-400 dark:border-yellow-700 text-yellow-700 dark:text-yellow-200 rounded-lg" role="alert">
@@ -236,7 +131,7 @@
         {error}
         {financialData}
         {numberFormat}
-        {selectedMetricNames}
+        selectedMetricNames={$chartStore.selectedMetricNames}
         on:metricClick={handleMetricClick}
     />
 </div>
