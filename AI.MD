@@ -45,32 +45,59 @@ const { subscribe, set, update } = writable(initialState);
 export { subscribe }; // Only expose what's needed
 ```
 
-## Supabase CLI Access
+## Database Access
+
+### Architecture Overview
+- Auth: Hosted Supabase (ztwbgnoykjmhqcooiosr.supabase.co)
+  - Used for authentication only
+  - Google OAuth and email auth
+  - Session management
+  - Auth client in supabaseClient.ts
+
+- Database: Self-hosted Supabase on Hetzner VPS via Coolify
+  - All data operations
+  - Better control and performance
+  - Lower costs
+  - Database client in supabaseClient.ts
+
+### Database Operations
+Use the `ladab` CLI tool for database operations:
 ```bash
-# Project Details
-Project URL: https://ztwbgnoykjmhqcooiosr.supabase.co
-Project Reference: ztwbgnoykjmhqcooiosr
+# List tables or table contents
+ladab ls [table]
 
-# Access Tokens
-Access Token Name: stojanovic-one
-Access Token: sbp_a1c2a9ba4eb7fdb44ffe9179deef7c9811743568
+# Get records with query
+ladab get <table> [query]
 
-# Database
-DB Password: Djordje1992_01
-DB Connection: postgresql://postgres.ztwbgnoykjmhqcooiosr:[YOUR-PASSWORD]@aws-0-eu-central-1.pooler.supabase.com:6543/postgres
+# Add record
+ladab add <table> [json]
 
-# CLI Commands
-# Install CLI locally
-npm install supabase --save-dev
+# Delete records
+ladab del <table> [query]
 
-# Initialize project
-npx supabase init
+# Update records
+ladab up <table> [query]
 
-# Link to project
-SUPABASE_ACCESS_TOKEN=sbp_a1c2a9ba4eb7fdb44ffe9179deef7c9811743568 npx supabase link --project-ref ztwbgnoykjmhqcooiosr
+# Test RLS policies
+ladab rls test <table>
 
-# Run SQL commands
-PGPASSWORD=Djordje1992_01 psql -h aws-0-eu-central-1.pooler.supabase.com -p 6543 -U postgres.ztwbgnoykjmhqcooiosr -d postgres -c "YOUR SQL COMMAND"
+# Examples
+ladab get stocks -l 5 -o symbol   # Get 5 stocks ordered by symbol
+ladab get users -w "id=eq.123"    # Get user with id 123
+```
+
+### Code Examples
+```typescript
+// Auth operations (hosted Supabase)
+import { supabase } from '$lib/supabaseClient';
+const { data: { user } } = await supabase.auth.getUser(token);
+
+// Database operations (VPS Supabase)
+import { db } from '$lib/supabaseClient';
+const { data, error } = await db
+    .from('table_name')
+    .select('*')
+    .limit(10);
 ```
 
 ## UI/UX Standards
@@ -132,19 +159,23 @@ PGPASSWORD=Djordje1992_01 psql -h aws-0-eu-central-1.pooler.supabase.com -p 6543
 - Clean up resources
 - Validate inputs
 - Test edge cases
+- Use service role key for database operations that need elevated privileges
+- Use anon key for regular database operations
 
 ### Performance
 - Lazy load components
-- Optimize queries
-- Implement caching
+- Optimize queries using proper indexes
+- Implement caching strategies
 - Compress assets
+- Use connection pooling for database
+- Implement proper error boundaries
 
 ## Tech Stack & Structure
 ```
 Frontend & Backend: SvelteKit
-Database: PostgreSQL (Supabase)
+Database: PostgreSQL (self-hosted via Coolify)
 UI: Tailwind CSS
-Auth: Supabase Auth
+Auth: Supabase (hosted)
 State: Svelte stores
 
 src/
@@ -152,8 +183,9 @@ src/
 │   ├── components/    # UI components
 │   ├── stores/        # State management
 │   ├── utils/         # Helpers
-│   └── types/         # TypeScript types
-└── routes/            # App routes
+│   ├── db/           # Database schema and connection
+│   └── types/        # TypeScript types
+└── routes/           # App routes
 ```
 
 Remember: Always apply Elon's principles to maintain code quality and efficiency.

@@ -11,7 +11,6 @@
     let password = '';
     let errorMessage = '';
     let loading = false;
-    let dbTestResult = '';
 
     let returnUrl = '';
     $: {
@@ -27,11 +26,8 @@
         // Check if we have a session
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
-            // Test database connection
-            const result = await testDbConnection();
-            console.log('Database connection test:', result);
-            dbTestResult = JSON.stringify(result, null, 2);
-            
+            // Test database connection silently
+            await testDbConnection();
             goto(returnUrl);
         }
     });
@@ -72,13 +68,6 @@
         {/if}
         {#if errorMessage}
             <ErrorMessage message={errorMessage} />
-        {/if}
-        {#if dbTestResult}
-            <div class="mb-4 rounded-md bg-blue-50 p-4 dark:bg-blue-900">
-                <pre class="text-sm text-blue-700 dark:text-blue-200 whitespace-pre-wrap">
-                    {dbTestResult}
-                </pre>
-            </div>
         {/if}
 
         <div class="mt-4">

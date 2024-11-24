@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { supabase } from '$lib/supabaseClient';
+import { supabase, db } from '$lib/supabaseClient';
 import { FMP_API_KEY } from '$env/static/private';
 import { getExchangeRate, convertToUSD } from '$lib/utils/currencyConverter';
 
@@ -159,7 +159,7 @@ export const POST: RequestHandler = async ({ request }) => {
         }
 
         // First check if stock already exists in stock_metadata
-        const { data: existingStock, error: existingStockError } = await supabase
+        const { data: existingStock, error: existingStockError } = await db
             .from('stock_metadata')
             .select('*')
             .eq(identifierType === 'symbol' ? 'symbol' : 'isin', identifier)
@@ -194,7 +194,7 @@ export const POST: RequestHandler = async ({ request }) => {
             const convertedData = await convertMetadataToUSD(stockDataArray[0] as FMPStockData);
 
             // Insert into stock_metadata
-            const { data: newStockMetadata, error: insertError } = await supabase
+            const { data: newStockMetadata, error: insertError } = await db
                 .from('stock_metadata')
                 .insert([convertedData])
                 .select()
@@ -208,7 +208,7 @@ export const POST: RequestHandler = async ({ request }) => {
         }
 
         // Create user_stocks entry
-        const { data: userStock, error: userStockError } = await supabase
+        const { data: userStock, error: userStockError } = await db
             .from('user_stocks')
             .insert([
                 {

@@ -4,6 +4,7 @@
     import type { ListName } from '$lib/constants/listNames';
     import { session } from '$lib/stores/sessionStore';
     import { stockForm, isFormValid } from '$lib/stores/stockFormStore';
+    import { get } from 'svelte/store';
 
     const dispatch = createEventDispatcher();
 
@@ -12,20 +13,21 @@
 
     function handleEscape(event: KeyboardEvent) {
         if (event.key === 'Escape') {
-            $stockForm.showSuggestions = false;
+            stockForm.hideSuggestions();
             dispatch('close');
         }
     }
 
     function handleInput() {
-        stockForm.updateSuggestions($stockForm.identifier);
+        const value = get(stockForm).identifier;
+        stockForm.updateSuggestions(value);
         if ($session?.access_token) {
             stockForm.validateIdentifier($session.access_token);
         }
     }
 
     function handleKeydown(event: KeyboardEvent) {
-        if (!$stockForm.showSuggestions) return;
+        if (!get(stockForm).showSuggestions) return;
 
         switch (event.key) {
             case 'ArrowDown':
@@ -38,8 +40,9 @@
                 break;
             case 'Enter':
                 event.preventDefault();
-                if ($stockForm.suggestionIndex >= 0) {
-                    stockForm.selectSuggestion($stockForm.suggestions[$stockForm.suggestionIndex]);
+                const state = get(stockForm);
+                if (state.suggestionIndex >= 0) {
+                    stockForm.selectSuggestion(state.suggestions[state.suggestionIndex]);
                     if ($session?.access_token) {
                         stockForm.validateIdentifier($session.access_token);
                     }
@@ -58,7 +61,7 @@
             return;
         }
 
-        if (!$stockForm.isValid) {
+        if (!get(stockForm).isValid) {
             stockForm.setErrorMessage('Please enter a valid symbol');
             return;
         }
@@ -123,7 +126,8 @@
                                     <input
                                         type="text"
                                         id="identifier"
-                                        bind:value={$stockForm.identifier}
+                                        value={$stockForm.identifier}
+                                        on:input={(e) => stockForm.setIdentifier(e.currentTarget.value)}
                                         bind:this={inputElement}
                                         on:input={handleInput}
                                         on:keydown={handleKeydown}
@@ -170,7 +174,8 @@
                                 <label for="notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Notes</label>
                                 <textarea
                                     id="notes"
-                                    bind:value={$stockForm.notes}
+                                    value={$stockForm.notes}
+                                    on:input={(e) => stockForm.setNotes(e.currentTarget.value)}
                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:text-sm p-2"
                                     rows="4"
                                 ></textarea>
