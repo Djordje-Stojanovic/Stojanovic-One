@@ -1,4 +1,4 @@
-import { supabase } from '$lib/supabaseClient';
+import { db } from '$lib/supabaseClient';
 import type { ListName } from '$lib/constants/listNames';
 
 export async function searchSymbols(query: string): Promise<string[]> {
@@ -6,7 +6,7 @@ export async function searchSymbols(query: string): Promise<string[]> {
 
     try {
         // First, try to find exact matches
-        const { data: exactMatches, error: exactError } = await supabase
+        const { data: exactMatches, error: exactError } = await db
             .from('available_symbols')
             .select('symbol')
             .ilike('symbol', query)
@@ -15,7 +15,7 @@ export async function searchSymbols(query: string): Promise<string[]> {
         if (exactError) throw exactError;
 
         // Then, find symbols that start with the query
-        const { data: startsWithMatches, error: startsWithError } = await supabase
+        const { data: startsWithMatches, error: startsWithError } = await db
             .from('available_symbols')
             .select('symbol')
             .ilike('symbol', `${query}%`)
@@ -25,7 +25,7 @@ export async function searchSymbols(query: string): Promise<string[]> {
         if (startsWithError) throw startsWithError;
 
         // Finally, find symbols that contain the query anywhere
-        const { data: containsMatches, error: containsError } = await supabase
+        const { data: containsMatches, error: containsError } = await db
             .from('available_symbols')
             .select('symbol')
             .ilike('symbol', `%${query}%`)

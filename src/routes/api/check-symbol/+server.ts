@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { supabase } from '$lib/supabaseClient';
+import { db } from '$lib/supabaseClient';
 
 export const GET: RequestHandler = async ({ url }) => {
     const symbol = url.searchParams.get('symbol')?.toUpperCase();
@@ -10,8 +10,8 @@ export const GET: RequestHandler = async ({ url }) => {
     }
 
     try {
-        // Check if symbol exists in our database
-        const { data, error } = await supabase
+        // Check if symbol exists in our VPS database
+        const { data, error } = await db
             .from('available_symbols')
             .select('symbol')
             .eq('symbol', symbol)

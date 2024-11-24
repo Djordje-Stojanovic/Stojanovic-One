@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { supabase } from '$lib/supabaseClient';
+	import { supabase, db } from '$lib/supabaseClient';
 	import { session } from '$lib/stores/sessionStore';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
@@ -17,11 +17,13 @@
 
 	onMount(async () => {
 		if ($session) {
+			// Get user info from auth session
 			email = $session.user.email || '';
 			name = $session.user.user_metadata.full_name || '';
 			avatarUrl = $session.user.user_metadata.avatar_url || '';
 
-			const { data, error } = await supabase
+			// Get profile data from VPS database
+			const { data, error } = await db
 				.from('profiles')
 				.select('username, website, avatar_url')
 				.eq('id', $session.user.id)
@@ -34,7 +36,8 @@
 				website = data.website;
 				avatarUrl = data.avatar_url || avatarUrl;
 			} else {
-				const { error: insertError } = await supabase
+				// Create initial profile in VPS database
+				const { error: insertError } = await db
 					.from('profiles')
 					.insert({ id: $session.user.id, avatar_url: avatarUrl });
 				if (insertError) {
@@ -45,7 +48,7 @@
 	});
 
 	async function updateProfile() {
-		const { error } = await supabase.from('profiles').upsert(
+		const { error } = await db.from('profiles').upsert(
 			{
 				id: $session?.user.id,
 				username,

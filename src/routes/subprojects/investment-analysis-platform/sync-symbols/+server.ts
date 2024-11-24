@@ -1,24 +1,13 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { createClient } from '@supabase/supabase-js';
-import { VITE_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, FMP_API_KEY } from '$env/static/private';
+import { supabase, db } from '$lib/supabaseClient';
+import { FMP_API_KEY } from '$env/static/private';
 import { getExchangeRate, convertToUSD } from '$lib/utils/currencyConverter';
 
-const supabaseUrl = VITE_PUBLIC_SUPABASE_URL;
-const supabaseServiceRoleKey = SUPABASE_SERVICE_ROLE_KEY;
-const fmpApiKey = FMP_API_KEY;
-
-if (!supabaseUrl || !supabaseServiceRoleKey) {
-    console.error('Missing Supabase environment variables');
-    throw new Error('Missing Supabase environment variables');
-}
-
-if (!fmpApiKey) {
+if (!FMP_API_KEY) {
     console.error('Missing FMP API key');
     throw new Error('Missing FMP API key');
 }
-
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey);
 
 interface StockMetadata {
     id: number;
@@ -44,14 +33,14 @@ async function convertMetadataToUSD(metadata: StockMetadata, exchangeRate: numbe
 }
 
 export const POST: RequestHandler = async ({ request }) => {
-    // Check authentication
+    // Check authentication using hosted Supabase
     const authHeader = request.headers.get('Authorization');
     if (!authHeader) {
         return json({ error: 'No authorization header' }, { status: 401 });
     }
 
     const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
 
     if (userError || !user) {
         return json({ error: 'Unauthorized' }, { status: 401 });
@@ -60,7 +49,7 @@ export const POST: RequestHandler = async ({ request }) => {
     try {
         console.log('Fetching symbol list from FMP...');
         const response = await fetch(
-            `https://financialmodelingprep.com/api/v3/financial-statement-symbol-lists?apikey=${fmpApiKey}`
+            `https://financialmodelingprep.com/api/v3/financial-statement-symbol-lists?apikey=${FMP_API_KEY}`
         );
 
         if (!response.ok) {
@@ -75,12 +64,12 @@ export const POST: RequestHandler = async ({ request }) => {
 
         console.log(`Fetched ${symbols.length} symbols`);
 
-        // Upsert symbols
+        // Upsert symbols using VPS database
         console.log('Upserting symbols...');
         const batchSize = 1000;
         for (let i = 0; i < symbols.length; i += batchSize) {
             const batch = symbols.slice(i, i + batchSize).map(symbol => ({ symbol }));
-            const { error: upsertError } = await supabaseAdmin
+            const { error: upsertError } = await db
                 .from('available_symbols')
                 .upsert(batch, { onConflict: 'symbol' });
 
@@ -91,9 +80,9 @@ export const POST: RequestHandler = async ({ request }) => {
             console.log(`Upserted ${i + batch.length} / ${symbols.length} symbols`);
         }
 
-        // Convert stock metadata currencies to USD
+        // Convert stock metadata currencies to USD using VPS database
         console.log('Converting stock metadata currencies to USD...');
-        const { data: stockMetadata, error: fetchError } = await supabaseAdmin
+        const { data: stockMetadata, error: fetchError } = await db
             .from('stock_metadata')
             .select('*')
             .not('currency', 'eq', 'USD');
@@ -125,7 +114,7 @@ export const POST: RequestHandler = async ({ request }) => {
                         
                         for (const stock of stocks) {
                             const converted = await convertMetadataToUSD(stock, exchangeRate);
-                            const { error: updateError } = await supabaseAdmin
+                            const { error: updateError } = await db
                                 .from('stock_metadata')
                                 .update(converted)
                                 .eq('id', stock.id);

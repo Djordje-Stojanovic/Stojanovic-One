@@ -1,10 +1,10 @@
-import { supabase } from '$lib/supabaseClient';
+import { db } from '$lib/supabaseClient';
 import type { ListName } from '$lib/constants/listNames';
 import type { FinancialData } from '$lib/types/financialStatements';
 
 export async function findCompanyList(symbol: string): Promise<ListName | null> {
     try {
-        const { data, error: queryError } = await supabase
+        const { data, error: queryError } = await db
             .from('user_stocks')
             .select(`
                 list_name,
@@ -26,7 +26,7 @@ export async function findCompanyList(symbol: string): Promise<ListName | null> 
 
 export async function fetchCompanyName(symbol: string): Promise<string | null> {
     try {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('stock_metadata')
             .select('company_name')
             .eq('symbol', symbol)

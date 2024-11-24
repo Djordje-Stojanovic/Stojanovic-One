@@ -1,13 +1,11 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { createClient } from '@supabase/supabase-js';
-import { VITE_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, FMP_API_KEY } from '$env/static/private';
+import { db } from '$lib/supabaseClient';
+import { FMP_API_KEY } from '$env/static/private';
 import { getExchangeRate, convertStatementToUSD } from '$lib/utils/currencyConverter';
 import type { FMPIncomeStatement, FMPBalanceSheet, FMPCashFlowStatement } from './types/fmpTypes';
 import { transformIncomeStatement, transformBalanceSheet, transformCashFlow } from './types/transformers';
 import type { IncomeStatement, BalanceSheet, CashFlowStatement } from '$lib/types/financialStatements';
-
-const supabase = createClient(VITE_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 type FinancialStatement = {
     reportedCurrency?: string;
@@ -65,7 +63,7 @@ async function insertFinancialData<T extends FinancialStatement, R>(
         });
 
         // Upsert the data
-        const { data: result, error } = await supabase
+        const { data: result, error } = await db
             .from(tableName)
             .upsert(transformedData, {
                 onConflict: 'symbol,date,period',
@@ -90,11 +88,11 @@ export const GET = (async ({ params, url }) => {
         const { symbol } = params;
         const forceRefresh = url.searchParams.get('forceRefresh') === 'true';
         
-        // First try to get existing data from Supabase
+        // First try to get existing data from database
         const [existingIncomeStmts, existingBalanceSheets, existingCashFlowStmts] = await Promise.all([
-            supabase.from('income_statements').select('*').eq('symbol', symbol).order('date', { ascending: false }),
-            supabase.from('balance_sheets').select('*').eq('symbol', symbol).order('date', { ascending: false }),
-            supabase.from('cash_flow_statements').select('*').eq('symbol', symbol).order('date', { ascending: false })
+            db.from('income_statements').select('*').eq('symbol', symbol).order('date', { ascending: false }),
+            db.from('balance_sheets').select('*').eq('symbol', symbol).order('date', { ascending: false }),
+            db.from('cash_flow_statements').select('*').eq('symbol', symbol).order('date', { ascending: false })
         ]);
 
         // If we have data and no force refresh, return it immediately
@@ -178,9 +176,9 @@ export const GET = (async ({ params, url }) => {
 
         // Fetch all data after upsert
         const [finalIncomeStmts, finalBalanceSheets, finalCashFlowStmts] = await Promise.all([
-            supabase.from('income_statements').select('*').eq('symbol', symbol).order('date', { ascending: false }),
-            supabase.from('balance_sheets').select('*').eq('symbol', symbol).order('date', { ascending: false }),
-            supabase.from('cash_flow_statements').select('*').eq('symbol', symbol).order('date', { ascending: false })
+            db.from('income_statements').select('*').eq('symbol', symbol).order('date', { ascending: false }),
+            db.from('balance_sheets').select('*').eq('symbol', symbol).order('date', { ascending: false }),
+            db.from('cash_flow_statements').select('*').eq('symbol', symbol).order('date', { ascending: false })
         ]);
 
         return json({

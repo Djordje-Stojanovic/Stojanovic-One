@@ -1,9 +1,9 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { supabase } from '$lib/supabaseClient';
+import { supabase, db } from '$lib/supabaseClient';
 
 export const POST: RequestHandler = async ({ request }) => {
-    // Verify admin user
+    // Verify admin user using hosted Supabase auth
     const authHeader = request.headers.get('Authorization');
     if (!authHeader) {
         return json({ error: 'No authorization header' }, { status: 401 });
@@ -16,8 +16,8 @@ export const POST: RequestHandler = async ({ request }) => {
         return json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Check if user is admin (you may want to implement your own admin check)
-    const { data: profile } = await supabase
+    // Check if user is admin using VPS database
+    const { data: profile } = await db
         .from('profiles')
         .select('is_admin')
         .eq('id', user.id)
@@ -42,11 +42,11 @@ export const POST: RequestHandler = async ({ request }) => {
             throw new Error('Invalid response format');
         }
 
-        // Insert new symbols in batches of 1000
+        // Insert new symbols in batches of 1000 using VPS database
         const batchSize = 1000;
         for (let i = 0; i < symbols.length; i += batchSize) {
             const batch = symbols.slice(i, i + batchSize).map(symbol => ({ symbol }));
-            const { error: insertError } = await supabase
+            const { error: insertError } = await db
                 .from('available_symbols')
                 .insert(batch);
 

@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { supabase } from '$lib/supabaseClient';
+    import { supabase, testDbConnection } from '$lib/supabaseClient';
     import { goto } from '$app/navigation';
     import { page } from '$app/stores';
     import ErrorMessage from '$lib/components/ErrorMessage.svelte';
@@ -11,21 +11,28 @@
     let password = '';
     let errorMessage = '';
     let loading = false;
+    let dbTestResult = '';
 
     let returnUrl = '';
     $: {
         const params = $page.url.searchParams;
         returnUrl = params.get('returnUrl') || params.get('from') || '/';
+        // Prevent redirect loops
+        if (returnUrl.includes('/auth/callback') || returnUrl.includes('/login')) {
+            returnUrl = '/';
+        }
     }
 
     onMount(async () => {
         // Check if we have a session
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
-            // Add state parameter to prevent redirect loops
-            const hasParams = returnUrl.includes('?');
-            const stateParam = `${hasParams ? '&' : '?'}state=post_auth`;
-            goto(returnUrl + stateParam);
+            // Test database connection
+            const result = await testDbConnection();
+            console.log('Database connection test:', result);
+            dbTestResult = JSON.stringify(result, null, 2);
+            
+            goto(returnUrl);
         }
     });
 
@@ -33,16 +40,13 @@
         try {
             loading = true;
             errorMessage = '';
-            const redirectTo = import.meta.env.DEV
-                ? 'http://localhost:5173/auth/callback'
-                : 'https://stojanovic-one.com/auth/callback';
-                
-            const { error } = await supabase.auth.signInWithOAuth({
+            const { data, error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: { 
-                    redirectTo,
+                    redirectTo: `${window.location.origin}/auth/callback`,
                     queryParams: {
-                        returnUrl
+                        access_type: 'offline',
+                        prompt: 'consent'
                     }
                 }
             });
@@ -68,6 +72,13 @@
         {/if}
         {#if errorMessage}
             <ErrorMessage message={errorMessage} />
+        {/if}
+        {#if dbTestResult}
+            <div class="mb-4 rounded-md bg-blue-50 p-4 dark:bg-blue-900">
+                <pre class="text-sm text-blue-700 dark:text-blue-200 whitespace-pre-wrap">
+                    {dbTestResult}
+                </pre>
+            </div>
         {/if}
 
         <div class="mt-4">

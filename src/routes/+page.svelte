@@ -2,15 +2,9 @@
 	import { sessionStore } from '$lib/stores/sessionStore';
 	import SubprojectCard from '$lib/components/SubprojectCard.svelte';
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
-	import { supabase } from '$lib/supabaseClient';
+	import { db } from '$lib/supabaseClient';
 
 	let subprojects = [
-		{
-			id: 'clothing-outfit-calculator',
-			title: 'Clothing Outfit Calculator',
-			description: 'Mix and match your clothing items to create perfect outfits.',
-			route: '/subprojects/clothing-outfit-calculator'
-		},
 		{
 			id: 'investment-analysis-platform',
 			title: 'Investment Analysis Platform',
@@ -22,7 +16,7 @@
 
 	// Load additional subprojects if user is authenticated
 	$: if ($sessionStore.session) {
-		supabase
+		db
 			.from('subprojects')
 			.select('id, title, description')
 			.then(({ data, error }) => {

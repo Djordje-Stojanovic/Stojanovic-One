@@ -1,5 +1,5 @@
 import type { RequestEvent } from '@sveltejs/kit';
-import { supabase } from '$lib/supabaseClient';
+import { db } from '$lib/supabaseClient';
 import type { ListName } from '$lib/constants/listNames';
 
 interface MoveRequest {
@@ -56,7 +56,7 @@ export async function POST({ request, locals }: RequestEvent) {
         }
 
         // Update the stock's list
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('user_stocks')
             .update({ 
                 list_name: newList,

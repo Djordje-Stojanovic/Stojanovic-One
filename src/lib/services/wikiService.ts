@@ -1,8 +1,8 @@
-import { supabase } from '$lib/supabaseClient';
+import { db } from '$lib/supabaseClient';
 import type { WikiContent } from '../types/wiki';
 
 export async function loadWikiContent(symbol: string, section: string): Promise<WikiContent | null> {
-    const { data, error } = await supabase
+    const { data, error } = await db
         .from('company_wiki')
         .select('id, content, updated_at, user_id')
         .eq('symbol', symbol)
@@ -38,7 +38,7 @@ export async function saveWikiContent(symbol: string, section: string, content: 
     const now = new Date().toISOString();
 
     // Update current content with new timestamp
-    const { error } = await supabase
+    const { error } = await db
         .from('company_wiki')
         .upsert(
             {
@@ -58,7 +58,7 @@ async function saveToHistory(symbol: string, section: string, currentData: WikiC
     // Get current timestamp for history entry
     const now = new Date().toISOString();
 
-    const { error } = await supabase
+    const { error } = await db
         .from('company_wiki_history')
         .insert({
             wiki_id: currentData.id,
@@ -73,7 +73,7 @@ async function saveToHistory(symbol: string, section: string, currentData: WikiC
 }
 
 async function cleanupHistory(symbol: string, section: string) {
-    const { data: historyEntries } = await supabase
+    const { data: historyEntries } = await db
         .from('company_wiki_history')
         .select('id')
         .eq('symbol', symbol)
@@ -81,7 +81,7 @@ async function cleanupHistory(symbol: string, section: string) {
         .order('updated_at', { ascending: true });
 
     if (historyEntries && historyEntries.length > 5) {
-        await supabase
+        await db
             .from('company_wiki_history')
             .delete()
             .eq('id', historyEntries[0].id);
@@ -89,7 +89,7 @@ async function cleanupHistory(symbol: string, section: string) {
 }
 
 export async function loadUserData(userId: string) {
-    const { data, error } = await supabase
+    const { data, error } = await db
         .from('profiles')
         .select('full_name, username')
         .eq('id', userId)
@@ -104,7 +104,7 @@ export async function revertContent(symbol: string, section: string, content: st
 
     const now = new Date().toISOString();
 
-    const { error } = await supabase
+    const { error } = await db
         .from('company_wiki')
         .update({
             content,

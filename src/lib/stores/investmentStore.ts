@@ -1,5 +1,5 @@
 import { writable, get } from 'svelte/store';
-import { supabase } from '../supabaseClient';
+import { db } from '../supabaseClient';
 import { session } from './sessionStore';
 import type { UserStock } from '../types';
 import type { ListName } from '../constants/listNames';
@@ -50,7 +50,7 @@ function createInvestmentStore(): InvestmentStore {
                     throw new Error('No user ID available');
                 }
 
-                const { data, error: fetchError } = await supabase
+                const { data, error: fetchError } = await db
                     .from('user_stocks')
                     .select(`*, metadata:stock_metadata (*)`)
                     .eq('user_id', userId);
@@ -104,7 +104,7 @@ function createInvestmentStore(): InvestmentStore {
 
         deleteStock: async (stockId: string) => {
             try {
-                const { error: deleteError } = await supabase
+                const { error: deleteError } = await db
                     .from('user_stocks')
                     .delete()
                     .eq('id', stockId);
@@ -123,7 +123,7 @@ function createInvestmentStore(): InvestmentStore {
 
         moveStock: async (stockId: string, newListName: ListName) => {
             try {
-                const { data, error: moveError } = await supabase
+                const { data, error: moveError } = await db
                     .from('user_stocks')
                     .update({ list_name: newListName })
                     .eq('id', stockId)
