@@ -61,29 +61,66 @@ export { subscribe }; // Only expose what's needed
   - Database client in supabaseClient.ts
 
 ### Database Operations
-Use the `ladab` CLI tool for database operations:
+The `ladab` CLI tool provides comprehensive database access. AI can use this tool to easily query and manipulate data when programming:
+
 ```bash
-# List tables or table contents
-ladab ls [table]
+# Core Commands
+ladab ls [table]              # List tables or contents
+ladab get <table> [options]   # Get records with filtering
+ladab add <table> [json]      # Add records
+ladab del <table> [query]     # Delete records
+ladab up <table> [query]      # Update records
+ladab count <table> [query]   # Count records
 
-# Get records with query
-ladab get <table> [query]
+# Get Command Options
+-l, --limit <n>      # Limit number of records
+-f, --offset <n>     # Skip/offset records
+-o, --order <col>    # Order by column
+-d, --desc           # Order descending
+-w, --where <cond>   # Filter records (e.g. "symbol=eq.AAPL")
+-s, --select <cols>  # Select specific columns
+-j, --join <spec>    # Join with other tables
+-g, --group <cols>   # Group by columns
 
-# Add record
-ladab add <table> [json]
+# Schema Commands
+ladab schema ls               # List all schemas
+ladab schema info <table>     # Get table info
+ladab schema fk <table>       # List foreign keys
+ladab schema refs <table>     # List references
+ladab schema cols <table>     # List columns
+ladab schema indexes <table>  # List indexes
 
-# Delete records
-ladab del <table> [query]
-
-# Update records
-ladab up <table> [query]
-
-# Test RLS policies
-ladab rls test <table>
+# RLS Commands
+ladab rls ls [table]          # List policies
+ladab rls add <table>         # Add policy
+ladab rls del <table>         # Delete policy
+ladab rls enable <table>      # Enable RLS
+ladab rls disable <table>     # Disable RLS
+ladab rls test <table>        # Test policies
 
 # Examples
-ladab get stocks -l 5 -o symbol   # Get 5 stocks ordered by symbol
-ladab get users -w "id=eq.123"    # Get user with id 123
+# Basic queries
+ladab get stock_metadata -w "symbol=eq.AAPL" -s "symbol,company_name,price"  # Get specific AAPL fields
+ladab get users -l 5 -o created_at -d                                        # Get 5 newest users
+
+# Using 'myself' shortcut for user_id
+ladab get user_stocks -w "user_id=myself"  # Get all your stocks
+
+# Join query with nested selects
+ladab get user_stocks \
+  -w "user_id=myself" \
+  -s "list_name,stock_metadata(symbol,ceo,company_name,price)"
+
+# This returns:
+# {
+#   "list_name": "Core Holdings",
+#   "stock_metadata": {
+#     "symbol": "GOOGL",
+#     "ceo": "Mr. Sundar Pichai",
+#     "company_name": "Alphabet Inc.",
+#     "price": 164.76
+#   }
+# }
 ```
 
 ### Code Examples
