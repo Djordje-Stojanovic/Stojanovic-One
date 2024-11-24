@@ -49,6 +49,51 @@
         showChart = false;
     }
 
+    function updateChartData() {
+        // Keep the same metrics selected but update their data
+        selectedMetrics = selectedMetricNames.map(name => {
+            let values: number[] = [];
+            let dates: string[] = [];
+
+            // Find the corresponding data in the financial statements based on the metric name
+            if (activeTab === 'income') {
+                financialData.income_statements.forEach(statement => {
+                    const value = statement[name.toLowerCase() as keyof typeof statement];
+                    if (typeof value === 'number') {
+                        values.push(value);
+                        dates.push(statement.date);
+                    }
+                });
+            } else if (activeTab === 'balance') {
+                financialData.balance_sheets.forEach(statement => {
+                    const value = statement[name.toLowerCase() as keyof typeof statement];
+                    if (typeof value === 'number') {
+                        values.push(value);
+                        dates.push(statement.date);
+                    }
+                });
+            } else if (activeTab === 'cashflow') {
+                financialData.cash_flow_statements.forEach(statement => {
+                    const value = statement[name.toLowerCase() as keyof typeof statement];
+                    if (typeof value === 'number') {
+                        values.push(value);
+                        dates.push(statement.date);
+                    }
+                });
+            }
+
+            return {
+                name,
+                data: dates.map((date, i) => ({
+                    date,
+                    value: values[i]
+                }))
+            };
+        });
+
+        showChart = selectedMetrics.length > 0;
+    }
+
     async function handleLoadFinancialData(forceRefresh = false) {
         if (!$session) {
             const returnUrl = encodeURIComponent($page.url.pathname);
@@ -75,6 +120,8 @@
                     }
                 }, 100);
             }
+            // Update chart data with new financial data
+            updateChartData();
         }
         
         loading = false;
@@ -103,6 +150,7 @@
     $: {
         if (allFinancialData && allFinancialData.income_statements.length > 0) {
             financialData = filterFinancialStatementsByPeriod(allFinancialData, selectedPeriod, selectedYears);
+            updateChartData();
         }
     }
 
