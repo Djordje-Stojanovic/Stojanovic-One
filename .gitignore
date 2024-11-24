@@ -51,3 +51,7 @@ yarn-error.log*
 *.njsproj
 *.sln
 *.sw?
+
+# Supabase
+supabase/config.toml
+!supabase/config.example.toml
