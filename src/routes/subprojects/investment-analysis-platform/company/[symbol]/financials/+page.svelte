@@ -45,7 +45,7 @@
         ({ financialData, allFinancialData, companyName, companyList, error } = result);
         
         if (!error && financialData) {
-            chartStore.updateMetrics(financialData, activeTab);
+            chartStore.updateMetrics(financialData);
         }
 
         loading = false;
@@ -55,7 +55,7 @@
         if (!allFinancialData?.income_statements.length) return;
         
         financialData = filterFinancialStatementsByPeriod(allFinancialData, selectedPeriod, selectedYears);
-        chartStore.updateMetrics(financialData, activeTab);
+        chartStore.updateMetrics(financialData);
     }
 
     function handleMetricClick(event: CustomEvent<{ name: string; values: number[]; dates: string[] }>) {
@@ -81,7 +81,7 @@
 
     // Watch for tab changes
     $: if (activeTab && financialData) {
-        chartStore.updateMetrics(financialData, activeTab);
+        chartStore.updateMetrics(financialData);
     }
 
     onMount(() => {
