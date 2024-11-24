@@ -3,15 +3,10 @@
     import { db } from '$lib/supabaseClient';
     import { onMount } from 'svelte';
     import { session } from '$lib/stores/sessionStore';
-    import { invalidate } from '$app/navigation';
     
     interface StockMetadata {
         symbol: string;
         company_name: string;
-    }
-
-    interface UserStockResponse {
-        stock_metadata: StockMetadata;
     }
 
     let searchTerm = '';
@@ -20,6 +15,7 @@
     let loading = false;
     let selectedIndex = -1;
     let searchInput: HTMLInputElement;
+    let dropdownContainer: HTMLDivElement;
 
     async function searchStocks(term: string) {
         loading = true;
@@ -45,7 +41,9 @@
             searchStocks(searchTerm).then(results => {
                 filteredStocks = results;
                 showDropdown = true;
-                selectedIndex = -1; // Reset selection when results change
+                if (selectedIndex >= results.length) {
+                    selectedIndex = results.length - 1;
+                }
             });
         } else {
             filteredStocks = [];
@@ -64,6 +62,15 @@
         });
     }
 
+    function scrollSelectedIntoView() {
+        if (selectedIndex >= 0 && dropdownContainer) {
+            const selectedElement = dropdownContainer.children[selectedIndex] as HTMLElement;
+            if (selectedElement) {
+                selectedElement.scrollIntoView({ block: 'nearest' });
+            }
+        }
+    }
+
     function handleKeydown(event: KeyboardEvent) {
         if (!showDropdown || filteredStocks.length === 0) return;
 
@@ -71,14 +78,19 @@
             case 'ArrowDown':
                 event.preventDefault();
                 selectedIndex = (selectedIndex + 1) % filteredStocks.length;
+                scrollSelectedIntoView();
                 break;
             case 'ArrowUp':
                 event.preventDefault();
                 selectedIndex = selectedIndex <= 0 ? filteredStocks.length - 1 : selectedIndex - 1;
+                scrollSelectedIntoView();
                 break;
             case 'Tab':
-                event.preventDefault();
-                selectedIndex = (selectedIndex + 1) % filteredStocks.length;
+                if (!event.shiftKey) {
+                    event.preventDefault();
+                    selectedIndex = (selectedIndex + 1) % filteredStocks.length;
+                    scrollSelectedIntoView();
+                }
                 break;
             case 'Enter':
                 event.preventDefault();
@@ -102,6 +114,12 @@
             selectedIndex = -1;
         }
     }
+
+    onMount(() => {
+        if (searchInput) {
+            searchInput.focus();
+        }
+    });
 </script>
 
 <svelte:window on:click={handleClickOutside} />
@@ -115,6 +133,10 @@
             on:keydown={handleKeydown}
             placeholder="Search any stock symbol or company name..."
             class="w-full px-4 py-2 rounded bg-gray-700 text-white placeholder-gray-400 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            aria-expanded={showDropdown}
+            aria-controls="stock-search-results"
+            role="combobox"
+            aria-autocomplete="list"
         />
         
         {#if loading}
@@ -125,12 +147,19 @@
     </div>
     
     {#if showDropdown && filteredStocks.length > 0}
-        <div class="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-700 rounded shadow-lg max-h-60 overflow-y-auto">
+        <div 
+            bind:this={dropdownContainer}
+            id="stock-search-results"
+            class="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-700 rounded shadow-lg max-h-60 overflow-y-auto"
+            role="listbox"
+        >
             {#each filteredStocks as stock, i}
                 <button
                     class="w-full px-4 py-2 text-left hover:bg-gray-700 text-white flex flex-col {i === selectedIndex ? 'bg-gray-700' : ''}"
                     on:click={() => handleStockSelect(stock.symbol)}
                     on:mouseenter={() => selectedIndex = i}
+                    role="option"
+                    aria-selected={i === selectedIndex}
                 >
                     <span class="font-semibold">{stock.symbol}</span>
                     <span class="text-sm text-gray-400">{stock.company_name}</span>

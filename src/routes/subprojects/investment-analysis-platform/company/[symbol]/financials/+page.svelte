@@ -13,7 +13,7 @@
     import { loadFinancialPageData } from '$lib/services/financialPageService';
     import { chartStore } from '$lib/stores/chartStore';
     import { filterFinancialStatementsByPeriod } from '$lib/utils/financialStatementFilters';
-    import { loadSelectedPeriod, saveSelectedPeriod } from '$lib/components/financials/state/chartState';
+    import { loadSelectedPeriod, saveSelectedPeriod, loadSelectedYears, saveSelectedYears } from '$lib/components/financials/state/chartState';
 
     let symbol = $page.params.symbol;
     let financialData: FinancialData = { income_statements: [], balance_sheets: [], cash_flow_statements: [] };
@@ -21,7 +21,7 @@
     let loading = false;
     let error: string | null = null;
     let numberFormat: NumberFormat = 'abbreviated';
-    let selectedYears = 10;
+    let selectedYears = loadSelectedYears();
     let activeTab: 'income' | 'balance' | 'cashflow' = 'income';
     let companyName: string | null = null;
     let companyList: ListName | null = null;
@@ -70,6 +70,7 @@
 
     function handleYearChange(event: CustomEvent<{ years: number }>) {
         selectedYears = event.detail.years;
+        saveSelectedYears(selectedYears);
         updateData();
     }
 

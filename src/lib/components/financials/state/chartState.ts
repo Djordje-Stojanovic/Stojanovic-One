@@ -54,6 +54,24 @@ export function saveSelectedPeriod(period: 'annual' | 'quarterly' | 'ttm') {
     }
 }
 
+export function loadSelectedYears(): number {
+    try {
+        const stored = localStorage.getItem('selectedYears');
+        return stored ? parseInt(stored, 10) : 10;
+    } catch (e) {
+        console.error('Error loading selected years:', e);
+        return 10;
+    }
+}
+
+export function saveSelectedYears(years: number) {
+    try {
+        localStorage.setItem('selectedYears', years.toString());
+    } catch (e) {
+        console.error('Error saving selected years:', e);
+    }
+}
+
 interface DataPoint {
     date: string;
     value: number | null;
