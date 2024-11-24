@@ -55,3 +55,6 @@ yarn-error.log*
 # Supabase
 supabase/config.toml
 !supabase/config.example.toml
+
+# AI Sensitive file
+AI.MD
