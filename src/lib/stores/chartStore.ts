@@ -22,38 +22,50 @@ function createChartStore() {
 
     // Map display names to actual field names
     const fieldNameMap: Record<string, string> = {
-        // Income Statement
+        // Income Statement - Revenue & Gross Profit
         'Revenue': 'revenue',
         'Cost of Revenue': 'cost_of_revenue',
         'Gross Profit': 'gross_profit',
-        'Operating Income': 'operating_income',
-        'Net Income': 'net_income',
-        'EBITDA': 'ebitda',
-        'EPS': 'eps',
-        'EPS Diluted': 'eps_diluted',
-        'Research & Development': 'research_and_development',
-        'Sales, General & Administrative': 'sales_general_and_administrative',
+        'Gross Profit Ratio': 'gross_profit_ratio',
+
+        // Income Statement - Operating Expenses
+        'Research & Development': 'research_and_development_expenses',
+        'Sales, General & Administrative': 'selling_general_and_administrative_expenses',
         'Operating Expenses': 'operating_expenses',
+        'Operating Income': 'operating_income',
+        'Operating Income Ratio': 'operating_income_ratio',
+
+        // Income Statement - Other Income & Expenses
         'Interest Income': 'interest_income',
         'Interest Expense': 'interest_expense',
+        'Total Other Income/Expenses': 'total_other_income_expenses_net',
         'Income Before Tax': 'income_before_tax',
         'Income Tax Expense': 'income_tax_expense',
-        'Total Other Income/Expenses': 'total_other_income_expenses',
-        'Weighted Average Shares': 'weighted_average_shares',
-        'Weighted Average Shares Diluted': 'weighted_average_shares_diluted',
+        'Net Income': 'net_income',
+        'Net Income Ratio': 'net_income_ratio',
+        'EBITDA': 'ebitda',
+        'EBITDA Ratio': 'ebitda_ratio',
 
-        // Balance Sheet
+        // Income Statement - Per Share Data
+        'EPS': 'eps',
+        'EPS Diluted': 'eps_diluted',
+        'Weighted Average Shares': 'weighted_average_shs_out',
+        'Weighted Average Shares Diluted': 'weighted_average_shs_out_dil',
+
+        // Balance Sheet - Assets
         'Cash & Cash Equivalents': 'cash_and_cash_equivalents',
         'Short Term Investments': 'short_term_investments',
         'Net Receivables': 'net_receivables',
         'Inventory': 'inventory',
         'Total Current Assets': 'total_current_assets',
-        'Property, Plant & Equipment': 'property_plant_and_equipment',
+        'Property, Plant & Equipment': 'property_plant_equipment_net',
         'Goodwill': 'goodwill',
         'Intangible Assets': 'intangible_assets',
         'Long Term Investments': 'long_term_investments',
         'Total Non-Current Assets': 'total_non_current_assets',
         'Total Assets': 'total_assets',
+
+        // Balance Sheet - Liabilities
         'Account Payables': 'account_payables',
         'Short Term Debt': 'short_term_debt',
         'Deferred Revenue': 'deferred_revenue',
@@ -61,26 +73,34 @@ function createChartStore() {
         'Long Term Debt': 'long_term_debt',
         'Total Non-Current Liabilities': 'total_non_current_liabilities',
         'Total Liabilities': 'total_liabilities',
+
+        // Balance Sheet - Equity
         'Common Stock': 'common_stock',
         'Retained Earnings': 'retained_earnings',
         'Total Stockholders\' Equity': 'total_stockholders_equity',
 
-        // Cash Flow
+        // Cash Flow - Operating Activities
         'Net Income CF': 'net_income',
         'Depreciation & Amortization': 'depreciation_and_amortization',
         'Stock Based Compensation': 'stock_based_compensation',
         'Change in Working Capital': 'change_in_working_capital',
         'Operating Cash Flow': 'operating_cash_flow',
+
+        // Cash Flow - Investing Activities
         'Capital Expenditure': 'capital_expenditure',
-        'Acquisitions': 'acquisitions',
-        'Purchase of Investments': 'purchase_of_investments',
-        'Sale of Investments': 'sale_of_investments',
-        'Net Investing Cash Flow': 'net_investing_cash_flow',
+        'Acquisitions': 'acquisitions_net',
+        'Purchase of Investments': 'purchases_of_investments',
+        'Sale of Investments': 'sales_maturities_of_investments',
+        'Net Investing Cash Flow': 'net_cash_used_for_investing_activities',
+
+        // Cash Flow - Financing Activities
         'Debt Repayment': 'debt_repayment',
         'Common Stock Issued': 'common_stock_issued',
         'Common Stock Repurchased': 'common_stock_repurchased',
         'Dividends Paid': 'dividends_paid',
-        'Net Financing Cash Flow': 'net_financing_cash_flow',
+        'Net Financing Cash Flow': 'net_cash_used_provided_by_financing_activities',
+
+        // Cash Flow - Summary
         'Free Cash Flow': 'free_cash_flow',
         'Net Change in Cash': 'net_change_in_cash',
         'Cash at End of Period': 'cash_at_end_of_period'
