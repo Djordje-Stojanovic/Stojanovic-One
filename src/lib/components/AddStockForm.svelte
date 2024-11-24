@@ -1,6 +1,6 @@
 <script lang="ts">
     import { fade, fly } from 'svelte/transition';
-    import { createEventDispatcher } from 'svelte';
+    import { createEventDispatcher, onMount } from 'svelte';
     import type { ListName } from '$lib/constants/listNames';
     import { session } from '$lib/stores/sessionStore';
     import { stockForm, isFormValid } from '$lib/stores/stockFormStore';
@@ -10,6 +10,10 @@
 
     export let activeList: ListName;
     let inputElement: HTMLInputElement;
+
+    onMount(() => {
+        inputElement?.focus();
+    });
 
     function handleEscape(event: KeyboardEvent) {
         if (event.key === 'Escape') {
@@ -27,7 +31,25 @@
     }
 
     function handleKeydown(event: KeyboardEvent) {
-        if (!get(stockForm).showSuggestions) return;
+        const state = get(stockForm);
+
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            
+            if (state.showSuggestions && state.suggestionIndex >= 0) {
+                // If suggestions are shown and one is selected, select it
+                stockForm.selectSuggestion(state.suggestions[state.suggestionIndex]);
+                if ($session?.access_token) {
+                    stockForm.validateIdentifier($session.access_token);
+                }
+            } else if (state.isValid && $isFormValid) {
+                // Only submit if the stock symbol is valid and no suggestion is selected
+                handleSubmit();
+            }
+            return;
+        }
+
+        if (!state.showSuggestions) return;
 
         switch (event.key) {
             case 'ArrowDown':
@@ -37,16 +59,6 @@
             case 'ArrowUp':
                 event.preventDefault();
                 stockForm.navigateSuggestions('up');
-                break;
-            case 'Enter':
-                event.preventDefault();
-                const state = get(stockForm);
-                if (state.suggestionIndex >= 0) {
-                    stockForm.selectSuggestion(state.suggestions[state.suggestionIndex]);
-                    if ($session?.access_token) {
-                        stockForm.validateIdentifier($session.access_token);
-                    }
-                }
                 break;
             case 'Escape':
                 event.preventDefault();
@@ -78,6 +90,10 @@
         } else {
             stockForm.setErrorMessage(result.error || 'Failed to add stock');
         }
+    }
+
+    function handleBackdropClick() {
+        stockForm.hideSuggestions();
     }
 </script>
 
@@ -118,6 +134,10 @@
                     </h2>
                     <div class="mt-2">
                         <form on:submit|preventDefault={handleSubmit} class="space-y-6">
+                            {#if $stockForm.errorMessage}
+                                <p class="text-sm text-red-600 dark:text-red-400" role="alert">{$stockForm.errorMessage}</p>
+                            {/if}
+
                             <div>
                                 <label for="identifier" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Stock Symbol
@@ -137,6 +157,13 @@
                                         placeholder="e.g., AAPL"
                                     >
                                     {#if $stockForm.showSuggestions}
+                                        <button
+                                            type="button"
+                                            class="fixed inset-0 cursor-default"
+                                            aria-label="Close suggestions"
+                                            on:click={handleBackdropClick}
+                                            on:keydown={(e) => e.key === 'Escape' && handleBackdropClick()}
+                                        ></button>
                                         <div class="absolute z-10 mt-1 w-full rounded-md bg-white shadow-lg dark:bg-gray-700">
                                             <div class="max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
                                                 {#each $stockForm.suggestions as symbol, i}
@@ -165,10 +192,6 @@
                                     {/if}
                                 </div>
                             </div>
-
-                            {#if $stockForm.errorMessage}
-                                <p class="mt-2 text-sm text-red-600 dark:text-red-400" role="alert">{$stockForm.errorMessage}</p>
-                            {/if}
 
                             <div>
                                 <label for="notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Notes</label>
