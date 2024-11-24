@@ -1,6 +1,6 @@
 <script lang="ts">
     import { page } from '$app/stores';
-    import { onMount, afterUpdate } from 'svelte';
+    import { onMount } from 'svelte';
     import { goto } from '$app/navigation';
     import { session } from '$lib/stores/sessionStore';
     import type { NumberFormat } from '$lib/utils/numberFormat';
@@ -14,6 +14,7 @@
     import UserStockSearch from '$lib/components/financials/UserStockSearch.svelte';
     import { filterFinancialStatementsByPeriod } from '$lib/utils/financialStatementFilters';
     import { findCompanyList, fetchCompanyName, loadFinancialData } from '$lib/services/companyFinancialsService';
+    import { loadShowChart, saveShowChart, loadSelectedMetrics, saveSelectedMetrics } from '$lib/components/financials/state/chartState';
 
     let symbol: string;
     $: symbol = $page.params.symbol;
@@ -39,59 +40,33 @@
     let tablesComponent: FinancialStatementTables;
 
     // Chart state
-    let showChart = false;
+    let showChart = loadShowChart();
     let selectedMetrics: ChartMetric[] = [];
-    let selectedMetricNames: string[] = [];
+    let selectedMetricNames: string[] = loadSelectedMetrics();
 
     function clearChartState() {
         selectedMetrics = [];
         selectedMetricNames = [];
         showChart = false;
+        saveShowChart(false);
+        saveSelectedMetrics([]);
     }
 
-    function updateChartData() {
-        // Keep the same metrics selected but update their data
-        selectedMetrics = selectedMetricNames.map(name => {
-            let values: number[] = [];
-            let dates: string[] = [];
+    function updateChartMetrics() {
+        if (selectedMetricNames.length > 0 && financialData) {
+            const statements = activeTab === 'income' ? financialData.income_statements :
+                             activeTab === 'balance' ? financialData.balance_sheets :
+                             financialData.cash_flow_statements;
 
-            // Find the corresponding data in the financial statements based on the metric name
-            if (activeTab === 'income') {
-                financialData.income_statements.forEach(statement => {
-                    const value = statement[name.toLowerCase() as keyof typeof statement];
-                    if (typeof value === 'number') {
-                        values.push(value);
-                        dates.push(statement.date);
-                    }
-                });
-            } else if (activeTab === 'balance') {
-                financialData.balance_sheets.forEach(statement => {
-                    const value = statement[name.toLowerCase() as keyof typeof statement];
-                    if (typeof value === 'number') {
-                        values.push(value);
-                        dates.push(statement.date);
-                    }
-                });
-            } else if (activeTab === 'cashflow') {
-                financialData.cash_flow_statements.forEach(statement => {
-                    const value = statement[name.toLowerCase() as keyof typeof statement];
-                    if (typeof value === 'number') {
-                        values.push(value);
-                        dates.push(statement.date);
-                    }
-                });
-            }
+            selectedMetrics = selectedMetricNames.map(name => {
+                const data = statements.map(statement => ({
+                    date: statement.date,
+                    value: statement[name.toLowerCase() as keyof typeof statement] as number
+                })).filter(d => typeof d.value === 'number');
 
-            return {
-                name,
-                data: dates.map((date, i) => ({
-                    date,
-                    value: values[i]
-                }))
-            };
-        });
-
-        showChart = selectedMetrics.length > 0;
+                return { name, data };
+            });
+        }
     }
 
     async function handleLoadFinancialData(forceRefresh = false) {
@@ -120,8 +95,7 @@
                     }
                 }, 100);
             }
-            // Update chart data with new financial data
-            updateChartData();
+            updateChartMetrics();
         }
         
         loading = false;
@@ -150,19 +124,8 @@
     $: {
         if (allFinancialData && allFinancialData.income_statements.length > 0) {
             financialData = filterFinancialStatementsByPeriod(allFinancialData, selectedPeriod, selectedYears);
-            updateChartData();
+            updateChartMetrics();
         }
-    }
-
-    // Scroll to right when switching tabs
-    $: if (activeTab && tablesComponent) {
-        setTimeout(() => {
-            try {
-                tablesComponent.scrollToRight();
-            } catch (e) {
-                console.warn('Could not scroll tables:', e);
-            }
-        }, 100);
     }
 
     function navigateToFullpage() {
@@ -192,6 +155,8 @@
         }
 
         showChart = selectedMetrics.length > 0;
+        saveShowChart(showChart);
+        saveSelectedMetrics(selectedMetricNames);
     }
 
     // Check if there's any data for the current tab

@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import Chart from 'chart.js/auto';
+    import type { ChartConfiguration, TooltipItem } from 'chart.js';
     import type { ChartProps } from './types';
     import { formatDate, formatValue, calculateGrowth } from './utils/chartUtils';
     import { theme, colors, createChartOptions } from './utils/chartConfig';
@@ -25,100 +26,97 @@
 
         const currentTheme = darkMode ? theme.dark : theme.light;
 
-        // Create gradients for each color
-        const gradients = colors.map(color => {
-            const gradient = ctx.createLinearGradient(0, 0, 0, 500);
-            gradient.addColorStop(0, `${color}E6`);
-            gradient.addColorStop(1, `${color}99`);
-            return gradient;
-        });
-
-        // Create hover gradients
-        const hoverGradients = colors.map(color => {
-            const gradient = ctx.createLinearGradient(0, 0, 0, 500);
-            gradient.addColorStop(0, `${color}FF`);
-            gradient.addColorStop(1, `${color}CC`);
-            return gradient;
-        });
-
-        // Prepare data
+        // Get all unique dates and sort them
         const allDates = [...new Set(metrics.flatMap(m => m.data.map(d => d.date)))].sort();
-        const datasets = metrics.map((metric, index) => ({
-            label: metric.name,
-            data: allDates.map(date => {
-                const dataPoint = metric.data.find(d => d.date === date);
-                return dataPoint ? dataPoint.value : null;
-            }),
-            backgroundColor: gradients[index % gradients.length],
-            hoverBackgroundColor: hoverGradients[index % hoverGradients.length],
-            borderColor: colors[index % colors.length],
-            borderWidth: 0,
-            borderRadius: 3,
-            barThickness: 14,
-            maxBarThickness: 14,
-            barPercentage: 0.8,
-            categoryPercentage: 0.6,
-            order: index
-        }));
 
-        const options = createChartOptions(currentTheme);
-        
-        // Add custom callbacks
-        const tooltipCallbacks = {
-            title: function(items: any[]) {
-                if (!items.length) return '';
-                const date = new Date(items[0].label);
-                return date.toLocaleDateString('en-US', { 
-                    year: 'numeric',
-                    month: 'long'
-                });
-            },
-            label: function(context: any) {
-                const value = context.raw;
-                if (value === null || typeof value !== 'number') {
-                    return '';
-                }
-                const formattedValue = formatValue(value);
-                const percentChange = calculateGrowth(context.dataset.data, context.dataIndex);
-                return `${context.dataset.label}: ${formattedValue}${percentChange}`;
-            }
-        };
+        // Create datasets with Chart.js 4.4.6 configuration
+        const datasets = metrics.map((metric, index) => {
+            const dateValueMap = new Map(metric.data.map(d => [d.date, d.value]));
+            
+            return {
+                type: 'bar' as const,
+                label: metric.name,
+                data: allDates.map(date => dateValueMap.get(date) ?? null),
+                backgroundColor: `${colors[index]}E6`,
+                borderColor: colors[index],
+                borderWidth: 0,
+                borderRadius: 3,
+                barPercentage: 0.9,
+                categoryPercentage: 0.8,
+                yAxisID: 'y',
+                order: index
+            };
+        });
 
-        const yAxisCallback = function(value: any) {
-            return formatValue(value);
-        };
-
-        // Type assertion to handle possibly undefined properties
-        const chartOptions = {
-            ...options,
-            plugins: {
-                ...options.plugins,
-                tooltip: {
-                    ...options.plugins?.tooltip,
-                    callbacks: tooltipCallbacks
-                }
-            },
-            scales: {
-                ...options.scales,
-                y: {
-                    ...options.scales?.y,
-                    ticks: {
-                        ...options.scales?.y?.ticks,
-                        callback: yAxisCallback
-                    }
-                }
-            }
-        };
-
-        // Create chart
-        chart = new Chart(ctx, {
+        // Chart.js 4.4.6 configuration
+        const config: ChartConfiguration<'bar'> = {
             type: 'bar',
             data: {
                 labels: allDates.map(formatDate),
                 datasets
             },
-            options: chartOptions
-        });
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                normalized: true,
+                animation: {
+                    duration: 0
+                },
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            title(items: TooltipItem<'bar'>[]) {
+                                if (!items.length) return '';
+                                const date = new Date(items[0].label);
+                                return date.toLocaleDateString('en-US', { 
+                                    year: 'numeric',
+                                    month: 'long'
+                                });
+                            },
+                            label(context: TooltipItem<'bar'>) {
+                                const value = context.raw;
+                                if (value === null || typeof value !== 'number') return '';
+                                const formattedValue = formatValue(value);
+                                const percentChange = calculateGrowth(context.dataset.data as number[], context.dataIndex);
+                                return `${context.dataset.label}: ${formattedValue}${percentChange}`;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            color: currentTheme.text
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            color: currentTheme.border
+                        },
+                        ticks: {
+                            color: currentTheme.text
+                        }
+                    },
+                    y: {
+                        grid: {
+                            color: currentTheme.border
+                        },
+                        ticks: {
+                            color: currentTheme.text,
+                            callback: (value: any) => formatValue(value)
+                        }
+                    }
+                }
+            }
+        };
+
+        // Create chart with Chart.js 4.4.6
+        chart = new Chart(ctx, config);
     }
 
     onMount(() => {
