@@ -104,7 +104,7 @@
                                 {stocksByList[listName].length} {stocksByList[listName].length === 1 ? 'stock' : 'stocks'}
                             </span>
                         </div>
-                        <div class="overflow-y-auto max-h-[calc(100vh-24rem)]">
+                        <div class="overflow-y-auto max-h-[calc(100vh-50rem)]">
                             <div class="min-w-full align-middle inline-block">
                                 <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                                     <thead class="bg-gray-50 dark:bg-gray-800 sticky top-0">
@@ -210,7 +210,7 @@
                             {stocksByList[listName].length} {stocksByList[listName].length === 1 ? 'stock' : 'stocks'}
                         </span>
                     </div>
-                    <div class="space-y-4 h-[calc(100vh-16rem)] overflow-y-auto pr-2">
+                    <div class="space-y-4 h-[calc(100vh-36rem)] overflow-y-auto pr-2">
                         {#each stocksByList[listName] as userStock (userStock.id)}
                             <div 
                                 role="listitem"
