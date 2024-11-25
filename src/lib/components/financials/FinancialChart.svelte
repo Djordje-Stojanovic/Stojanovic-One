@@ -33,11 +33,11 @@
                 type: 'bar' as const,
                 label: metric.name,
                 data: allDates.map(date => dateValueMap.get(date) ?? null),
-                backgroundColor: `${colors[index]}E6`,
+                backgroundColor: `${colors[index]}CC`,
                 borderColor: colors[index],
-                borderWidth: 0,
-                borderRadius: 3,
-                barPercentage: 0.9,
+                borderWidth: 1,
+                borderRadius: 4,
+                barPercentage: 0.85,
                 categoryPercentage: 0.8,
                 yAxisID: 'y',
                 order: index
@@ -49,7 +49,7 @@
             maintainAspectRatio: false,
             normalized: true,
             animation: {
-                duration: 0
+                duration: 300
             },
             interaction: {
                 mode: 'index',
@@ -57,6 +57,13 @@
             },
             plugins: {
                 tooltip: {
+                    backgroundColor: darkMode ? '#374151' : '#FFFFFF',
+                    titleColor: darkMode ? '#F3F4F6' : '#111827',
+                    bodyColor: darkMode ? '#F3F4F6' : '#111827',
+                    borderColor: darkMode ? '#4B5563' : '#E5E7EB',
+                    borderWidth: 1,
+                    padding: 12,
+                    cornerRadius: 8,
                     callbacks: {
                         title(items: TooltipItem<'bar'>[]) {
                             if (!items.length) return '';
@@ -77,27 +84,47 @@
                 },
                 legend: {
                     position: 'top',
+                    align: 'start',
                     labels: {
-                        color: currentTheme.text
+                        color: currentTheme.text,
+                        padding: 20,
+                        usePointStyle: true,
+                        pointStyle: 'circle'
                     }
                 }
             },
             scales: {
                 x: {
                     grid: {
-                        color: currentTheme.border
-                    },
-                    ticks: {
-                        color: currentTheme.text
-                    }
-                },
-                y: {
-                    grid: {
-                        color: currentTheme.border
+                        color: currentTheme.border,
+                        lineWidth: 0.5
                     },
                     ticks: {
                         color: currentTheme.text,
-                        callback: (value: any) => formatValue(value)
+                        padding: 8,
+                        maxRotation: 0,
+                        autoSkip: true,
+                        autoSkipPadding: 20
+                    }
+                },
+                y: {
+                    position: 'left',
+                    grid: {
+                        color: currentTheme.border,
+                        lineWidth: 0.5
+                    },
+                    ticks: {
+                        color: currentTheme.text,
+                        padding: 12,
+                        callback: (value: any) => formatValue(value),
+                        font: {
+                            size: 12,
+                            weight: 500
+                        },
+                        maxTicksLimit: 8
+                    },
+                    afterFit: (scale: any) => {
+                        scale.width = 80;  // Set minimum width for y-axis
                     }
                 }
             }
@@ -141,8 +168,8 @@
     }
 </script>
 
-<div class="w-full bg-white dark:bg-[#1F2937] rounded-lg p-2 shadow-sm dark:shadow-lg">
-    <div class="h-[500px]">
+<div class="w-full bg-white dark:bg-[#1F2937] rounded-lg">
+    <div class="h-[600px]">
         <canvas bind:this={canvas}></canvas>
     </div>
     
