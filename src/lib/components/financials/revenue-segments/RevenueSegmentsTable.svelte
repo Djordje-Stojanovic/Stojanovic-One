@@ -9,8 +9,16 @@
     export let numberFormat: NumberFormat = 'abbreviated';
     export let selectedMetricNames: string[] = [];
 
+    // Get all unique segments across all periods
     $: segments = data.length > 0 
-        ? Object.keys(data[0].segments).sort()
+        ? [...new Set(data.flatMap(period => Object.keys(period.segments)))]
+            .sort((a, b) => {
+                // Sort by most recent total value (descending)
+                const latestPeriod = data[0];
+                const aValue = latestPeriod.segments[a] || 0;
+                const bValue = latestPeriod.segments[b] || 0;
+                return bValue - aValue;
+            })
         : [];
 
     $: totalRevenue = data.map(period => 

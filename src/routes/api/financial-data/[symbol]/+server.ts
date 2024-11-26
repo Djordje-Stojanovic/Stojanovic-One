@@ -117,16 +117,40 @@ async function insertFinancialData<T extends FinancialStatement, R>(
     }
 }
 
-async function insertRevenueSegments(data: RawRevenueSegment[], symbol: string) {
-    if (!Array.isArray(data) || data.length === 0) {
+async function insertRevenueSegments(annualData: RawRevenueSegment[], quarterlyData: RawRevenueSegment[], symbol: string) {
+    if ((!Array.isArray(annualData) || annualData.length === 0) && (!Array.isArray(quarterlyData) || quarterlyData.length === 0)) {
         console.log('No revenue segments data to insert');
         return { data: [] };
     }
 
     try {
-        console.log('Raw revenue segments data:', JSON.stringify(data, null, 2));
-        const transformedData = transformRevenueSegments(data, symbol);
-        console.log('Transformed revenue segments data:', JSON.stringify(transformedData, null, 2));
+        console.log('Raw annual revenue segments data:', JSON.stringify(annualData, null, 2));
+        console.log('Raw quarterly revenue segments data:', JSON.stringify(quarterlyData, null, 2));
+
+        // Transform annual and quarterly data separately
+        const transformedAnnualData = transformRevenueSegments(annualData, symbol);
+        const transformedQuarterlyData = transformRevenueSegments(quarterlyData, symbol);
+
+        // Create a map to deduplicate entries by date
+        const dataMap = new Map<string, RevenueSegment>();
+        
+        // Annual data takes precedence for year-end dates
+        transformedAnnualData.forEach(item => {
+            const key = `${item.symbol}-${item.date}`;
+            dataMap.set(key, item);
+        });
+
+        // Add quarterly data only if it doesn't conflict with annual data
+        transformedQuarterlyData.forEach(item => {
+            const key = `${item.symbol}-${item.date}`;
+            if (!dataMap.has(key)) {
+                dataMap.set(key, item);
+            }
+        });
+
+        // Convert map back to array
+        const combinedData = Array.from(dataMap.values());
+        console.log('Combined transformed revenue segments data:', JSON.stringify(combinedData, null, 2));
 
         // First try to verify the table exists
         const { error: tableCheckError } = await db
@@ -141,7 +165,7 @@ async function insertRevenueSegments(data: RawRevenueSegment[], symbol: string) 
 
         const { data: result, error: upsertError } = await db
             .from('revenue_segments')
-            .upsert(transformedData, {
+            .upsert(combinedData, {
                 onConflict: 'symbol,date,period',
                 ignoreDuplicates: false
             })
@@ -242,7 +266,6 @@ export const GET = (async ({ params, url }) => {
                 exchangeRate,
                 transformCashFlow
             ),
-            insertRevenueSegments(annualRevenueSegments, symbol),
             // Quarterly data
             insertFinancialData<FMPIncomeStatement, IncomeStatement>(
                 'income_statements',
@@ -265,7 +288,8 @@ export const GET = (async ({ params, url }) => {
                 exchangeRate,
                 transformCashFlow
             ),
-            insertRevenueSegments(quarterlyRevenueSegments, symbol)
+            // Insert both annual and quarterly revenue segments together
+            insertRevenueSegments(annualRevenueSegments, quarterlyRevenueSegments, symbol)
         ]);
 
         // Fetch all data after upsert

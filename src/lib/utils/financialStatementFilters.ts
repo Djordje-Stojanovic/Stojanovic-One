@@ -105,9 +105,32 @@ export function filterFinancialStatementsByPeriod(
         );
     };
 
+    // Filter revenue segments separately since they don't need TTM calculations
+    const filterRevenueSegments = (segments: FinancialData['revenue_segments']) => {
+        if (!segments) return [];
+        
+        const periodFiltered = segments.filter(stmt => 
+            period === 'annual' ? stmt.period === 'FY' : (stmt.period !== 'FY' && stmt.period !== 'TTM')
+        );
+
+        if (years === 0) return periodFiltered;
+
+        const sorted = [...periodFiltered].sort((a, b) => 
+            new Date(b.date).getTime() - new Date(a.date).getTime()
+        );
+
+        const limit = period === 'annual' ? years : years * 4;
+        const filtered = sorted.slice(0, limit);
+        
+        return filtered.sort((a, b) => 
+            new Date(a.date).getTime() - new Date(b.date).getTime()
+        );
+    };
+
     return {
         income_statements: filterMostRecent(data.income_statements),
         balance_sheets: filterMostRecent(data.balance_sheets),
-        cash_flow_statements: filterMostRecent(data.cash_flow_statements)
+        cash_flow_statements: filterMostRecent(data.cash_flow_statements),
+        revenue_segments: filterRevenueSegments(data.revenue_segments)
     };
 }

@@ -16,13 +16,23 @@
     import { loadSelectedPeriod, saveSelectedPeriod, loadSelectedYears, saveSelectedYears } from '$lib/components/financials/state/chartState';
 
     let symbol = $page.params.symbol;
-    let financialData: FinancialData = { income_statements: [], balance_sheets: [], cash_flow_statements: [] };
-    let allFinancialData: FinancialData = { income_statements: [], balance_sheets: [], cash_flow_statements: [] };
+    let financialData: FinancialData = { 
+        income_statements: [], 
+        balance_sheets: [], 
+        cash_flow_statements: [], 
+        revenue_segments: [] 
+    };
+    let allFinancialData: FinancialData = { 
+        income_statements: [], 
+        balance_sheets: [], 
+        cash_flow_statements: [], 
+        revenue_segments: [] 
+    };
     let loading = false;
     let error: string | null = null;
     let numberFormat: NumberFormat = 'abbreviated';
     let selectedYears = loadSelectedYears();
-    let activeTab: 'income' | 'balance' | 'cashflow' = 'income';
+    let activeTab: 'income' | 'balance' | 'cashflow' | 'segments' = 'income';
     let companyName: string | null = null;
     let companyList: ListName | null = null;
     let selectedPeriod: 'annual' | 'quarterly' | 'ttm' = loadSelectedPeriod();
@@ -91,9 +101,20 @@
         }
     });
 
-    $: hasData = activeTab === 'income' ? financialData.income_statements.length > 0 :
-                 activeTab === 'balance' ? financialData.balance_sheets.length > 0 :
-                 financialData.cash_flow_statements.length > 0;
+    $: hasData = (() => {
+        switch (activeTab) {
+            case 'income':
+                return financialData.income_statements.length > 0;
+            case 'balance':
+                return financialData.balance_sheets.length > 0;
+            case 'cashflow':
+                return financialData.cash_flow_statements.length > 0;
+            case 'segments':
+                return (financialData.revenue_segments || []).length > 0;
+            default:
+                return false;
+        }
+    })();
 </script>
 
 <div class="min-h-screen bg-white dark:bg-[#1F2937] p-4 space-y-4">
