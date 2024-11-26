@@ -143,12 +143,27 @@ function createChartStore() {
                 const fieldName = getFieldName(name);
 
                 // Try to find data in each statement type
-                const incomeData = getMetricData(financialData.income_statements, fieldName);
-                const balanceData = getMetricData(financialData.balance_sheets, fieldName);
-                const cashFlowData = getMetricData(financialData.cash_flow_statements, fieldName);
+                const incomeData = getMetricData(financialData.income_statements || [], fieldName);
+                const balanceData = getMetricData(financialData.balance_sheets || [], fieldName);
+                const cashFlowData = getMetricData(financialData.cash_flow_statements || [], fieldName);
+
+                // Handle revenue segments data
+                let revenueSegmentsData: { date: string; value: number }[] = [];
+                if (financialData.revenue_segments) {
+                    revenueSegmentsData = financialData.revenue_segments
+                        .filter(stmt => {
+                            const value = stmt.segments[name];
+                            return typeof value === 'number' && !isNaN(value);
+                        })
+                        .map(stmt => ({
+                            date: stmt.date,
+                            value: stmt.segments[name]
+                        }))
+                        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+                }
 
                 // Combine all data points and remove duplicates by date
-                const allData = [...incomeData, ...balanceData, ...cashFlowData];
+                const allData = [...incomeData, ...balanceData, ...cashFlowData, ...revenueSegmentsData];
                 const uniqueDates = new Set();
                 const metricData = allData
                     .filter(d => {
