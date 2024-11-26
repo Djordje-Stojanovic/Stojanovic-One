@@ -18,10 +18,16 @@ export const theme = {
 };
 
 export const colors = [
-    '#3B82F6', // blue
-    '#10B981', // green
-    '#F59E0B', // yellow
-    '#EF4444', // red
+    '#3B82F6', // Blue - Primary
+    '#10B981', // Emerald - Growth
+    '#F59E0B', // Amber - Warning
+    '#EF4444', // Red - Danger
+    '#8B5CF6', // Purple - Royal
+    '#EC4899', // Pink - Vibrant
+    '#06B6D4', // Cyan - Info
+    '#F97316', // Orange - Energy
+    '#14B8A6', // Teal - Calm
+    '#6366F1'  // Indigo - Deep
 ];
 
 export function createChartOptions(currentTheme: typeof theme.dark | typeof theme.light): ChartOptions<'bar'> {
