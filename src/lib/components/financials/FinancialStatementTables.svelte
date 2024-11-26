@@ -5,12 +5,13 @@
     import IncomeStatementTable from './IncomeStatementTable.svelte';
     import BalanceSheetTable from './BalanceSheetTable.svelte';
     import CashFlowTable from './CashFlowTable.svelte';
+    import RevenueSegmentsTable from './revenue-segments/RevenueSegmentsTable.svelte';
 
     export let loading = false;
     export let error: string | null = null;
     export let financialData: FinancialData;
     export let numberFormat: NumberFormat;
-    export let activeTab: 'income' | 'balance' | 'cashflow' = 'income';
+    export let activeTab: 'income' | 'balance' | 'cashflow' | 'segments' = 'income';
     export let selectedMetricNames: string[] = [];
 
     const dispatch = createEventDispatcher();
@@ -49,6 +50,12 @@
         >
             Cash Flow
         </button>
+        <button
+            class="px-4 py-2 rounded-lg transition-colors {activeTab === 'segments' ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'}"
+            on:click={() => activeTab = 'segments'}
+        >
+            Revenue Segments
+        </button>
     </div>
 
     {#if loading}
@@ -78,6 +85,13 @@
             {:else if activeTab === 'cashflow'}
                 <CashFlowTable
                     statements={financialData.cash_flow_statements}
+                    {numberFormat}
+                    {selectedMetricNames}
+                    on:metricClick={handleMetricClick}
+                />
+            {:else if activeTab === 'segments' && financialData.revenue_segments?.length}
+                <RevenueSegmentsTable
+                    data={financialData.revenue_segments}
                     {numberFormat}
                     {selectedMetricNames}
                     on:metricClick={handleMetricClick}

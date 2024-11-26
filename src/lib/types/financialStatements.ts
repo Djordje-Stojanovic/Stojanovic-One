@@ -126,8 +126,20 @@ export interface CashFlowStatement extends BaseFinancialStatement {
     free_cash_flow: number;
 }
 
+export interface RevenueSegment {
+    id?: bigint;
+    symbol: string;
+    date: string;
+    reported_currency: string;
+    period: FinancialPeriod;
+    segments: { [segment: string]: number };
+    created_at?: string;
+    updated_at?: string;
+}
+
 export interface FinancialData {
     income_statements: IncomeStatement[];
     balance_sheets: BalanceSheet[];
     cash_flow_statements: CashFlowStatement[];
+    revenue_segments?: RevenueSegment[];
 }
