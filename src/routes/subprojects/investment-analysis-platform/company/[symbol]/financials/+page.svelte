@@ -153,6 +153,7 @@
         {error}
         {financialData}
         {numberFormat}
+        {selectedPeriod}
         selectedMetricNames={$chartStore.selectedMetricNames}
         on:metricClick={handleMetricClick}
     />

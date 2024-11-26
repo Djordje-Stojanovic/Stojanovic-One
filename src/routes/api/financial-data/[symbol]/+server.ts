@@ -128,52 +128,51 @@ async function insertRevenueSegments(annualData: RawRevenueSegment[], quarterlyD
         console.log('Raw quarterly revenue segments data:', JSON.stringify(quarterlyData, null, 2));
 
         // Transform annual and quarterly data separately
-        const transformedAnnualData = transformRevenueSegments(annualData, symbol);
-        const transformedQuarterlyData = transformRevenueSegments(quarterlyData, symbol);
+        const transformedAnnualData = transformRevenueSegments(annualData, symbol, true);
+        const transformedQuarterlyData = transformRevenueSegments(quarterlyData, symbol, false);
 
-        // Create a map to deduplicate entries by date
-        const dataMap = new Map<string, RevenueSegment>();
-        
-        // Annual data takes precedence for year-end dates
-        transformedAnnualData.forEach(item => {
-            const key = `${item.symbol}-${item.date}`;
-            dataMap.set(key, item);
-        });
+        // First insert annual data
+        if (transformedAnnualData.length > 0) {
+            const { error: annualError } = await db
+                .from('revenue_segments')
+                .upsert(transformedAnnualData, {
+                    onConflict: 'symbol,date,period',
+                    ignoreDuplicates: true
+                })
+                .select();
 
-        // Add quarterly data only if it doesn't conflict with annual data
-        transformedQuarterlyData.forEach(item => {
-            const key = `${item.symbol}-${item.date}`;
-            if (!dataMap.has(key)) {
-                dataMap.set(key, item);
+            if (annualError) {
+                console.error('Error upserting annual revenue segments:', annualError);
+                throw annualError;
             }
-        });
-
-        // Convert map back to array
-        const combinedData = Array.from(dataMap.values());
-        console.log('Combined transformed revenue segments data:', JSON.stringify(combinedData, null, 2));
-
-        // First try to verify the table exists
-        const { error: tableCheckError } = await db
-            .from('revenue_segments')
-            .select('id')
-            .limit(1);
-
-        if (tableCheckError) {
-            console.error('Error checking revenue_segments table:', tableCheckError);
-            throw new Error(`Table check failed: ${tableCheckError.message}`);
         }
 
-        const { data: result, error: upsertError } = await db
-            .from('revenue_segments')
-            .upsert(combinedData, {
-                onConflict: 'symbol,date,period',
-                ignoreDuplicates: false
-            })
-            .select();
+        // Then insert quarterly data
+        if (transformedQuarterlyData.length > 0) {
+            const { error: quarterlyError } = await db
+                .from('revenue_segments')
+                .upsert(transformedQuarterlyData, {
+                    onConflict: 'symbol,date,period',
+                    ignoreDuplicates: true
+                })
+                .select();
 
-        if (upsertError) {
-            console.error('Error upserting revenue segments:', upsertError);
-            throw upsertError;
+            if (quarterlyError) {
+                console.error('Error upserting quarterly revenue segments:', quarterlyError);
+                throw quarterlyError;
+            }
+        }
+
+        // Return all data
+        const { data: result, error: selectError } = await db
+            .from('revenue_segments')
+            .select('*')
+            .eq('symbol', symbol)
+            .order('date', { ascending: false });
+
+        if (selectError) {
+            console.error('Error selecting revenue segments:', selectError);
+            throw selectError;
         }
 
         return { data: result };

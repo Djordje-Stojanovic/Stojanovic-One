@@ -28,6 +28,10 @@
         cursor-pointer
         transition-colors duration-200
     `;
+
+    $: formattedValues = values.map(value => 
+        value !== null && value !== undefined ? formatNumber(value, numberFormat).formatted : '-'
+    );
 </script>
 
 <tr class={rowClass} on:click={handleClick}>
@@ -39,9 +43,9 @@
             {name}
         </div>
     </td>
-    {#each values as value, i}
+    {#each formattedValues as value}
         <td class="value-cell">
-            {value !== null ? formatNumber(value, numberFormat).formatted : '-'}
+            {value}
         </td>
     {/each}
 </tr>

@@ -9,37 +9,38 @@
     export let numberFormat: NumberFormat = 'abbreviated';
     export let selectedMetricNames: string[] = [];
 
+    // Sort statements by date (ascending - oldest to newest)
+    $: sortedData = [...data].sort((a, b) => 
+        new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+
     // Get all unique segments across all periods
-    $: segments = data.length > 0 
-        ? [...new Set(data.flatMap(period => Object.keys(period.segments)))]
+    $: segments = sortedData.length > 0 
+        ? [...new Set(sortedData.flatMap(period => Object.keys(period.segments)))]
             .sort((a, b) => {
                 // Sort by most recent total value (descending)
-                const latestPeriod = data[0];
+                const latestPeriod = sortedData[sortedData.length - 1];
                 const aValue = latestPeriod.segments[a] || 0;
                 const bValue = latestPeriod.segments[b] || 0;
                 return bValue - aValue;
             })
         : [];
 
-    $: totalRevenue = data.map(period => 
+    $: totalRevenue = sortedData.map(period => 
         Object.values(period.segments).reduce((sum, value) => sum + value, 0)
     );
 
-    $: dates = data.map(period => period.date);
+    $: dates = sortedData.map(period => period.date);
 </script>
 
 <SectionStyles />
 
-<BaseFinancialTable statements={data} tableName="revenue_segments">
-    <div class="financial-section">
-        <div class="section-header">
-            <h3>Revenue Segments</h3>
-        </div>
-
+<BaseFinancialTable statements={sortedData} tableName="Revenue Segments">
+    <tbody>
         {#each segments as segment}
             <MetricRow
                 name={segment}
-                values={data.map(period => period.segments[segment] || 0)}
+                values={sortedData.map(period => period.segments[segment] || 0)}
                 {dates}
                 {numberFormat}
                 isSelected={selectedMetricNames.includes(segment)}
@@ -56,5 +57,5 @@
             isSelected={selectedMetricNames.includes('Total Revenue')}
             on:metricClick
         />
-    </div>
+    </tbody>
 </BaseFinancialTable>

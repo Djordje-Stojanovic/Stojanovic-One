@@ -110,7 +110,7 @@ export function filterFinancialStatementsByPeriod(
         if (!segments) return [];
         
         const periodFiltered = segments.filter(stmt => 
-            period === 'annual' ? stmt.period === 'FY' : (stmt.period !== 'FY' && stmt.period !== 'TTM')
+            period === 'annual' ? stmt.period === 'FY' : stmt.period !== 'FY'
         );
 
         if (years === 0) return periodFiltered;

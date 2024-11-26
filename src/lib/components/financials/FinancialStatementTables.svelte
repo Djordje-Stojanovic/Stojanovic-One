@@ -19,15 +19,6 @@
     function handleMetricClick(event: CustomEvent) {
         dispatch('metricClick', event.detail);
     }
-
-    function scrollToRight() {
-        const tables = document.querySelectorAll('.financial-table-container');
-        tables.forEach(table => {
-            if (table instanceof HTMLElement) {
-                table.scrollLeft = table.scrollWidth;
-            }
-        });
-    }
 </script>
 
 <div class="space-y-4">
