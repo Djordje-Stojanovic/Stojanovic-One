@@ -1,8 +1,12 @@
-import type { FinancialData, IncomeStatement, BalanceSheet, CashFlowStatement } from '$lib/types/financialStatements';
+import type { FinancialData, IncomeStatement, BalanceSheet, CashFlowStatement, RevenueSegment } from '$lib/types/financialStatements';
 
 type FinancialStatement = IncomeStatement | BalanceSheet | CashFlowStatement;
 
-function calculateTTM<T extends FinancialStatement>(statements: T[]): T[] {
+function isBalanceSheet(statement: FinancialStatement): boolean {
+    return 'total_assets' in statement;
+}
+
+function calculateTTM(statements: FinancialStatement[]): FinancialStatement[] {
     // Get quarterly statements sorted by date (newest first)
     const quarterlyStatements = statements
         .filter(stmt => stmt.period !== 'FY' && stmt.period !== 'TTM')
@@ -10,7 +14,7 @@ function calculateTTM<T extends FinancialStatement>(statements: T[]): T[] {
 
     if (quarterlyStatements.length < 4) return [];
 
-    const ttmStatements: T[] = [];
+    const ttmStatements: FinancialStatement[] = [];
 
     // Calculate TTM for each quarter point
     for (let i = 0; i < quarterlyStatements.length - 3; i++) {
@@ -18,7 +22,7 @@ function calculateTTM<T extends FinancialStatement>(statements: T[]): T[] {
         const previousQuarters = quarterlyStatements.slice(i, i + 4);
         
         // Create TTM entry based on current quarter
-        const ttmEntry = { ...currentQuarter } as T;
+        const ttmEntry = { ...currentQuarter };
         ttmEntry.period = 'TTM';
 
         // Sum numeric fields from the last 4 quarters
@@ -37,40 +41,54 @@ function calculateTTM<T extends FinancialStatement>(statements: T[]): T[] {
             }
         });
 
-        // Calculate ratios based on TTM totals
-        if ('revenue' in ttmEntry && typeof ttmEntry.revenue === 'number' && ttmEntry.revenue > 0) {
-            if ('gross_profit' in ttmEntry && typeof ttmEntry.gross_profit === 'number') {
-                ttmEntry.gross_profit_ratio = Number((ttmEntry.gross_profit / ttmEntry.revenue).toFixed(3));
-            }
-            if ('operating_income' in ttmEntry && typeof ttmEntry.operating_income === 'number') {
-                ttmEntry.operating_income_ratio = Number((ttmEntry.operating_income / ttmEntry.revenue).toFixed(3));
-            }
-            if ('net_income' in ttmEntry && typeof ttmEntry.net_income === 'number') {
-                ttmEntry.net_income_ratio = Number((ttmEntry.net_income / ttmEntry.revenue).toFixed(3));
-            }
-            if ('ebitda' in ttmEntry && typeof ttmEntry.ebitda === 'number') {
-                ttmEntry.ebitda_ratio = Number((ttmEntry.ebitda / ttmEntry.revenue).toFixed(3));
-            }
-        }
-
-        // Calculate per share metrics using current quarter's share count
-        if ('net_income' in ttmEntry && typeof ttmEntry.net_income === 'number') {
-            const currentShares = currentQuarter.weighted_average_shs_out;
-            const currentSharesDiluted = currentQuarter.weighted_average_shs_out_dil;
-
-            if (typeof currentShares === 'number' && currentShares > 0) {
-                ttmEntry.eps = Number((ttmEntry.net_income / currentShares).toFixed(3));
-            }
-            if (typeof currentSharesDiluted === 'number' && currentSharesDiluted > 0) {
-                ttmEntry.eps_diluted = Number((ttmEntry.net_income / currentSharesDiluted).toFixed(3));
-            }
-        }
-
         ttmStatements.push(ttmEntry);
     }
 
-    // Sort TTM statements by date (oldest to newest)
     return ttmStatements.sort((a, b) => 
+        new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+}
+
+function calculateRevenueSegmentsTTM(segments: RevenueSegment[]): RevenueSegment[] {
+    // Get quarterly segments sorted by date (newest first)
+    const quarterlySegments = segments
+        .filter(seg => seg.period !== 'FY' && seg.period !== 'TTM')
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    if (quarterlySegments.length < 4) return [];
+
+    const ttmSegments: RevenueSegment[] = [];
+
+    // Calculate TTM for each quarter point
+    for (let i = 0; i < quarterlySegments.length - 3; i++) {
+        const currentQuarter = quarterlySegments[i];
+        const previousQuarters = quarterlySegments.slice(i, i + 4);
+        
+        // Create TTM entry based on current quarter
+        const ttmEntry: RevenueSegment = {
+            symbol: currentQuarter.symbol,
+            date: currentQuarter.date,
+            reported_currency: currentQuarter.reported_currency,
+            period: 'TTM',
+            segments: {}
+        };
+
+        // Get all unique segment names across the 4 quarters
+        const segmentNames = new Set<string>();
+        previousQuarters.forEach(q => {
+            Object.keys(q.segments).forEach(name => segmentNames.add(name));
+        });
+
+        // Sum each segment across 4 quarters
+        segmentNames.forEach(name => {
+            const sum = previousQuarters.reduce((acc, q) => acc + (q.segments[name] || 0), 0);
+            ttmEntry.segments[name] = Number(sum.toFixed(2));
+        });
+
+        ttmSegments.push(ttmEntry);
+    }
+
+    return ttmSegments.sort((a, b) => 
         new Date(a.date).getTime() - new Date(b.date).getTime()
     );
 }
@@ -83,8 +101,11 @@ export function filterFinancialStatementsByPeriod(
     const filterMostRecent = <T extends FinancialStatement>(statements: T[]): T[] => {
         let periodFiltered: T[];
         
-        if (period === 'ttm') {
-            periodFiltered = calculateTTM(statements);
+        if (period === 'ttm' && !isBalanceSheet(statements[0])) {
+            periodFiltered = calculateTTM(statements) as T[];
+            if (periodFiltered.length === 0) {
+                periodFiltered = statements.filter(stmt => stmt.period !== 'FY' && stmt.period !== 'TTM');
+            }
         } else {
             periodFiltered = statements.filter(stmt => 
                 period === 'annual' ? stmt.period === 'FY' : (stmt.period !== 'FY' && stmt.period !== 'TTM')
@@ -105,13 +126,21 @@ export function filterFinancialStatementsByPeriod(
         );
     };
 
-    // Filter revenue segments separately since they don't need TTM calculations
     const filterRevenueSegments = (segments: FinancialData['revenue_segments']) => {
         if (!segments) return [];
         
-        const periodFiltered = segments.filter(stmt => 
-            period === 'annual' ? stmt.period === 'FY' : stmt.period !== 'FY'
-        );
+        let periodFiltered: RevenueSegment[];
+        
+        if (period === 'ttm') {
+            periodFiltered = calculateRevenueSegmentsTTM(segments);
+            if (periodFiltered.length === 0) {
+                periodFiltered = segments.filter(stmt => stmt.period !== 'FY' && stmt.period !== 'TTM');
+            }
+        } else {
+            periodFiltered = segments.filter(stmt => 
+                period === 'annual' ? stmt.period === 'FY' : stmt.period !== 'FY'
+            );
+        }
 
         if (years === 0) return periodFiltered;
 
@@ -129,7 +158,9 @@ export function filterFinancialStatementsByPeriod(
 
     return {
         income_statements: filterMostRecent(data.income_statements),
-        balance_sheets: filterMostRecent(data.balance_sheets),
+        balance_sheets: data.balance_sheets.filter(stmt => 
+            period === 'annual' ? stmt.period === 'FY' : stmt.period !== 'FY'
+        ),
         cash_flow_statements: filterMostRecent(data.cash_flow_statements),
         revenue_segments: filterRevenueSegments(data.revenue_segments)
     };
