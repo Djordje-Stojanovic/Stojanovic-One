@@ -1,186 +1,8 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { db } from '$lib/supabaseClient';
-import { FMP_API_KEY } from '$env/static/private';
-import { getExchangeRate, convertStatementToUSD } from '$lib/utils/currencyConverter';
-import type { FMPIncomeStatement, FMPBalanceSheet, FMPCashFlowStatement } from './types/fmpTypes';
-import { transformIncomeStatement, transformBalanceSheet, transformCashFlow } from './types/transformers';
-import { transformRevenueSegments } from './types/transformers/revenueSegments';
-import type { IncomeStatement, BalanceSheet, CashFlowStatement, RevenueSegment } from '$lib/types/financialStatements';
-
-type FinancialStatement = {
-    reportedCurrency?: string;
-    period?: string;
-    [key: string]: unknown;
-};
-
-interface RawRevenueSegment {
-    [date: string]: {
-        [segment: string]: number;
-    };
-}
-
-type TransformerFunction<T extends FinancialStatement, R> = (
-    stmt: T,
-    symbol: string,
-    converted: T
-) => R;
-
-async function fetchFinancialData(symbol: string, period: 'annual' | 'quarter') {
-    const [incomeStmtsRes, balanceSheetsRes, cashFlowStmtsRes] = await Promise.all([
-        fetch(`https://financialmodelingprep.com/api/v3/income-statement/${symbol}?period=${period}&apikey=${FMP_API_KEY}`),
-        fetch(`https://financialmodelingprep.com/api/v3/balance-sheet-statement/${symbol}?period=${period}&apikey=${FMP_API_KEY}`),
-        fetch(`https://financialmodelingprep.com/api/v3/cash-flow-statement/${symbol}?period=${period}&apikey=${FMP_API_KEY}`)
-    ]);
-
-    const [incomeStmts, balanceSheets, cashFlowStmts] = await Promise.all([
-        incomeStmtsRes.json(),
-        balanceSheetsRes.json(),
-        cashFlowStmtsRes.json()
-    ]);
-
-    if (!Array.isArray(incomeStmts) || !Array.isArray(balanceSheets) || !Array.isArray(cashFlowStmts)) {
-        const errorResponse = [incomeStmts, balanceSheets, cashFlowStmts].find(resp => !Array.isArray(resp));
-        if (typeof errorResponse === 'object' && errorResponse !== null) {
-            throw new Error(errorResponse.message || 'Invalid API response format');
-        }
-        throw new Error('Invalid API response format');
-    }
-
-    return [incomeStmts, balanceSheets, cashFlowStmts];
-}
-
-async function fetchRevenueSegments(symbol: string, period: 'quarter' | 'annual'): Promise<RawRevenueSegment[]> {
-    try {
-        console.log(`Fetching revenue segments for ${symbol} (${period})`);
-        const response = await fetch(
-            `https://financialmodelingprep.com/api/v4/revenue-product-segmentation?symbol=${symbol}&period=${period}&structure=flat&apikey=${FMP_API_KEY}`
-        );
-        
-        if (!response.ok) {
-            console.error(`Failed to fetch revenue segments: ${response.statusText}`);
-            throw new Error(`Failed to fetch revenue segments: ${response.statusText}`);
-        }
-        
-        const data = await response.json();
-        console.log('Revenue segments response:', JSON.stringify(data, null, 2));
-        
-        if (!Array.isArray(data)) {
-            console.error('Invalid revenue segments response format:', data);
-            throw new Error('Invalid revenue segments response format');
-        }
-        
-        return data;
-    } catch (error) {
-        console.error('Error fetching revenue segments:', error);
-        throw error;
-    }
-}
-
-async function insertFinancialData<T extends FinancialStatement, R>(
-    tableName: string,
-    data: T[],
-    symbol: string,
-    exchangeRate: number,
-    transformer: TransformerFunction<T, R>
-) {
-    if (!Array.isArray(data) || data.length === 0) {
-        console.log(`No data to insert for ${tableName}`);
-        return { data: [] };
-    }
-
-    try {
-        // Transform the data
-        const transformedData = data.map(stmt => {
-            const converted = convertStatementToUSD(stmt, exchangeRate);
-            return transformer(stmt, symbol, converted as T);
-        });
-
-        // Upsert the data
-        const { data: result, error } = await db
-            .from(tableName)
-            .upsert(transformedData, {
-                onConflict: 'symbol,date,period',
-                ignoreDuplicates: true
-            })
-            .select();
-
-        if (error) {
-            console.error(`Error upserting ${tableName}:`, error);
-            throw error;
-        }
-
-        return { data: result };
-    } catch (error) {
-        console.error(`Error in insertFinancialData for ${tableName}:`, error);
-        throw error;
-    }
-}
-
-async function insertRevenueSegments(annualData: RawRevenueSegment[], quarterlyData: RawRevenueSegment[], symbol: string) {
-    if ((!Array.isArray(annualData) || annualData.length === 0) && (!Array.isArray(quarterlyData) || quarterlyData.length === 0)) {
-        console.log('No revenue segments data to insert');
-        return { data: [] };
-    }
-
-    try {
-        console.log('Raw annual revenue segments data:', JSON.stringify(annualData, null, 2));
-        console.log('Raw quarterly revenue segments data:', JSON.stringify(quarterlyData, null, 2));
-
-        // Transform annual and quarterly data separately
-        const transformedAnnualData = transformRevenueSegments(annualData, symbol, true);
-        const transformedQuarterlyData = transformRevenueSegments(quarterlyData, symbol, false);
-
-        // First insert annual data
-        if (transformedAnnualData.length > 0) {
-            const { error: annualError } = await db
-                .from('revenue_segments')
-                .upsert(transformedAnnualData, {
-                    onConflict: 'symbol,date,period',
-                    ignoreDuplicates: true
-                })
-                .select();
-
-            if (annualError) {
-                console.error('Error upserting annual revenue segments:', annualError);
-                throw annualError;
-            }
-        }
-
-        // Then insert quarterly data
-        if (transformedQuarterlyData.length > 0) {
-            const { error: quarterlyError } = await db
-                .from('revenue_segments')
-                .upsert(transformedQuarterlyData, {
-                    onConflict: 'symbol,date,period',
-                    ignoreDuplicates: true
-                })
-                .select();
-
-            if (quarterlyError) {
-                console.error('Error upserting quarterly revenue segments:', quarterlyError);
-                throw quarterlyError;
-            }
-        }
-
-        // Return all data
-        const { data: result, error: selectError } = await db
-            .from('revenue_segments')
-            .select('*')
-            .eq('symbol', symbol)
-            .order('date', { ascending: false });
-
-        if (selectError) {
-            console.error('Error selecting revenue segments:', selectError);
-            throw selectError;
-        }
-
-        return { data: result };
-    } catch (error) {
-        console.error('Error in insertRevenueSegments:', error);
-        throw error;
-    }
-}
+import { fetchFinancialData, fetchRevenueSegments } from './services/dataFetchService';
+import { getExchangeRateIfNeeded, transformAllStatements, transformSegments } from './services/dataTransformService';
+import { getExistingData, upsertFinancialData, upsertRevenueSegments } from './services/databaseService';
 
 export const GET = (async ({ params, url }) => {
     try {
@@ -188,33 +10,18 @@ export const GET = (async ({ params, url }) => {
         const forceRefresh = url.searchParams.get('forceRefresh') === 'true';
         
         // First try to get existing data from database
-        const [
-            existingIncomeStmts, 
-            existingBalanceSheets, 
-            existingCashFlowStmts,
-            existingRevenueSegments
-        ] = await Promise.all([
-            db.from('income_statements').select('*').eq('symbol', symbol).order('date', { ascending: false }),
-            db.from('balance_sheets').select('*').eq('symbol', symbol).order('date', { ascending: false }),
-            db.from('cash_flow_statements').select('*').eq('symbol', symbol).order('date', { ascending: false }),
-            db.from('revenue_segments').select('*').eq('symbol', symbol).order('date', { ascending: false })
-        ]);
-
+        const existingData = await getExistingData(symbol);
+        
         // If we have data and no force refresh, return it immediately
         if (!forceRefresh && (
-            existingIncomeStmts.data?.length || 
-            existingBalanceSheets.data?.length || 
-            existingCashFlowStmts.data?.length ||
-            existingRevenueSegments.data?.length
+            existingData.income_statements.length || 
+            existingData.balance_sheets.length || 
+            existingData.cash_flow_statements.length ||
+            existingData.revenue_segments.length
         )) {
             return json({
                 success: true,
-                data: {
-                    income_statements: existingIncomeStmts.data as IncomeStatement[],
-                    balance_sheets: existingBalanceSheets.data as BalanceSheet[],
-                    cash_flow_statements: existingCashFlowStmts.data as CashFlowStatement[],
-                    revenue_segments: existingRevenueSegments.data as RevenueSegment[]
-                }
+                data: existingData
             });
         }
 
@@ -234,79 +41,62 @@ export const GET = (async ({ params, url }) => {
         ]);
 
         // Get exchange rate if statements exist and currency is not USD
-        let exchangeRate = 1;
-        const firstStatement = annualIncomeStmts?.[0] || quarterlyIncomeStmts?.[0];
-        if (firstStatement && firstStatement.reportedCurrency !== 'USD') {
-            exchangeRate = await getExchangeRate(firstStatement.reportedCurrency);
-            console.log(`Converting ${firstStatement.reportedCurrency} to USD with rate:`, exchangeRate);
-        }
+        const exchangeRate = await getExchangeRateIfNeeded(
+            annualIncomeStmts?.[0] || quarterlyIncomeStmts?.[0]
+        );
 
-        // Process annual and quarterly data separately
+        // Transform the financial statements
+        const annualStatements = transformAllStatements(
+            annualIncomeStmts,
+            annualBalanceSheets,
+            annualCashFlowStmts,
+            symbol,
+            exchangeRate
+        );
+
+        const quarterlyStatements = transformAllStatements(
+            quarterlyIncomeStmts,
+            quarterlyBalanceSheets,
+            quarterlyCashFlowStmts,
+            symbol,
+            exchangeRate
+        );
+
+        // Transform revenue segments
+        const transformedSegments = transformSegments(
+            annualRevenueSegments,
+            quarterlyRevenueSegments,
+            symbol
+        );
+
+        // Split segments by period
+        const annualSegments = transformedSegments.filter(
+            (s) => s.period === 'FY'
+        );
+        const quarterlySegments = transformedSegments.filter(
+            (s) => ['Q1', 'Q2', 'Q3', 'Q4'].includes(s.period)
+        );
+
+        // Upsert all data to database
         await Promise.all([
-            // Annual data
-            insertFinancialData<FMPIncomeStatement, IncomeStatement>(
-                'income_statements',
-                annualIncomeStmts,
-                symbol,
-                exchangeRate,
-                transformIncomeStatement
-            ),
-            insertFinancialData<FMPBalanceSheet, BalanceSheet>(
-                'balance_sheets',
-                annualBalanceSheets,
-                symbol,
-                exchangeRate,
-                transformBalanceSheet
-            ),
-            insertFinancialData<FMPCashFlowStatement, CashFlowStatement>(
-                'cash_flow_statements',
-                annualCashFlowStmts,
-                symbol,
-                exchangeRate,
-                transformCashFlow
-            ),
-            // Quarterly data
-            insertFinancialData<FMPIncomeStatement, IncomeStatement>(
-                'income_statements',
-                quarterlyIncomeStmts,
-                symbol,
-                exchangeRate,
-                transformIncomeStatement
-            ),
-            insertFinancialData<FMPBalanceSheet, BalanceSheet>(
-                'balance_sheets',
-                quarterlyBalanceSheets,
-                symbol,
-                exchangeRate,
-                transformBalanceSheet
-            ),
-            insertFinancialData<FMPCashFlowStatement, CashFlowStatement>(
-                'cash_flow_statements',
-                quarterlyCashFlowStmts,
-                symbol,
-                exchangeRate,
-                transformCashFlow
-            ),
-            // Insert both annual and quarterly revenue segments together
-            insertRevenueSegments(annualRevenueSegments, quarterlyRevenueSegments, symbol)
+            // Annual statements
+            upsertFinancialData('income_statements', annualStatements.incomeStatements),
+            upsertFinancialData('balance_sheets', annualStatements.balanceSheets),
+            upsertFinancialData('cash_flow_statements', annualStatements.cashFlowStatements),
+            // Quarterly statements
+            upsertFinancialData('income_statements', quarterlyStatements.incomeStatements),
+            upsertFinancialData('balance_sheets', quarterlyStatements.balanceSheets),
+            upsertFinancialData('cash_flow_statements', quarterlyStatements.cashFlowStatements),
+            // Revenue segments
+            upsertRevenueSegments(annualSegments, quarterlySegments, symbol)
         ]);
 
-        // Fetch all data after upsert
-        const [finalIncomeStmts, finalBalanceSheets, finalCashFlowStmts, finalRevenueSegments] = await Promise.all([
-            db.from('income_statements').select('*').eq('symbol', symbol).order('date', { ascending: false }),
-            db.from('balance_sheets').select('*').eq('symbol', symbol).order('date', { ascending: false }),
-            db.from('cash_flow_statements').select('*').eq('symbol', symbol).order('date', { ascending: false }),
-            db.from('revenue_segments').select('*').eq('symbol', symbol).order('date', { ascending: false })
-        ]);
+        // Get final data after all upserts
+        const finalData = await getExistingData(symbol);
 
         return json({
             success: true,
-            data: {
-                income_statements: finalIncomeStmts.data as IncomeStatement[],
-                balance_sheets: finalBalanceSheets.data as BalanceSheet[],
-                cash_flow_statements: finalCashFlowStmts.data as CashFlowStatement[],
-                revenue_segments: finalRevenueSegments.data as RevenueSegment[]
-            }
+            data: finalData
         });
 
     } catch (error) {
