@@ -62,11 +62,12 @@ export const GET = (async ({ params, url }) => {
             exchangeRate
         );
 
-        // Transform revenue segments
+        // Transform revenue segments with exchange rate
         const transformedSegments = transformSegments(
             annualRevenueSegments,
             quarterlyRevenueSegments,
-            symbol
+            symbol,
+            exchangeRate
         );
 
         // Split segments by period

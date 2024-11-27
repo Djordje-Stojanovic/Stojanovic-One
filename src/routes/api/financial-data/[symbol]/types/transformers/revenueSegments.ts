@@ -1,4 +1,5 @@
 import type { RevenueSegment, FinancialPeriod } from '$lib/types/financialStatements';
+import { convertToUSD } from '$lib/utils/currencyConverter';
 
 interface RawRevenueSegment {
     [date: string]: {
@@ -6,14 +7,19 @@ interface RawRevenueSegment {
     };
 }
 
-export function transformRevenueSegments(data: RawRevenueSegment[], symbol: string, isAnnual: boolean): RevenueSegment[] {
+export function transformRevenueSegments(
+    data: RawRevenueSegment[], 
+    symbol: string, 
+    isAnnual: boolean,
+    exchangeRate: number = 1  // Default to 1 if not provided
+): RevenueSegment[] {
     return data.map(item => {
         const [date, segments] = Object.entries(item)[0];
         
-        // Clean up segments by removing zero values
+        // Clean up segments by removing zero values and convert to USD
         const cleanedSegments = Object.entries(segments).reduce((acc, [key, value]) => {
             if (value !== 0) {
-                acc[key] = value;
+                acc[key] = convertToUSD(value, exchangeRate) ?? 0;
             }
             return acc;
         }, {} as { [key: string]: number });
@@ -37,7 +43,7 @@ export function transformRevenueSegments(data: RawRevenueSegment[], symbol: stri
         return {
             symbol: symbol.toUpperCase(),
             date,
-            reported_currency: 'USD', // FMP data is in USD
+            reported_currency: 'USD',  // Always USD since we're converting the values
             period,
             segments: cleanedSegments,
             // Not setting id, created_at, or updated_at as they're handled by the database

@@ -51,9 +51,10 @@ export function transformAllStatements(
 export function transformSegments(
     annualData: RawRevenueSegment[], 
     quarterlyData: RawRevenueSegment[], 
-    symbol: string
+    symbol: string,
+    exchangeRate: number
 ) {
-    const transformedAnnualData = transformRevenueSegments(annualData, symbol, true);
-    const transformedQuarterlyData = transformRevenueSegments(quarterlyData, symbol, false);
+    const transformedAnnualData = transformRevenueSegments(annualData, symbol, true, exchangeRate);
+    const transformedQuarterlyData = transformRevenueSegments(quarterlyData, symbol, false, exchangeRate);
     return [...transformedAnnualData, ...transformedQuarterlyData];
 }
