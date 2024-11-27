@@ -1,4 +1,4 @@
-import type { IncomeStatement, BalanceSheet, CashFlowStatement, RevenueSegment } from '$lib/types/financialStatements';
+import type { IncomeStatement, BalanceSheet, CashFlowStatement, RevenueSegment, RevenueGeoSegment } from '$lib/types/financialStatements';
 
 export type FinancialStatement = {
     reportedCurrency?: string;
@@ -9,6 +9,12 @@ export type FinancialStatement = {
 export interface RawRevenueSegment {
     [date: string]: {
         [segment: string]: number;
+    };
+}
+
+export interface RawRevenueGeoSegment {
+    [date: string]: {
+        [region: string]: number;
     };
 }
 
@@ -23,4 +29,5 @@ export type FinancialData = {
     balance_sheets: BalanceSheet[];
     cash_flow_statements: CashFlowStatement[];
     revenue_segments: RevenueSegment[];
+    revenue_geo_segments: RevenueGeoSegment[];
 };

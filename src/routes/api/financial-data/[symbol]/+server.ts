@@ -1,8 +1,8 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { fetchFinancialData, fetchRevenueSegments } from './services/dataFetchService';
-import { getExchangeRateIfNeeded, transformAllStatements, transformSegments } from './services/dataTransformService';
-import { getExistingData, upsertFinancialData, upsertRevenueSegments } from './services/databaseService';
+import { fetchFinancialData, fetchRevenueSegments, fetchRevenueGeoSegments } from './services/dataFetchService';
+import { getExchangeRateIfNeeded, transformAllStatements, transformSegments, transformGeoSegments } from './services/dataTransformService';
+import { getExistingData, upsertFinancialData, upsertRevenueSegments, upsertRevenueGeoSegments } from './services/databaseService';
 
 export const GET = (async ({ params, url }) => {
     try {
@@ -17,7 +17,8 @@ export const GET = (async ({ params, url }) => {
             existingData.income_statements.length || 
             existingData.balance_sheets.length || 
             existingData.cash_flow_statements.length ||
-            existingData.revenue_segments.length
+            existingData.revenue_segments.length ||
+            existingData.revenue_geo_segments?.length
         )) {
             return json({
                 success: true,
@@ -32,12 +33,16 @@ export const GET = (async ({ params, url }) => {
             [annualIncomeStmts, annualBalanceSheets, annualCashFlowStmts],
             [quarterlyIncomeStmts, quarterlyBalanceSheets, quarterlyCashFlowStmts],
             annualRevenueSegments,
-            quarterlyRevenueSegments
+            quarterlyRevenueSegments,
+            annualRevenueGeoSegments,
+            quarterlyRevenueGeoSegments
         ] = await Promise.all([
             fetchFinancialData(symbol, 'annual'),
             fetchFinancialData(symbol, 'quarter'),
             fetchRevenueSegments(symbol, 'annual'),
-            fetchRevenueSegments(symbol, 'quarter')
+            fetchRevenueSegments(symbol, 'quarter'),
+            fetchRevenueGeoSegments(symbol, 'annual'),
+            fetchRevenueGeoSegments(symbol, 'quarter')
         ]);
 
         // Get exchange rate if statements exist and currency is not USD
@@ -70,11 +75,27 @@ export const GET = (async ({ params, url }) => {
             exchangeRate
         );
 
+        // Transform revenue geo segments with exchange rate
+        const transformedGeoSegments = transformGeoSegments(
+            annualRevenueGeoSegments,
+            quarterlyRevenueGeoSegments,
+            symbol,
+            exchangeRate
+        );
+
         // Split segments by period
         const annualSegments = transformedSegments.filter(
             (s) => s.period === 'FY'
         );
         const quarterlySegments = transformedSegments.filter(
+            (s) => ['Q1', 'Q2', 'Q3', 'Q4'].includes(s.period)
+        );
+
+        // Split geo segments by period
+        const annualGeoSegments = transformedGeoSegments.filter(
+            (s) => s.period === 'FY'
+        );
+        const quarterlyGeoSegments = transformedGeoSegments.filter(
             (s) => ['Q1', 'Q2', 'Q3', 'Q4'].includes(s.period)
         );
 
@@ -89,7 +110,9 @@ export const GET = (async ({ params, url }) => {
             upsertFinancialData('balance_sheets', quarterlyStatements.balanceSheets),
             upsertFinancialData('cash_flow_statements', quarterlyStatements.cashFlowStatements),
             // Revenue segments
-            upsertRevenueSegments(annualSegments, quarterlySegments, symbol)
+            upsertRevenueSegments(annualSegments, quarterlySegments, symbol),
+            // Revenue geo segments
+            upsertRevenueGeoSegments(annualGeoSegments, quarterlyGeoSegments, symbol)
         ]);
 
         // Get final data after all upserts

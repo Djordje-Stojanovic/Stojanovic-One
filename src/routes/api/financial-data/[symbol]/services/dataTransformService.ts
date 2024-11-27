@@ -1,7 +1,8 @@
 import { getExchangeRate, convertStatementToUSD } from '$lib/utils/currencyConverter';
-import type { FinancialStatement, TransformerFunction, RawRevenueSegment } from './types';
+import type { FinancialStatement, TransformerFunction, RawRevenueSegment, RawRevenueGeoSegment } from './types';
 import { transformIncomeStatement, transformBalanceSheet, transformCashFlow } from '../types/transformers';
 import { transformRevenueSegments } from '../types/transformers/revenueSegments';
+import { transformRevenueGeoSegments } from '../types/transformers/revenueGeoSegments';
 import type { FMPIncomeStatement, FMPBalanceSheet, FMPCashFlowStatement } from '../types/fmpTypes';
 import type { IncomeStatement, BalanceSheet, CashFlowStatement } from '$lib/types/financialStatements';
 
@@ -56,5 +57,16 @@ export function transformSegments(
 ) {
     const transformedAnnualData = transformRevenueSegments(annualData, symbol, true, exchangeRate);
     const transformedQuarterlyData = transformRevenueSegments(quarterlyData, symbol, false, exchangeRate);
+    return [...transformedAnnualData, ...transformedQuarterlyData];
+}
+
+export function transformGeoSegments(
+    annualData: RawRevenueGeoSegment[], 
+    quarterlyData: RawRevenueGeoSegment[], 
+    symbol: string,
+    exchangeRate: number
+) {
+    const transformedAnnualData = transformRevenueGeoSegments(annualData, symbol, true, exchangeRate);
+    const transformedQuarterlyData = transformRevenueGeoSegments(quarterlyData, symbol, false, exchangeRate);
     return [...transformedAnnualData, ...transformedQuarterlyData];
 }

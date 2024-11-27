@@ -20,19 +20,21 @@
         income_statements: [], 
         balance_sheets: [], 
         cash_flow_statements: [], 
-        revenue_segments: [] 
+        revenue_segments: [],
+        revenue_geo_segments: []
     };
     let allFinancialData: FinancialData = { 
         income_statements: [], 
         balance_sheets: [], 
         cash_flow_statements: [], 
-        revenue_segments: [] 
+        revenue_segments: [],
+        revenue_geo_segments: []
     };
     let loading = false;
     let error: string | null = null;
     let numberFormat: NumberFormat = 'abbreviated';
     let selectedYears = loadSelectedYears();
-    let activeTab: 'income' | 'balance' | 'cashflow' | 'segments' = 'income';
+    let activeTab: 'income' | 'balance' | 'cashflow' | 'segments' | 'geo_segments' = 'income';
     let companyName: string | null = null;
     let companyList: ListName | null = null;
     let selectedPeriod: 'annual' | 'quarterly' | 'ttm' = loadSelectedPeriod();
@@ -111,6 +113,8 @@
                 return financialData.cash_flow_statements.length > 0;
             case 'segments':
                 return (financialData.revenue_segments || []).length > 0;
+            case 'geo_segments':
+                return (financialData.revenue_geo_segments || []).length > 0;
             default:
                 return false;
         }

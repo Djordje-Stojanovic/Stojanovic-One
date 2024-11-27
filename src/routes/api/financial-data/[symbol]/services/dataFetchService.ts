@@ -1,5 +1,5 @@
 import { FMP_API_KEY } from '$env/static/private';
-import type { RawRevenueSegment } from './types';
+import type { RawRevenueSegment, RawRevenueGeoSegment } from './types';
 
 export async function fetchFinancialData(symbol: string, period: 'annual' | 'quarter') {
     const [incomeStmtsRes, balanceSheetsRes, cashFlowStmtsRes] = await Promise.all([
@@ -48,6 +48,33 @@ export async function fetchRevenueSegments(symbol: string, period: 'quarter' | '
         return data;
     } catch (error) {
         console.error('Error fetching revenue segments:', error);
+        throw error;
+    }
+}
+
+export async function fetchRevenueGeoSegments(symbol: string, period: 'quarter' | 'annual'): Promise<RawRevenueGeoSegment[]> {
+    try {
+        console.log(`Fetching revenue geo segments for ${symbol} (${period})`);
+        const response = await fetch(
+            `https://financialmodelingprep.com/api/v4/revenue-geographic-segmentation?symbol=${symbol}&period=${period}&structure=flat&apikey=${FMP_API_KEY}`
+        );
+        
+        if (!response.ok) {
+            console.error(`Failed to fetch revenue geo segments: ${response.statusText}`);
+            throw new Error(`Failed to fetch revenue geo segments: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        console.log('Revenue geo segments response:', JSON.stringify(data, null, 2));
+        
+        if (!Array.isArray(data)) {
+            console.error('Invalid revenue geo segments response format:', data);
+            throw new Error('Invalid revenue geo segments response format');
+        }
+        
+        return data;
+    } catch (error) {
+        console.error('Error fetching revenue geo segments:', error);
         throw error;
     }
 }

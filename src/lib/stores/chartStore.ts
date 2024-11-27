@@ -133,6 +133,21 @@ function createChartStore() {
             .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     }
 
+    function getSegmentsData(segments: { date: string; segments: { [key: string]: number } }[] | undefined, name: string) {
+        if (!segments) return [];
+        
+        return segments
+            .filter(stmt => {
+                const value = stmt.segments[name];
+                return typeof value === 'number' && !isNaN(value);
+            })
+            .map(stmt => ({
+                date: stmt.date,
+                value: stmt.segments[name]
+            }))
+            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    }
+
     return {
         subscribe,
         updateMetrics: (financialData: FinancialData) => update(state => {
@@ -147,23 +162,12 @@ function createChartStore() {
                 const balanceData = getMetricData(financialData.balance_sheets || [], fieldName);
                 const cashFlowData = getMetricData(financialData.cash_flow_statements || [], fieldName);
 
-                // Handle revenue segments data
-                let revenueSegmentsData: { date: string; value: number }[] = [];
-                if (financialData.revenue_segments) {
-                    revenueSegmentsData = financialData.revenue_segments
-                        .filter(stmt => {
-                            const value = stmt.segments[name];
-                            return typeof value === 'number' && !isNaN(value);
-                        })
-                        .map(stmt => ({
-                            date: stmt.date,
-                            value: stmt.segments[name]
-                        }))
-                        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-                }
+                // Handle segments data (both revenue and geographic)
+                const revenueSegmentsData = getSegmentsData(financialData.revenue_segments, name);
+                const geoSegmentsData = getSegmentsData(financialData.revenue_geo_segments, name);
 
                 // Combine all data points and remove duplicates by date
-                const allData = [...incomeData, ...balanceData, ...cashFlowData, ...revenueSegmentsData];
+                const allData = [...incomeData, ...balanceData, ...cashFlowData, ...revenueSegmentsData, ...geoSegmentsData];
                 const uniqueDates = new Set();
                 const metricData = allData
                     .filter(d => {

@@ -1,4 +1,4 @@
-import type { FinancialData, IncomeStatement, BalanceSheet, CashFlowStatement, RevenueSegment } from '$lib/types/financialStatements';
+import type { FinancialData, IncomeStatement, BalanceSheet, CashFlowStatement, RevenueSegment, RevenueGeoSegment } from '$lib/types/financialStatements';
 
 type FinancialStatement = IncomeStatement | BalanceSheet | CashFlowStatement;
 
@@ -49,7 +49,7 @@ function calculateTTM(statements: FinancialStatement[]): FinancialStatement[] {
     );
 }
 
-function calculateRevenueSegmentsTTM(segments: RevenueSegment[]): RevenueSegment[] {
+function calculateSegmentsTTM<T extends RevenueSegment | RevenueGeoSegment>(segments: T[]): T[] {
     // Get quarterly segments sorted by date (newest first)
     const quarterlySegments = segments
         .filter(seg => seg.period !== 'FY' && seg.period !== 'TTM')
@@ -57,7 +57,7 @@ function calculateRevenueSegmentsTTM(segments: RevenueSegment[]): RevenueSegment
 
     if (quarterlySegments.length < 4) return [];
 
-    const ttmSegments: RevenueSegment[] = [];
+    const ttmSegments: T[] = [];
 
     // Calculate TTM for each quarter point
     for (let i = 0; i < quarterlySegments.length - 3; i++) {
@@ -65,13 +65,13 @@ function calculateRevenueSegmentsTTM(segments: RevenueSegment[]): RevenueSegment
         const previousQuarters = quarterlySegments.slice(i, i + 4);
         
         // Create TTM entry based on current quarter
-        const ttmEntry: RevenueSegment = {
+        const ttmEntry = {
             symbol: currentQuarter.symbol,
             date: currentQuarter.date,
             reported_currency: currentQuarter.reported_currency,
             period: 'TTM',
             segments: {}
-        };
+        } as T;
 
         // Get all unique segment names across the 4 quarters
         const segmentNames = new Set<string>();
@@ -89,6 +89,40 @@ function calculateRevenueSegmentsTTM(segments: RevenueSegment[]): RevenueSegment
     }
 
     return ttmSegments.sort((a, b) => 
+        new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+}
+
+function filterSegments<T extends RevenueSegment | RevenueGeoSegment>(
+    segments: T[] | undefined,
+    period: 'annual' | 'quarterly' | 'ttm',
+    years: number
+): T[] {
+    if (!segments) return [];
+    
+    let periodFiltered: T[];
+    
+    if (period === 'ttm') {
+        periodFiltered = calculateSegmentsTTM(segments);
+        if (periodFiltered.length === 0) {
+            periodFiltered = segments.filter(stmt => stmt.period !== 'FY' && stmt.period !== 'TTM');
+        }
+    } else {
+        periodFiltered = segments.filter(stmt => 
+            period === 'annual' ? stmt.period === 'FY' : stmt.period !== 'FY'
+        );
+    }
+
+    if (years === 0) return periodFiltered;
+
+    const sorted = [...periodFiltered].sort((a, b) => 
+        new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+
+    const limit = period === 'annual' ? years : years * 4;
+    const filtered = sorted.slice(0, limit);
+    
+    return filtered.sort((a, b) => 
         new Date(a.date).getTime() - new Date(b.date).getTime()
     );
 }
@@ -126,42 +160,13 @@ export function filterFinancialStatementsByPeriod(
         );
     };
 
-    const filterRevenueSegments = (segments: FinancialData['revenue_segments']) => {
-        if (!segments) return [];
-        
-        let periodFiltered: RevenueSegment[];
-        
-        if (period === 'ttm') {
-            periodFiltered = calculateRevenueSegmentsTTM(segments);
-            if (periodFiltered.length === 0) {
-                periodFiltered = segments.filter(stmt => stmt.period !== 'FY' && stmt.period !== 'TTM');
-            }
-        } else {
-            periodFiltered = segments.filter(stmt => 
-                period === 'annual' ? stmt.period === 'FY' : stmt.period !== 'FY'
-            );
-        }
-
-        if (years === 0) return periodFiltered;
-
-        const sorted = [...periodFiltered].sort((a, b) => 
-            new Date(b.date).getTime() - new Date(a.date).getTime()
-        );
-
-        const limit = period === 'annual' ? years : years * 4;
-        const filtered = sorted.slice(0, limit);
-        
-        return filtered.sort((a, b) => 
-            new Date(a.date).getTime() - new Date(b.date).getTime()
-        );
-    };
-
     return {
         income_statements: filterMostRecent(data.income_statements),
         balance_sheets: data.balance_sheets.filter(stmt => 
             period === 'annual' ? stmt.period === 'FY' : stmt.period !== 'FY'
         ),
         cash_flow_statements: filterMostRecent(data.cash_flow_statements),
-        revenue_segments: filterRevenueSegments(data.revenue_segments)
+        revenue_segments: filterSegments(data.revenue_segments, period, years),
+        revenue_geo_segments: filterSegments(data.revenue_geo_segments, period, years)
     };
 }
