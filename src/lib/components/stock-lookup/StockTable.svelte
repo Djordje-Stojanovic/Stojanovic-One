@@ -28,6 +28,10 @@
   export let addingStockId: string | null = null;
   export let filteredStocks: StockMetadata[] = [];
 
+  // Sorting state
+  let sortColumn: keyof StockMetadata | null = 'market_cap';
+  let sortDirection: 'asc' | 'desc' = 'desc';
+
   function formatMarketCap(value: number): string {
     if (!value) return 'N/A';
     if (value >= 1_000_000_000_000) return `$${(value / 1_000_000_000_000).toFixed(2)}T`;
@@ -46,6 +50,46 @@
     });
     return userStock?.list_name ?? null;
   }
+
+  function handleSort(column: keyof StockMetadata) {
+    if (sortColumn === column) {
+      // If clicking the same column, toggle direction
+      sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      // If clicking a new column, set it with default desc direction
+      sortColumn = column;
+      sortDirection = 'desc';
+    }
+  }
+
+  function getSortIcon(column: keyof StockMetadata): string {
+    if (sortColumn !== column) return '↕';
+    return sortDirection === 'asc' ? '↑' : '↓';
+  }
+
+  // Reactive sorting of stocks
+  $: sortedStocks = [...filteredStocks].sort((a, b) => {
+    if (!sortColumn) return 0;
+    
+    const aVal = a[sortColumn];
+    const bVal = b[sortColumn];
+
+    // Handle null/undefined values
+    if (!aVal && !bVal) return 0;
+    if (!aVal) return 1;
+    if (!bVal) return -1;
+
+    // Special handling for market cap to sort numerically
+    if (sortColumn === 'market_cap') {
+      return sortDirection === 'asc' 
+        ? Number(aVal) - Number(bVal)
+        : Number(bVal) - Number(aVal);
+    }
+
+    // String comparison for other columns
+    const comparison = String(aVal).localeCompare(String(bVal));
+    return sortDirection === 'asc' ? comparison : -comparison;
+  });
 
   async function addToWatchlist(stock: StockMetadata) {
     if (!$session?.access_token) {
@@ -107,17 +151,47 @@
     <table class="w-full">
       <thead class="bg-[#374151] border-b-2 border-[#4B5563]">
         <tr class="text-xs uppercase tracking-wider">
-          <th class="text-left py-4 px-4 text-[#60A5FA] font-semibold">Symbol</th>
-          <th class="text-left py-4 px-4 text-[#60A5FA] font-semibold border-l border-[#374151]">Company Name</th>
-          <th class="text-left py-4 px-4 text-[#60A5FA] font-semibold border-l border-[#374151]">Sector</th>
-          <th class="text-left py-4 px-4 text-[#60A5FA] font-semibold border-l border-[#374151]">Market Cap ▼</th>
-          <th class="text-left py-4 px-4 text-[#60A5FA] font-semibold border-l border-[#374151]">Country</th>
-          <th class="text-left py-4 px-4 text-[#60A5FA] font-semibold border-l border-[#374151]">Exchange</th>
+          <th 
+            class="text-left py-4 px-4 text-[#60A5FA] font-semibold cursor-pointer hover:text-blue-400"
+            on:click={() => handleSort('symbol')}
+          >
+            Symbol {getSortIcon('symbol')}
+          </th>
+          <th 
+            class="text-left py-4 px-4 text-[#60A5FA] font-semibold border-l border-[#374151] cursor-pointer hover:text-blue-400"
+            on:click={() => handleSort('company_name')}
+          >
+            Company Name {getSortIcon('company_name')}
+          </th>
+          <th 
+            class="text-left py-4 px-4 text-[#60A5FA] font-semibold border-l border-[#374151] cursor-pointer hover:text-blue-400"
+            on:click={() => handleSort('sector')}
+          >
+            Sector {getSortIcon('sector')}
+          </th>
+          <th 
+            class="text-left py-4 px-4 text-[#60A5FA] font-semibold border-l border-[#374151] cursor-pointer hover:text-blue-400"
+            on:click={() => handleSort('market_cap')}
+          >
+            Market Cap {getSortIcon('market_cap')}
+          </th>
+          <th 
+            class="text-left py-4 px-4 text-[#60A5FA] font-semibold border-l border-[#374151] cursor-pointer hover:text-blue-400"
+            on:click={() => handleSort('country')}
+          >
+            Country {getSortIcon('country')}
+          </th>
+          <th 
+            class="text-left py-4 px-4 text-[#60A5FA] font-semibold border-l border-[#374151] cursor-pointer hover:text-blue-400"
+            on:click={() => handleSort('exchange')}
+          >
+            Exchange {getSortIcon('exchange')}
+          </th>
           <th class="text-left py-4 px-4 text-[#60A5FA] font-semibold border-l border-[#374151]">Action</th>
         </tr>
       </thead>
       <tbody class="bg-[#1F2937]">
-        {#each filteredStocks as stock (stock.id)}
+        {#each sortedStocks as stock (stock.id)}
           <tr class="border-b border-[#374151] hover:bg-[#4B5563] transition-colors duration-200">
             <td class="py-4 px-4">
               <div class="flex items-center space-x-3">
