@@ -27,21 +27,17 @@ export async function fetchFinancialData(symbol: string, period: 'annual' | 'qua
 
 export async function fetchRevenueSegments(symbol: string, period: 'quarter' | 'annual'): Promise<RawRevenueSegment[]> {
     try {
-        console.log(`Fetching revenue segments for ${symbol} (${period})`);
         const response = await fetch(
             `https://financialmodelingprep.com/api/v4/revenue-product-segmentation?symbol=${symbol}&period=${period}&structure=flat&apikey=${FMP_API_KEY}`
         );
         
         if (!response.ok) {
-            console.error(`Failed to fetch revenue segments: ${response.statusText}`);
             throw new Error(`Failed to fetch revenue segments: ${response.statusText}`);
         }
         
         const data = await response.json();
-        console.log('Revenue segments response:', JSON.stringify(data, null, 2));
         
         if (!Array.isArray(data)) {
-            console.error('Invalid revenue segments response format:', data);
             throw new Error('Invalid revenue segments response format');
         }
         
@@ -54,21 +50,17 @@ export async function fetchRevenueSegments(symbol: string, period: 'quarter' | '
 
 export async function fetchRevenueGeoSegments(symbol: string, period: 'quarter' | 'annual'): Promise<RawRevenueGeoSegment[]> {
     try {
-        console.log(`Fetching revenue geo segments for ${symbol} (${period})`);
         const response = await fetch(
             `https://financialmodelingprep.com/api/v4/revenue-geographic-segmentation?symbol=${symbol}&period=${period}&structure=flat&apikey=${FMP_API_KEY}`
         );
         
         if (!response.ok) {
-            console.error(`Failed to fetch revenue geo segments: ${response.statusText}`);
             throw new Error(`Failed to fetch revenue geo segments: ${response.statusText}`);
         }
         
         const data = await response.json();
-        console.log('Revenue geo segments response:', JSON.stringify(data, null, 2));
         
         if (!Array.isArray(data)) {
-            console.error('Invalid revenue geo segments response format:', data);
             throw new Error('Invalid revenue geo segments response format');
         }
         

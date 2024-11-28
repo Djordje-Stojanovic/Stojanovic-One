@@ -27,8 +27,6 @@ export const GET = (async ({ params, url }) => {
         }
 
         // Fetch both annual and quarterly data from FMP API
-        console.log('Fetching data from FMP API for symbol:', symbol);
-        
         const [
             [annualIncomeStmts, annualBalanceSheets, annualCashFlowStmts],
             [quarterlyIncomeStmts, quarterlyBalanceSheets, quarterlyCashFlowStmts],
