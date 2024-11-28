@@ -162,9 +162,7 @@ export function filterFinancialStatementsByPeriod(
 
     return {
         income_statements: filterMostRecent(data.income_statements),
-        balance_sheets: data.balance_sheets.filter(stmt => 
-            period === 'annual' ? stmt.period === 'FY' : stmt.period !== 'FY'
-        ),
+        balance_sheets: filterMostRecent(data.balance_sheets),
         cash_flow_statements: filterMostRecent(data.cash_flow_statements),
         revenue_segments: filterSegments(data.revenue_segments, period, years),
         revenue_geo_segments: filterSegments(data.revenue_geo_segments, period, years)
