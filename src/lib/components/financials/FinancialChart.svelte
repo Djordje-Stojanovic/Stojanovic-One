@@ -94,8 +94,9 @@
                         bodyColor: darkMode ? '#F3F4F6' : '#111827',
                         borderColor: darkMode ? '#4B5563' : '#E5E7EB',
                         borderWidth: 1,
-                        padding: 12,
+                        padding: 16,
                         cornerRadius: 8,
+                        bodySpacing: 8,
                         callbacks: {
                             title(items: TooltipItem<ChartType>[]) {
                                 if (!items.length) return '';
@@ -108,13 +109,36 @@
                             label(context: TooltipItem<ChartType>) {
                                 const value = context.raw;
                                 if (value === null || typeof value !== 'number') return '';
+                                
                                 const label = context.dataset.label || '';
                                 const isMargin = label.includes('Margin');
                                 const formattedValue = isMargin
                                     ? `${value.toFixed(2)}%`
                                     : formatValue(value);
-                                const percentChange = calculateGrowth(context.dataset.data as number[], context.dataIndex);
-                                return `${label}: ${formattedValue}${percentChange}`;
+
+                                // Calculate growth rate
+                                const growthRate = calculateGrowth(
+                                    context.dataset.data as number[], 
+                                    context.dataIndex
+                                );
+
+                                // Return formatted string with growth rate
+                                return `${label}: ${formattedValue}${growthRate}`;
+                            },
+                            afterLabel(context: TooltipItem<ChartType>) {
+                                // Add any additional TTM calculations if needed
+                                const value = context.raw;
+                                if (value === null || typeof value !== 'number') return '';
+                                
+                                const label = context.dataset.label || '';
+                                if (label === 'Revenue' || label === 'Operating Income' || label === 'Net Income') {
+                                    const data = context.dataset.data as number[];
+                                    const ttmValue = calculateTTM(data, context.dataIndex);
+                                    if (ttmValue !== null) {
+                                        return `TTM: ${formatValue(ttmValue)}`;
+                                    }
+                                }
+                                return '';
                             }
                         }
                     },
@@ -212,6 +236,17 @@
             // Create new chart
             chart = new Chart(ctx, config);
         }
+    }
+
+    function calculateTTM(data: number[], currentIndex: number): number | null {
+        if (currentIndex < 3) return null;
+        
+        // Sum up the last 4 quarters
+        const ttm = data.slice(currentIndex - 3, currentIndex + 1).reduce((sum, val) => {
+            return val !== null ? sum + val : sum;
+        }, 0);
+        
+        return ttm;
     }
 
     onMount(() => {

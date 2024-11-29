@@ -74,7 +74,7 @@ export function calculateFCFMargin(statements: CashFlowStatement[], revenue: num
             revenue: revenue[index]
         }))
         .filter(({ stmt, revenue }) => {
-            const fcf = stmt.free_cash_flow;
+            const fcf = stmt.net_cash_provided_by_operating_activities - stmt.capital_expenditure;
             return typeof fcf === 'number' && 
                    typeof revenue === 'number' && 
                    !isNaN(fcf) && 
@@ -83,7 +83,7 @@ export function calculateFCFMargin(statements: CashFlowStatement[], revenue: num
         })
         .map(({ stmt, revenue }) => ({
             date: stmt.date,
-            value: (stmt.free_cash_flow / revenue) * 100
+            value: ((stmt.net_cash_provided_by_operating_activities - stmt.capital_expenditure) / revenue) * 100
         }))
         .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
@@ -105,7 +105,7 @@ export function calculateOperatingCashFlowMargin(statements: CashFlowStatement[]
             revenue: revenue[index]
         }))
         .filter(({ stmt, revenue }) => {
-            const ocf = stmt.operating_cash_flow;
+            const ocf = stmt.net_cash_provided_by_operating_activities;
             return typeof ocf === 'number' && 
                    typeof revenue === 'number' && 
                    !isNaN(ocf) && 
@@ -114,7 +114,7 @@ export function calculateOperatingCashFlowMargin(statements: CashFlowStatement[]
         })
         .map(({ stmt, revenue }) => ({
             date: stmt.date,
-            value: (stmt.operating_cash_flow / revenue) * 100
+            value: (stmt.net_cash_provided_by_operating_activities / revenue) * 100
         }))
         .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
