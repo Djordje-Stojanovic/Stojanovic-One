@@ -1,11 +1,12 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import Chart from 'chart.js/auto';
-    import type { ChartConfiguration, TooltipItem, ChartOptions, ChartType } from 'chart.js';
+    import type { ChartConfiguration, TooltipItem, ChartOptions, ChartType, ChartEvent, LegendItem } from 'chart.js';
     import type { ChartProps } from './types';
     import { formatDate, formatValue, calculateGrowth } from './utils/chartUtils';
     import { theme, colors, marginColors } from './utils/chartConfig';
     import GrowthRates from './GrowthRates.svelte';
+    import { chartStore } from '$lib/stores/financial-charts';
     
     export let metrics: ChartProps['metrics'] = [];
     export let darkMode: ChartProps['darkMode'] = true;
@@ -48,7 +49,8 @@
                     pointBorderColor: color,
                     yAxisID: 'y1',
                     order: 0,
-                    tension: 0.2
+                    tension: 0.2,
+                    hidden: metric.hidden
                 };
             }
 
@@ -63,7 +65,8 @@
                 barPercentage: 0.85,
                 categoryPercentage: 0.8,
                 yAxisID: 'y',
-                order: index + 1
+                order: index + 1,
+                hidden: metric.hidden
             };
         });
 
@@ -118,6 +121,25 @@
                     legend: {
                         position: 'top' as const,
                         align: 'center' as const,
+                        onClick: (e: ChartEvent, legendItem: LegendItem, legend: Chart['legend']) => {
+                            const index = legendItem.datasetIndex;
+                            if (index !== undefined && chart?.data.datasets[index] && legend?.chart) {
+                                const dataset = chart.data.datasets[index];
+                                const label = dataset.label || '';
+                                
+                                // Use the store's toggleMetricVisibility action
+                                chartStore.toggleMetricVisibility(label);
+                                
+                                // Update chart visibility
+                                const ci = legend.chart;
+                                if (ci.isDatasetVisible(index)) {
+                                    ci.hide(index);
+                                } else {
+                                    ci.show(index);
+                                }
+                                ci.update();
+                            }
+                        },
                         labels: {
                             color: currentTheme.text,
                             padding: 20,

@@ -28,7 +28,8 @@ function createChartStore(): ChartStoreActions {
             fcf: false,
             operatingCashFlow: false
         },
-        lastFinancialData: null
+        lastFinancialData: null,
+        metricVisibility: {}
     };
 
     const { subscribe, set, update } = writable(initialState);
@@ -40,34 +41,34 @@ function createChartStore(): ChartStoreActions {
 
         if (state.margins.netIncome) {
             const margin = calculateNetIncomeMargin(financialData.income_statements);
-            if (margin) margins.push(margin);
+            if (margin) margins.push({...margin, hidden: !state.metricVisibility[margin.name]});
         }
 
         if (state.margins.grossProfit) {
             const margin = calculateGrossProfitMargin(financialData.income_statements);
-            if (margin) margins.push(margin);
+            if (margin) margins.push({...margin, hidden: !state.metricVisibility[margin.name]});
         }
 
         if (state.margins.operating) {
             const margin = calculateOperatingMargin(financialData.income_statements);
-            if (margin) margins.push(margin);
+            if (margin) margins.push({...margin, hidden: !state.metricVisibility[margin.name]});
         }
 
         if (state.margins.ebitda) {
             const margin = calculateEBITDAMargin(financialData.income_statements);
-            if (margin) margins.push(margin);
+            if (margin) margins.push({...margin, hidden: !state.metricVisibility[margin.name]});
         }
 
         if (state.margins.fcf) {
             const revenue = financialData.income_statements.map(stmt => stmt.revenue);
             const margin = calculateFCFMargin(financialData.cash_flow_statements, revenue);
-            if (margin) margins.push(margin);
+            if (margin) margins.push({...margin, hidden: !state.metricVisibility[margin.name]});
         }
 
         if (state.margins.operatingCashFlow) {
             const revenue = financialData.income_statements.map(stmt => stmt.revenue);
             const margin = calculateOperatingCashFlowMargin(financialData.cash_flow_statements, revenue);
-            if (margin) margins.push(margin);
+            if (margin) margins.push({...margin, hidden: !state.metricVisibility[margin.name]});
         }
 
         return margins;
@@ -100,7 +101,8 @@ function createChartStore(): ChartStoreActions {
 
                 return {
                     name,
-                    data: metricData
+                    data: metricData,
+                    hidden: !state.metricVisibility[name]
                 };
             });
 
@@ -126,6 +128,8 @@ function createChartStore(): ChartStoreActions {
             if (existingIndex !== -1) {
                 const newMetrics = state.selectedMetrics.filter(m => m.name !== name);
                 const newMetricNames = state.selectedMetricNames.filter(n => n !== name);
+                const newVisibility = { ...state.metricVisibility };
+                delete newVisibility[name];
                 
                 saveShowChart(newMetrics.length > 0);
                 saveSelectedMetrics(newMetricNames);
@@ -134,7 +138,8 @@ function createChartStore(): ChartStoreActions {
                     ...state,
                     selectedMetrics: newMetrics,
                     selectedMetricNames: newMetricNames,
-                    showChart: newMetrics.length > 0
+                    showChart: newMetrics.length > 0,
+                    metricVisibility: newVisibility
                 };
             } else {
                 const newMetric = {
@@ -142,7 +147,8 @@ function createChartStore(): ChartStoreActions {
                     data: dates.map((date, i) => ({
                         date,
                         value: values[i]
-                    })).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                    })).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()),
+                    hidden: false
                 };
 
                 const newMetrics = [...state.selectedMetrics, newMetric];
@@ -155,9 +161,36 @@ function createChartStore(): ChartStoreActions {
                     ...state,
                     selectedMetrics: newMetrics,
                     selectedMetricNames: newMetricNames,
-                    showChart: true
+                    showChart: true,
+                    metricVisibility: {
+                        ...state.metricVisibility,
+                        [name]: true
+                    }
                 };
             }
+        }),
+
+        toggleMetricVisibility: (metricName: string) => update(state => {
+            const newVisibility = {
+                ...state.metricVisibility,
+                [metricName]: !state.metricVisibility[metricName]
+            };
+
+            const updatedMetrics = state.selectedMetrics.map(metric => {
+                if (metric.name === metricName) {
+                    return {
+                        ...metric,
+                        hidden: !newVisibility[metricName]
+                    };
+                }
+                return metric;
+            });
+
+            return {
+                ...state,
+                metricVisibility: newVisibility,
+                selectedMetrics: updatedMetrics
+            };
         }),
 
         toggleMargin: (marginType: MarginType) => update(state => {
@@ -199,7 +232,8 @@ function createChartStore(): ChartStoreActions {
                     fcf: false,
                     operatingCashFlow: false
                 },
-                lastFinancialData: null
+                lastFinancialData: null,
+                metricVisibility: {}
             });
         }
     };

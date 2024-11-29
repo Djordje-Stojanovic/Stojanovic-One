@@ -30,6 +30,7 @@ export interface MetricRowProps {
 export interface ChartMetric {
     name: string;
     data: { date: string; value: number }[];
+    hidden?: boolean;
 }
 
 // Chart props interface

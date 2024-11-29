@@ -3,6 +3,7 @@ import type { FinancialData } from '$lib/types/financialStatements';
 export interface ChartMetric {
     name: string;
     data: ChartDataPoint[];
+    hidden?: boolean;
 }
 
 export interface ChartDataPoint {
@@ -28,6 +29,7 @@ export interface ChartStoreState {
     selectedMetricNames: string[];
     margins: MarginState;
     lastFinancialData: FinancialData | null;
+    metricVisibility: Record<string, boolean>;
 }
 
 export interface ChartStoreActions {
@@ -36,4 +38,5 @@ export interface ChartStoreActions {
     handleMetricClick: (name: string, values: number[], dates: string[]) => void;
     toggleMargin: (marginType: MarginType) => void;
     clearChart: () => void;
+    toggleMetricVisibility: (metricName: string) => void;
 }
