@@ -49,23 +49,25 @@ function toggleMargin(margin: MarginOption) {
 $: marginStates = $chartStore.margins;
 </script>
 
-<div class="flex flex-wrap gap-2 items-center">
-    {#each margins as margin}
-        <button
-            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-all duration-200
-                   border border-transparent hover:bg-opacity-10 focus:outline-none"
-            class:bg-opacity-10={marginStates[margin.id]}
-            style="color: {margin.color}; 
-                   background-color: {marginStates[margin.id] ? margin.color + '20' : 'transparent'};
-                   border-color: {marginStates[margin.id] ? margin.color : 'transparent'}"
-            on:click={() => toggleMargin(margin)}
-        >
-            <span class="w-1.5 h-1.5 rounded-full mr-1.5" style="background-color: {margin.color}"></span>
-            {margin.name}
-        </button>
-    {/each}
+<div class="w-full flex items-center">
+    <div class="flex-grow flex flex-wrap gap-2 items-center justify-center">
+        {#each margins as margin}
+            <button
+                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-all duration-200
+                       border border-transparent hover:bg-opacity-10 focus:outline-none"
+                class:bg-opacity-10={marginStates[margin.id]}
+                style="color: {margin.color}; 
+                       background-color: {marginStates[margin.id] ? margin.color + '20' : 'transparent'};
+                       border-color: {marginStates[margin.id] ? margin.color : 'transparent'}"
+                on:click={() => toggleMargin(margin)}
+            >
+                <span class="w-1.5 h-1.5 rounded-full mr-1.5" style="background-color: {margin.color}"></span>
+                {margin.name}
+            </button>
+        {/each}
+    </div>
     <button
-        class="ml-auto p-1.5 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+        class="flex-shrink-0 ml-4 p-1.5 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
         on:click={() => chartStore.clearChart()}
         title="Close Chart"
     >

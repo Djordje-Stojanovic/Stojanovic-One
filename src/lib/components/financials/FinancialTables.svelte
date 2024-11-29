@@ -24,7 +24,7 @@
 
 <!-- Tabs -->
 <div class="bg-white dark:bg-[#374151] rounded-[0.375rem] shadow-sm transition-all duration-300">
-    <div class="flex space-x-1 p-2">
+    <div class="flex justify-center space-x-1 p-2">
         <button
             class={`px-4 py-2 rounded-[0.375rem] font-medium transition-all duration-300 ${
                 activeTab === 'income'
