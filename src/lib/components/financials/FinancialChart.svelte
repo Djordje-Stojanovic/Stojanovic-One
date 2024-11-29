@@ -15,6 +15,20 @@
     let canvas: HTMLCanvasElement;
     let chart: Chart | null = null;
 
+    // Get consistent color for margin metrics
+    function getMarginColor(metricName: string): string {
+        const marginTypes = [
+            'Net Income Margin',
+            'Gross Profit Margin',
+            'Operating Margin',
+            'EBITDA Margin',
+            'FCF Margin',
+            'Op. Cash Flow Margin'
+        ];
+        const index = marginTypes.indexOf(metricName);
+        return marginColors[index % marginColors.length];
+    }
+
     function updateChart() {
         if (!canvas || !metrics.length) return;
         
@@ -34,8 +48,7 @@
             const isMargin = metric.name.includes('Margin');
             
             if (isMargin) {
-                const marginIndex = Math.floor(index % marginColors.length);
-                const color = marginColors[marginIndex];
+                const color = getMarginColor(metric.name);
                 return {
                     type: 'line' as const,
                     label: metric.name,
@@ -73,7 +86,7 @@
         const config = {
             type: 'bar' as const,
             data: {
-                labels: allDates.map(formatDate),
+                labels: allDates.map(date => formatDate(date)),
                 datasets
             },
             options: {
@@ -100,11 +113,8 @@
                         callbacks: {
                             title(items: TooltipItem<ChartType>[]) {
                                 if (!items.length) return '';
-                                const date = new Date(items[0].label);
-                                return date.toLocaleDateString('en-US', { 
-                                    year: 'numeric',
-                                    month: 'long'
-                                });
+                                const date = allDates[items[0].dataIndex];
+                                return formatDate(date);
                             },
                             label(context: TooltipItem<ChartType>) {
                                 const value = context.raw;
@@ -211,7 +221,7 @@
                             drawOnChartArea: false
                         },
                         ticks: {
-                            color: marginColors[0],
+                            color: currentTheme.text, // Always use theme's text color for consistency
                             padding: 12,
                             callback: (value: any) => `${value.toFixed(1)}%`,
                             font: {
