@@ -29,26 +29,26 @@
         const datasets = metrics.map((metric, index) => {
             const dateValueMap = new Map(metric.data.map(d => [d.date, d.value]));
             
-            // Special handling for Net Income Margin
-            if (metric.name === 'Net Income Margin') {
-                const color = marginColors[0];
-                // Create a semi-transparent version of the color
-                const transparentColor = color + '60'; // 30% opacity
+            // Check if this is a margin metric
+            const isMargin = metric.name.includes('Margin');
+            
+            if (isMargin) {
+                const marginIndex = Math.floor(index % marginColors.length);
+                const color = marginColors[marginIndex];
                 return {
                     type: 'line' as const,
                     label: metric.name,
                     data: allDates.map(date => dateValueMap.get(date) ?? null),
-                    borderColor: transparentColor,
+                    borderColor: color,
                     backgroundColor: 'transparent',
-                    borderWidth: 2.5,
+                    borderWidth: 2,
                     pointRadius: 3,
                     pointHoverRadius: 5,
                     pointBackgroundColor: color,
                     pointBorderColor: color,
                     yAxisID: 'y1',
-                    order: 0, // Draw on top
-                    tension: 0.2, // Slight curve for better visibility
-                    fill: false
+                    order: 0,
+                    tension: 0.2
                 };
             }
 
@@ -105,11 +105,13 @@
                             label(context: TooltipItem<ChartType>) {
                                 const value = context.raw;
                                 if (value === null || typeof value !== 'number') return '';
-                                const formattedValue = context.dataset.label === 'Net Income Margin' 
+                                const label = context.dataset.label || '';
+                                const isMargin = label.includes('Margin');
+                                const formattedValue = isMargin
                                     ? `${value.toFixed(2)}%`
                                     : formatValue(value);
                                 const percentChange = calculateGrowth(context.dataset.data as number[], context.dataIndex);
-                                return `${context.dataset.label}: ${formattedValue}${percentChange}`;
+                                return `${label}: ${formattedValue}${percentChange}`;
                             }
                         }
                     },
@@ -163,7 +165,7 @@
                             drawOnChartArea: false
                         },
                         ticks: {
-                            color: marginColors[0] + '80', // Match line transparency
+                            color: marginColors[0],
                             padding: 12,
                             callback: (value: any) => `${value.toFixed(1)}%`,
                             font: {

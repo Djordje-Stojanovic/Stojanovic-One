@@ -57,6 +57,7 @@
         ({ financialData, allFinancialData, companyName, companyList, error } = result);
         
         if (!error && financialData) {
+            console.log('Loaded financial data:', financialData);
             chartStore.updateMetrics(financialData);
         }
 
@@ -67,11 +68,14 @@
         if (!allFinancialData?.income_statements.length) return;
         
         financialData = filterFinancialStatementsByPeriod(allFinancialData, selectedPeriod, selectedYears);
+        console.log('Filtered financial data:', financialData);
         chartStore.updateMetrics(financialData);
     }
 
     function handleMetricClick(event: CustomEvent<{ name: string; values: number[]; dates: string[] }>) {
-        chartStore.handleMetricClick(event.detail.name, event.detail.values, event.detail.dates);
+        const { name, values, dates } = event.detail;
+        console.log('Metric clicked:', { name, values, dates });
+        chartStore.handleMetricClick(name, values, dates);
     }
 
     function handlePeriodChange(event: CustomEvent<{ period: 'annual' | 'quarterly' | 'ttm' }>) {
@@ -94,6 +98,7 @@
 
     // Watch for tab changes
     $: if (activeTab && financialData) {
+        console.log('Active tab changed:', activeTab);
         chartStore.updateMetrics(financialData);
     }
 
@@ -141,7 +146,7 @@
         on:periodChange={handlePeriodChange}
     />
 
-    <ChartSection {selectedPeriod} />
+    <ChartSection />
 
     {#if !hasData && !loading && !error}
         <div class="p-4 bg-yellow-100 dark:bg-yellow-900 border border-yellow-400 dark:border-yellow-700 text-yellow-700 dark:text-yellow-200 rounded-lg" role="alert">
