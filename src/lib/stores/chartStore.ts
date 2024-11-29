@@ -7,6 +7,8 @@ interface ChartStore {
     showChart: boolean;
     selectedMetrics: ChartMetric[];
     selectedMetricNames: string[];
+    showNetIncomeMargin: boolean;
+    lastFinancialData: FinancialData | null;
 }
 
 function createChartStore() {
@@ -15,7 +17,9 @@ function createChartStore() {
     const initialState: ChartStore = {
         showChart: loadShowChart(),
         selectedMetrics: [],
-        selectedMetricNames: storedMetricNames
+        selectedMetricNames: storedMetricNames,
+        showNetIncomeMargin: false,
+        lastFinancialData: null
     };
 
     const { subscribe, set, update } = writable(initialState);
@@ -148,10 +152,38 @@ function createChartStore() {
             .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     }
 
+    function calculateNetIncomeMargin(statements: IncomeStatement[]): ChartMetric | null {
+        if (!statements?.length) return null;
+
+        const marginData = statements
+            .filter(stmt => {
+                const netIncome = stmt.net_income;
+                const revenue = stmt.revenue;
+                return typeof netIncome === 'number' && 
+                       typeof revenue === 'number' && 
+                       !isNaN(netIncome) && 
+                       !isNaN(revenue) && 
+                       revenue !== 0;
+            })
+            .map(stmt => ({
+                date: stmt.date,
+                value: (stmt.net_income / stmt.revenue) * 100
+            }))
+            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+        return marginData.length > 0 ? {
+            name: 'Net Income Margin',
+            data: marginData
+        } : null;
+    }
+
     return {
         subscribe,
         updateMetrics: (financialData: FinancialData) => update(state => {
             if (!financialData || !state.selectedMetricNames.length) return state;
+
+            // Store the financial data for later use
+            state.lastFinancialData = financialData;
 
             // Process each selected metric
             const updatedMetrics = state.selectedMetricNames.map(name => {
@@ -183,6 +215,14 @@ function createChartStore() {
                 };
             });
 
+            // Add net income margin if enabled and net income is selected
+            if (state.showNetIncomeMargin && state.selectedMetricNames.includes('Net Income')) {
+                const marginMetric = calculateNetIncomeMargin(financialData.income_statements);
+                if (marginMetric) {
+                    updatedMetrics.push(marginMetric);
+                }
+            }
+
             // Keep all metrics but only show chart if at least one has data
             const hasAnyData = updatedMetrics.some(m => m.data.length > 0);
 
@@ -191,7 +231,8 @@ function createChartStore() {
                 ...state,
                 selectedMetrics: updatedMetrics,
                 selectedMetricNames: state.selectedMetricNames, // Keep original selection
-                showChart: hasAnyData
+                showChart: hasAnyData,
+                lastFinancialData: financialData
             };
 
             // Save state
@@ -212,9 +253,11 @@ function createChartStore() {
                 saveSelectedMetrics(newMetricNames);
 
                 return {
+                    ...state,
                     selectedMetrics: newMetrics,
                     selectedMetricNames: newMetricNames,
-                    showChart: newMetrics.length > 0
+                    showChart: newMetrics.length > 0,
+                    showNetIncomeMargin: name === 'Net Income' ? false : state.showNetIncomeMargin
                 };
             } else {
                 // Add new metric
@@ -233,19 +276,26 @@ function createChartStore() {
                 saveSelectedMetrics(newMetricNames);
 
                 return {
+                    ...state,
                     selectedMetrics: newMetrics,
                     selectedMetricNames: newMetricNames,
                     showChart: true
                 };
             }
         }),
+        toggleNetIncomeMargin: () => update(state => ({
+            ...state,
+            showNetIncomeMargin: !state.showNetIncomeMargin
+        })),
         clearChart: () => {
             saveShowChart(false);
             saveSelectedMetrics([]);
             set({
                 showChart: false,
                 selectedMetrics: [],
-                selectedMetricNames: []
+                selectedMetricNames: [],
+                showNetIncomeMargin: false,
+                lastFinancialData: null
             });
         }
     };

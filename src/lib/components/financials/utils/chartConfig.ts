@@ -17,6 +17,7 @@ export const theme = {
     }
 };
 
+// Regular chart colors (removed last 3)
 export const colors = [
     '#3B82F6', // Blue - Primary
     '#10B981', // Emerald - Growth
@@ -24,10 +25,14 @@ export const colors = [
     '#EF4444', // Red - Danger
     '#8B5CF6', // Purple - Royal
     '#EC4899', // Pink - Vibrant
-    '#06B6D4', // Cyan - Info
-    '#F97316', // Orange - Energy
-    '#14B8A6', // Teal - Calm
-    '#6366F1'  // Indigo - Deep
+    '#06B6D4'  // Cyan - Info
+];
+
+// Special colors for margin lines - sophisticated and modern
+export const marginColors = [
+    '#E879F9', // Soft Neon Purple - modern but not harsh
+    '#2DD4BF', // Refined Teal - professional and distinct
+    '#FB923C'  // Soft Orange - warm and visible
 ];
 
 export function createChartOptions(currentTheme: typeof theme.dark | typeof theme.light): ChartOptions<'bar'> {
