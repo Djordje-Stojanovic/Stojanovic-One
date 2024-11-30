@@ -4,24 +4,67 @@
     import MarginSelector from './margins/MarginSelector.svelte';
     import { formatValue } from './utils/chartUtils';
     import { colors, marginColors } from './utils/chartConfig';
+    import type { FinancialData } from '$lib/types/financialStatements';
+
+    export let allFinancialData: FinancialData;
 
     $: showChart = $chartStore.showChart;
     $: darkMode = true;
 
     interface GrowthRate {
         name: string;
-        growth: string;
+        oneYear: string;
+        twoYear: string;
+        fiveYear: string;
         color: string;
     }
 
-    function calculateYoYGrowth(metrics: any[]): GrowthRate[] {
+    const EXCLUDED_MARGINS = [
+        'Net Income Margin',
+        'Gross Profit Margin',
+        'Operating Margin',
+        'EBITDA Margin',
+        'FCF Margin',
+        'Op. Cash Flow Margin'
+    ];
+
+    function getCompleteMetricData(metricName: string) {
+        // Get complete data for the metric from allFinancialData
+        const statements = allFinancialData?.income_statements || [];
+        const quarterlyData = statements
+            .filter(stmt => stmt.period !== 'FY' && stmt.period !== 'TTM')
+            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        
+        return quarterlyData.map(stmt => ({
+            date: stmt.date,
+            value: stmt[metricName.toLowerCase().replace(/ /g, '_') as keyof typeof stmt] as number
+        }));
+    }
+
+    function shouldShowGrowthRate(metricName: string): boolean {
+        return !EXCLUDED_MARGINS.includes(metricName);
+    }
+
+    function calculateGrowthRates(metrics: any[]): GrowthRate[] {
         const results: GrowthRate[] = [];
         for (const metric of metrics) {
-            if (!metric.hidden && metric.data.length >= 4) {
-                const current = metric.data[metric.data.length - 1].value;
-                const yearAgo = metric.data[metric.data.length - 5]?.value;
-                if (yearAgo && yearAgo !== 0) {
-                    const growth = ((current - yearAgo) / Math.abs(yearAgo)) * 100;
+            if (!metric.hidden && shouldShowGrowthRate(metric.name)) {
+                // Get complete data for calculations
+                const allData = getCompleteMetricData(metric.name);
+                
+                if (allData.length >= 21) {  // Need at least 21 quarters for 5Y calculation
+                    const current = allData[allData.length - 1].value;
+                    const oneYearAgo = allData[allData.length - 5]?.value;
+                    const twoYearAgo = allData[allData.length - 9]?.value;
+                    const fiveYearAgo = allData[allData.length - 21]?.value;
+                    
+                    const oneYear = oneYearAgo !== undefined && oneYearAgo !== 0 ? 
+                        ((current - oneYearAgo) / Math.abs(oneYearAgo)) * 100 : null;
+                    const twoYear = twoYearAgo !== undefined && twoYearAgo !== 0 ? 
+                        (Math.pow(current / twoYearAgo, 1/2) - 1) * 100 : null;
+                    const fiveYear = fiveYearAgo !== undefined && fiveYearAgo !== 0 ? 
+                        (Math.pow(current / fiveYearAgo, 1/5) - 1) * 100 : null;
+
                     const isMargin = metric.name.includes('Margin');
                     const colorIndex: number = isMargin 
                         ? Math.floor(results.length % marginColors.length)
@@ -30,7 +73,9 @@
                     
                     results.push({
                         name: metric.name,
-                        growth: growth.toFixed(1),
+                        oneYear: oneYear !== null ? oneYear.toFixed(1) : 'N/A',
+                        twoYear: twoYear !== null ? twoYear.toFixed(1) : 'N/A',
+                        fiveYear: fiveYear !== null ? fiveYear.toFixed(1) : 'N/A',
                         color
                     });
                 }
@@ -39,7 +84,7 @@
         return results;
     }
 
-    $: growthRates = calculateYoYGrowth($chartStore.selectedMetrics);
+    $: growthRates = calculateGrowthRates($chartStore.selectedMetrics);
 </script>
 
 {#if showChart}
@@ -58,8 +103,18 @@
                     <span style="color: {rate.color}">{rate.name}</span>
                     <div class="flex items-center gap-4">
                         <span class="whitespace-nowrap">
-                            YoY: <span class={Number(rate.growth) >= 0 ? 'text-green-500' : 'text-red-500'}>
-                                {rate.growth}%
+                            1Y: <span class={Number(rate.oneYear) >= 0 ? 'text-green-500' : 'text-red-500'}>
+                                {rate.oneYear}%
+                            </span>
+                        </span>
+                        <span class="whitespace-nowrap">
+                            2Y: <span class={Number(rate.twoYear) >= 0 ? 'text-green-500' : 'text-red-500'}>
+                                {rate.twoYear}%
+                            </span>
+                        </span>
+                        <span class="whitespace-nowrap">
+                            5Y: <span class={Number(rate.fiveYear) >= 0 ? 'text-green-500' : 'text-red-500'}>
+                                {rate.fiveYear}%
                             </span>
                         </span>
                     </div>
