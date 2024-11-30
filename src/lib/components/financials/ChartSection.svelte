@@ -11,7 +11,6 @@
     interface GrowthRate {
         name: string;
         growth: string;
-        ttm: string;
         color: string;
     }
 
@@ -23,7 +22,6 @@
                 const yearAgo = metric.data[metric.data.length - 5]?.value;
                 if (yearAgo && yearAgo !== 0) {
                     const growth = ((current - yearAgo) / Math.abs(yearAgo)) * 100;
-                    const ttm = metric.data.slice(-4).reduce((sum: number, d: any) => sum + d.value, 0);
                     const isMargin = metric.name.includes('Margin');
                     const colorIndex: number = isMargin 
                         ? Math.floor(results.length % marginColors.length)
@@ -33,7 +31,6 @@
                     results.push({
                         name: metric.name,
                         growth: growth.toFixed(1),
-                        ttm: formatValue(ttm),
                         color
                     });
                 }
@@ -64,9 +61,6 @@
                             YoY: <span class={Number(rate.growth) >= 0 ? 'text-green-500' : 'text-red-500'}>
                                 {rate.growth}%
                             </span>
-                        </span>
-                        <span class="whitespace-nowrap">
-                            TTM: {rate.ttm}
                         </span>
                     </div>
                 </div>

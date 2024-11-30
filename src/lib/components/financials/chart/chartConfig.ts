@@ -1,5 +1,4 @@
 import { formatDate, formatValue, calculateGrowth } from '../utils/chartUtils';
-import { calculateTTM } from './chartUtils';
 import { createDatasets } from './DatasetManager';
 import type { TooltipItem, ChartType, ChartEvent, LegendItem, Chart } from 'chart.js';
 
@@ -57,20 +56,6 @@ export function getChartConfig(metrics: any[], darkMode: boolean | undefined, al
                             );
 
                             return `${label}: ${formattedValue}${growthRate}`;
-                        },
-                        afterLabel(context: TooltipItem<ChartType>) {
-                            const value = context.raw;
-                            if (value === null || typeof value !== 'number') return '';
-                            
-                            const label = context.dataset.label || '';
-                            if (label === 'Revenue' || label === 'Operating Income' || label === 'Net Income') {
-                                const data = context.dataset.data as number[];
-                                const ttmValue = calculateTTM(data, context.dataIndex);
-                                if (ttmValue !== null) {
-                                    return `TTM: ${formatValue(ttmValue)}`;
-                                }
-                            }
-                            return '';
                         }
                     }
                 },
