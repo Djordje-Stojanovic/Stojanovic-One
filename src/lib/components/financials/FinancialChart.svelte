@@ -4,7 +4,9 @@
     import type { ChartConfiguration, TooltipItem, ChartOptions, ChartType, ChartEvent, LegendItem } from 'chart.js';
     import type { ChartProps } from './types';
     import { formatDate, formatValue, calculateGrowth } from './utils/chartUtils';
-    import { theme, colors, marginColors } from './utils/chartConfig';
+    import { theme } from './utils/chartConfig';
+    import { calculateTTM } from './chart/chartUtils';
+    import { createDatasets } from './chart/DatasetManager';
     import GrowthRates from './GrowthRates.svelte';
     import { chartStore } from '$lib/stores/financial-charts';
     
@@ -14,20 +16,6 @@
     
     let canvas: HTMLCanvasElement;
     let chart: Chart | null = null;
-
-    // Get consistent color for margin metrics
-    function getMarginColor(metricName: string): string {
-        const marginTypes = [
-            'Net Income Margin',
-            'Gross Profit Margin',
-            'Operating Margin',
-            'EBITDA Margin',
-            'FCF Margin',
-            'Op. Cash Flow Margin'
-        ];
-        const index = marginTypes.indexOf(metricName);
-        return marginColors[index % marginColors.length];
-    }
 
     function updateChart() {
         if (!canvas || !metrics.length) return;
@@ -40,48 +28,8 @@
         // Get all unique dates and sort them
         const allDates = [...new Set(metrics.flatMap(m => m.data.map(d => d.date)))].sort();
 
-        // Create datasets
-        const datasets = metrics.map((metric, index) => {
-            const dateValueMap = new Map(metric.data.map(d => [d.date, d.value]));
-            
-            // Check if this is a margin metric
-            const isMargin = metric.name.includes('Margin');
-            
-            if (isMargin) {
-                const color = getMarginColor(metric.name);
-                return {
-                    type: 'line' as const,
-                    label: metric.name,
-                    data: allDates.map(date => dateValueMap.get(date) ?? null),
-                    borderColor: color,
-                    backgroundColor: 'transparent',
-                    borderWidth: 2,
-                    pointRadius: 3,
-                    pointHoverRadius: 5,
-                    pointBackgroundColor: color,
-                    pointBorderColor: color,
-                    yAxisID: 'y1',
-                    order: 0,
-                    tension: 0.2,
-                    hidden: metric.hidden
-                };
-            }
-
-            return {
-                type: 'bar' as const,
-                label: metric.name,
-                data: allDates.map(date => dateValueMap.get(date) ?? null),
-                backgroundColor: `${colors[index]}CC`,
-                borderColor: colors[index],
-                borderWidth: 1,
-                borderRadius: 4,
-                barPercentage: 0.85,
-                categoryPercentage: 0.8,
-                yAxisID: 'y',
-                order: index + 1,
-                hidden: metric.hidden
-            };
-        });
+        // Create datasets using DatasetManager
+        const datasets = createDatasets(metrics, allDates);
 
         const config = {
             type: 'bar' as const,
@@ -221,7 +169,7 @@
                             drawOnChartArea: false
                         },
                         ticks: {
-                            color: currentTheme.text, // Always use theme's text color for consistency
+                            color: currentTheme.text,
                             padding: 12,
                             callback: (value: any) => `${value.toFixed(1)}%`,
                             font: {
@@ -230,8 +178,8 @@
                             },
                             maxTicksLimit: 8
                         },
-                        display: datasets.some(d => d.yAxisID === 'y1'), // Only show if margin is present
-                        min: 0 // Start from 0 for better margin visualization
+                        display: datasets.some(d => d.yAxisID === 'y1'),
+                        min: 0
                     }
                 }
             }
@@ -246,17 +194,6 @@
             // Create new chart
             chart = new Chart(ctx, config);
         }
-    }
-
-    function calculateTTM(data: number[], currentIndex: number): number | null {
-        if (currentIndex < 3) return null;
-        
-        // Sum up the last 4 quarters
-        const ttm = data.slice(currentIndex - 3, currentIndex + 1).reduce((sum, val) => {
-            return val !== null ? sum + val : sum;
-        }, 0);
-        
-        return ttm;
     }
 
     onMount(() => {
