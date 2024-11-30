@@ -1,10 +1,13 @@
 <script lang="ts">
-    import { chartStore } from '$lib/stores/financial-charts';
+    import { chartStore, getFieldName, financialFieldMap } from '$lib/stores/financial-charts';
+    import { extractMetricData } from '$lib/stores/financial-charts/utils/DataProcessing';
     import FinancialChart from './FinancialChart.svelte';
     import MarginSelector from './margins/MarginSelector.svelte';
-    import { formatValue } from './utils/chartUtils';
-    import { colors, marginColors } from './utils/chartConfig';
+    import { formatValue, calculateMultiYearGrowth } from './utils/chartUtils';
+    import { colors } from './utils/chartConfig';
+    import { getMarginColor } from './chart/chartUtils';
     import type { FinancialData } from '$lib/types/financialStatements';
+    import type { ChartDataPoint, ChartMetric } from '$lib/stores/financial-charts/types/ChartTypes';
 
     export let allFinancialData: FinancialData;
 
@@ -19,57 +22,58 @@
         color: string;
     }
 
-    const EXCLUDED_MARGINS = [
-        'Net Income Margin',
-        'Gross Profit Margin',
-        'Operating Margin',
-        'EBITDA Margin',
-        'FCF Margin',
-        'Op. Cash Flow Margin'
-    ];
-
-    function getCompleteMetricData(metricName: string) {
-        // Get complete data for the metric from allFinancialData
-        const statements = allFinancialData?.income_statements || [];
-        const quarterlyData = statements
-            .filter(stmt => stmt.period !== 'FY' && stmt.period !== 'TTM')
-            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    function getCompleteMetricData(metricName: string): ChartDataPoint[] {
+        // Use the existing field name mapping utility
+        const fieldName = getFieldName(metricName);
         
-        return quarterlyData.map(stmt => ({
-            date: stmt.date,
-            value: stmt[metricName.toLowerCase().replace(/ /g, '_') as keyof typeof stmt] as number
-        }));
+        // Try each statement type to find where the field exists
+        let data: ChartDataPoint[] = [];
+        
+        // Try income statements
+        if (allFinancialData?.income_statements?.length > 0 && 
+            fieldName in allFinancialData.income_statements[0]) {
+            data = extractMetricData(
+                allFinancialData.income_statements.filter(stmt => stmt.period !== 'FY' && stmt.period !== 'TTM'),
+                fieldName
+            );
+        }
+        // Try balance sheets
+        else if (allFinancialData?.balance_sheets?.length > 0 && 
+                 fieldName in allFinancialData.balance_sheets[0]) {
+            data = extractMetricData(
+                allFinancialData.balance_sheets.filter(stmt => stmt.period !== 'FY' && stmt.period !== 'TTM'),
+                fieldName
+            );
+        }
+        // Try cash flow statements
+        else if (allFinancialData?.cash_flow_statements?.length > 0 && 
+                 fieldName in allFinancialData.cash_flow_statements[0]) {
+            data = extractMetricData(
+                allFinancialData.cash_flow_statements.filter(stmt => stmt.period !== 'FY' && stmt.period !== 'TTM'),
+                fieldName
+            );
+        }
+
+        return data;
     }
 
-    function shouldShowGrowthRate(metricName: string): boolean {
-        return !EXCLUDED_MARGINS.includes(metricName);
-    }
-
-    function calculateGrowthRates(metrics: any[]): GrowthRate[] {
+    function calculateGrowthRates(metrics: ChartMetric[]): GrowthRate[] {
         const results: GrowthRate[] = [];
-        for (const metric of metrics) {
-            if (!metric.hidden && shouldShowGrowthRate(metric.name)) {
+        metrics.forEach((metric, index) => {
+            if (!metric.hidden) {
                 // Get complete data for calculations
                 const allData = getCompleteMetricData(metric.name);
                 
-                if (allData.length >= 21) {  // Need at least 21 quarters for 5Y calculation
-                    const current = allData[allData.length - 1].value;
-                    const oneYearAgo = allData[allData.length - 5]?.value;
-                    const twoYearAgo = allData[allData.length - 9]?.value;
-                    const fiveYearAgo = allData[allData.length - 21]?.value;
-                    
-                    const oneYear = oneYearAgo !== undefined && oneYearAgo !== 0 ? 
-                        ((current - oneYearAgo) / Math.abs(oneYearAgo)) * 100 : null;
-                    const twoYear = twoYearAgo !== undefined && twoYearAgo !== 0 ? 
-                        (Math.pow(current / twoYearAgo, 1/2) - 1) * 100 : null;
-                    const fiveYear = fiveYearAgo !== undefined && fiveYearAgo !== 0 ? 
-                        (Math.pow(current / fiveYearAgo, 1/5) - 1) * 100 : null;
+                // Only proceed if we have enough data points
+                if (allData.length >= 4) {  // Need at least 4 quarters of data
+                    // Calculate growth rates using the more robust calculateMultiYearGrowth function
+                    const oneYear = calculateMultiYearGrowth(allData, 1);
+                    const twoYear = calculateMultiYearGrowth(allData, 2);
+                    const fiveYear = calculateMultiYearGrowth(allData, 5);
 
+                    // Use the same color logic as DatasetManager
                     const isMargin = metric.name.includes('Margin');
-                    const colorIndex: number = isMargin 
-                        ? Math.floor(results.length % marginColors.length)
-                        : Math.floor(results.length % colors.length);
-                    const color: string = isMargin ? marginColors[colorIndex] : colors[colorIndex];
+                    const color = isMargin ? getMarginColor(metric.name) : colors[index];
                     
                     results.push({
                         name: metric.name,
@@ -80,7 +84,7 @@
                     });
                 }
             }
-        }
+        });
         return results;
     }
 
@@ -97,26 +101,29 @@
     </div>
     
     {#if growthRates.length > 0}
-        <div class="flex justify-center gap-8 mt-2 text-sm">
+        <div class="flex flex-wrap justify-center gap-4 mt-2 text-sm">
             {#each growthRates as rate}
-                <div class="flex items-center gap-2">
-                    <span style="color: {rate.color}">{rate.name}</span>
-                    <div class="flex items-center gap-4">
-                        <span class="whitespace-nowrap">
-                            1Y: <span class={Number(rate.oneYear) >= 0 ? 'text-green-500' : 'text-red-500'}>
+                <div class="flex flex-col items-center mx-2">
+                    <span style="color: {rate.color}" class="font-medium mb-1">{rate.name}</span>
+                    <div class="flex flex-col gap-0.5 items-center">
+                        <div class="flex items-center gap-2">
+                            <span class="text-gray-400 dark:text-gray-500">1Y:</span>
+                            <span class={Number(rate.oneYear) >= 0 ? 'text-green-500' : 'text-red-500'}>
                                 {rate.oneYear}%
                             </span>
-                        </span>
-                        <span class="whitespace-nowrap">
-                            2Y: <span class={Number(rate.twoYear) >= 0 ? 'text-green-500' : 'text-red-500'}>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-gray-400 dark:text-gray-500">2Y:</span>
+                            <span class={Number(rate.twoYear) >= 0 ? 'text-green-500' : 'text-red-500'}>
                                 {rate.twoYear}%
                             </span>
-                        </span>
-                        <span class="whitespace-nowrap">
-                            5Y: <span class={Number(rate.fiveYear) >= 0 ? 'text-green-500' : 'text-red-500'}>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-gray-400 dark:text-gray-500">5Y:</span>
+                            <span class={Number(rate.fiveYear) >= 0 ? 'text-green-500' : 'text-red-500'}>
                                 {rate.fiveYear}%
                             </span>
-                        </span>
+                        </div>
                     </div>
                 </div>
             {/each}
