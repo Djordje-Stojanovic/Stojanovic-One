@@ -1,14 +1,12 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import Chart from 'chart.js/auto';
-    import type { ChartConfiguration, TooltipItem, ChartOptions, ChartType, ChartEvent, LegendItem } from 'chart.js';
+    import type { ChartEvent, LegendItem } from 'chart.js';
     import type { ChartProps } from './types';
-    import { formatDate, formatValue, calculateGrowth } from './utils/chartUtils';
-    import { theme } from './utils/chartConfig';
-    import { calculateTTM } from './chart/chartUtils';
-    import { createDatasets } from './chart/DatasetManager';
+    import { getChartConfig } from './chart/chartConfig';
     import GrowthRates from './GrowthRates.svelte';
     import { chartStore } from '$lib/stores/financial-charts';
+    import { theme } from './utils/chartConfig';
     
     export let metrics: ChartProps['metrics'] = [];
     export let darkMode: ChartProps['darkMode'] = true;
@@ -16,6 +14,26 @@
     
     let canvas: HTMLCanvasElement;
     let chart: Chart | null = null;
+
+    function handleLegendClick(e: ChartEvent, legendItem: LegendItem, legend: Chart['legend']) {
+        const index = legendItem.datasetIndex;
+        if (index !== undefined && chart?.data.datasets[index] && legend?.chart) {
+            const dataset = chart.data.datasets[index];
+            const label = dataset.label || '';
+            
+            // Use the store's toggleMetricVisibility action
+            chartStore.toggleMetricVisibility(label);
+            
+            // Update chart visibility
+            const ci = legend.chart;
+            if (ci.isDatasetVisible(index)) {
+                ci.hide(index);
+            } else {
+                ci.show(index);
+            }
+            ci.update();
+        }
+    }
 
     function updateChart() {
         if (!canvas || !metrics.length) return;
@@ -28,162 +46,8 @@
         // Get all unique dates and sort them
         const allDates = [...new Set(metrics.flatMap(m => m.data.map(d => d.date)))].sort();
 
-        // Create datasets using DatasetManager
-        const datasets = createDatasets(metrics, allDates);
-
-        const config = {
-            type: 'bar' as const,
-            data: {
-                labels: allDates.map(date => formatDate(date)),
-                datasets
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                normalized: true,
-                animation: {
-                    duration: 300
-                },
-                interaction: {
-                    mode: 'index' as const,
-                    intersect: false
-                },
-                plugins: {
-                    tooltip: {
-                        backgroundColor: darkMode ? '#374151' : '#FFFFFF',
-                        titleColor: darkMode ? '#F3F4F6' : '#111827',
-                        bodyColor: darkMode ? '#F3F4F6' : '#111827',
-                        borderColor: darkMode ? '#4B5563' : '#E5E7EB',
-                        borderWidth: 1,
-                        padding: 16,
-                        cornerRadius: 8,
-                        bodySpacing: 8,
-                        callbacks: {
-                            title(items: TooltipItem<ChartType>[]) {
-                                if (!items.length) return '';
-                                const date = allDates[items[0].dataIndex];
-                                return formatDate(date);
-                            },
-                            label(context: TooltipItem<ChartType>) {
-                                const value = context.raw;
-                                if (value === null || typeof value !== 'number') return '';
-                                
-                                const label = context.dataset.label || '';
-                                const isMargin = label.includes('Margin');
-                                const formattedValue = isMargin
-                                    ? `${value.toFixed(2)}%`
-                                    : formatValue(value);
-
-                                // Calculate growth rate
-                                const growthRate = calculateGrowth(
-                                    context.dataset.data as number[], 
-                                    context.dataIndex
-                                );
-
-                                // Return formatted string with growth rate
-                                return `${label}: ${formattedValue}${growthRate}`;
-                            },
-                            afterLabel(context: TooltipItem<ChartType>) {
-                                // Add any additional TTM calculations if needed
-                                const value = context.raw;
-                                if (value === null || typeof value !== 'number') return '';
-                                
-                                const label = context.dataset.label || '';
-                                if (label === 'Revenue' || label === 'Operating Income' || label === 'Net Income') {
-                                    const data = context.dataset.data as number[];
-                                    const ttmValue = calculateTTM(data, context.dataIndex);
-                                    if (ttmValue !== null) {
-                                        return `TTM: ${formatValue(ttmValue)}`;
-                                    }
-                                }
-                                return '';
-                            }
-                        }
-                    },
-                    legend: {
-                        position: 'top' as const,
-                        align: 'center' as const,
-                        onClick: (e: ChartEvent, legendItem: LegendItem, legend: Chart['legend']) => {
-                            const index = legendItem.datasetIndex;
-                            if (index !== undefined && chart?.data.datasets[index] && legend?.chart) {
-                                const dataset = chart.data.datasets[index];
-                                const label = dataset.label || '';
-                                
-                                // Use the store's toggleMetricVisibility action
-                                chartStore.toggleMetricVisibility(label);
-                                
-                                // Update chart visibility
-                                const ci = legend.chart;
-                                if (ci.isDatasetVisible(index)) {
-                                    ci.hide(index);
-                                } else {
-                                    ci.show(index);
-                                }
-                                ci.update();
-                            }
-                        },
-                        labels: {
-                            color: currentTheme.text,
-                            padding: 20,
-                            usePointStyle: true,
-                            pointStyle: 'circle'
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        grid: {
-                            color: currentTheme.border,
-                            lineWidth: 0.5
-                        },
-                        ticks: {
-                            color: currentTheme.text,
-                            padding: 8,
-                            maxRotation: 0,
-                            autoSkip: true,
-                            autoSkipPadding: 20
-                        }
-                    },
-                    y: {
-                        type: 'linear' as const,
-                        position: 'left' as const,
-                        grid: {
-                            color: currentTheme.border,
-                            lineWidth: 0.5
-                        },
-                        ticks: {
-                            color: currentTheme.text,
-                            padding: 12,
-                            callback: (value: any) => formatValue(value),
-                            font: {
-                                size: 12,
-                                weight: 500
-                            },
-                            maxTicksLimit: 8
-                        }
-                    },
-                    y1: {
-                        type: 'linear' as const,
-                        position: 'right' as const,
-                        grid: {
-                            drawOnChartArea: false
-                        },
-                        ticks: {
-                            color: currentTheme.text,
-                            padding: 12,
-                            callback: (value: any) => `${value.toFixed(1)}%`,
-                            font: {
-                                size: 12,
-                                weight: 500
-                            },
-                            maxTicksLimit: 8
-                        },
-                        display: datasets.some(d => d.yAxisID === 'y1'),
-                        min: 0
-                    }
-                }
-            }
-        };
+        // Get chart configuration
+        const config = getChartConfig(metrics, darkMode, allDates, currentTheme, handleLegendClick);
 
         if (chart) {
             // Update existing chart
