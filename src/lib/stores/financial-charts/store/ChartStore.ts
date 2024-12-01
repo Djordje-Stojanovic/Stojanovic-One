@@ -41,34 +41,34 @@ function createChartStore(): ChartStoreActions {
 
         if (state.margins.netIncome) {
             const margin = calculateNetIncomeMargin(financialData.income_statements);
-            if (margin) margins.push({...margin, hidden: !state.metricVisibility[margin.name]});
+            if (margin) margins.push({...margin, hidden: false}); // Always visible when enabled
         }
 
         if (state.margins.grossProfit) {
             const margin = calculateGrossProfitMargin(financialData.income_statements);
-            if (margin) margins.push({...margin, hidden: !state.metricVisibility[margin.name]});
+            if (margin) margins.push({...margin, hidden: false}); // Always visible when enabled
         }
 
         if (state.margins.operating) {
             const margin = calculateOperatingMargin(financialData.income_statements);
-            if (margin) margins.push({...margin, hidden: !state.metricVisibility[margin.name]});
+            if (margin) margins.push({...margin, hidden: false}); // Always visible when enabled
         }
 
         if (state.margins.ebitda) {
             const margin = calculateEBITDAMargin(financialData.income_statements);
-            if (margin) margins.push({...margin, hidden: !state.metricVisibility[margin.name]});
+            if (margin) margins.push({...margin, hidden: false}); // Always visible when enabled
         }
 
         if (state.margins.fcf) {
             const revenue = financialData.income_statements.map(stmt => stmt.revenue);
             const margin = calculateFCFMargin(financialData.cash_flow_statements, revenue);
-            if (margin) margins.push({...margin, hidden: !state.metricVisibility[margin.name]});
+            if (margin) margins.push({...margin, hidden: false}); // Always visible when enabled
         }
 
         if (state.margins.operatingCashFlow) {
             const revenue = financialData.income_statements.map(stmt => stmt.revenue);
             const margin = calculateOperatingCashFlowMargin(financialData.cash_flow_statements, revenue);
-            if (margin) margins.push({...margin, hidden: !state.metricVisibility[margin.name]});
+            if (margin) margins.push({...margin, hidden: false}); // Always visible when enabled
         }
 
         return margins;
@@ -171,26 +171,30 @@ function createChartStore(): ChartStoreActions {
         }),
 
         toggleMetricVisibility: (metricName: string) => update(state => {
-            const newVisibility = {
-                ...state.metricVisibility,
-                [metricName]: !state.metricVisibility[metricName]
-            };
+            // Only handle visibility for non-margin metrics
+            if (!metricName.includes('Margin')) {
+                const newVisibility = {
+                    ...state.metricVisibility,
+                    [metricName]: !state.metricVisibility[metricName]
+                };
 
-            const updatedMetrics = state.selectedMetrics.map(metric => {
-                if (metric.name === metricName) {
-                    return {
-                        ...metric,
-                        hidden: !newVisibility[metricName]
-                    };
-                }
-                return metric;
-            });
+                const updatedMetrics = state.selectedMetrics.map(metric => {
+                    if (metric.name === metricName) {
+                        return {
+                            ...metric,
+                            hidden: !newVisibility[metricName]
+                        };
+                    }
+                    return metric;
+                });
 
-            return {
-                ...state,
-                metricVisibility: newVisibility,
-                selectedMetrics: updatedMetrics
-            };
+                return {
+                    ...state,
+                    metricVisibility: newVisibility,
+                    selectedMetrics: updatedMetrics
+                };
+            }
+            return state;
         }),
 
         toggleMargin: (marginType: MarginType) => update(state => {

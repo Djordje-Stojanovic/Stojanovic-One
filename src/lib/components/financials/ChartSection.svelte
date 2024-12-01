@@ -86,7 +86,7 @@
     function calculateGrowthRates(metrics: ChartMetric[]): GrowthRate[] {
         const results: GrowthRate[] = [];
         metrics.forEach((metric, index) => {
-            if (!metric.hidden) {
+            if (!metric.hidden && !metric.name.includes('Margin')) {  // Only calculate for non-margin metrics
                 // Get complete data for calculations
                 const allData = getCompleteMetricData(metric.name);
                 
@@ -98,8 +98,7 @@
                     const fiveYear = calculateMultiYearGrowth(allData, 5);
 
                     // Use the same color logic as DatasetManager
-                    const isMargin = metric.name.includes('Margin');
-                    const color = isMargin ? getMarginColor(metric.name) : colors[index];
+                    const color = colors[index];
                     
                     results.push({
                         name: metric.name,
