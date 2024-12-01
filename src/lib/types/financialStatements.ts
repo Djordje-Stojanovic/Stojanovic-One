@@ -9,6 +9,8 @@ export interface BaseFinancialStatement {
     accepted_date: string;
     calendar_year: string;
     period: FinancialPeriod;
+    link: string;
+    final_link: string;
 }
 
 // Add index signature to allow string indexing

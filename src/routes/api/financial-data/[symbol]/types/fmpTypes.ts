@@ -7,6 +7,8 @@ export interface FMPStatement {
     acceptedDate: string;
     calendarYear: string;
     period: string;
+    link: string;
+    finalLink: string;
     [key: string]: unknown;
 }
 
