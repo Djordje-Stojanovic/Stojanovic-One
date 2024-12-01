@@ -23,62 +23,60 @@
     }
 
     function getCompleteMetricData(metricName: string): ChartDataPoint[] {
-        // Use the existing field name mapping utility
-        const fieldName = getFieldName(metricName);
-        
-        // Try each statement type to find where the field exists
         let data: ChartDataPoint[] = [];
         
-        // Try income statements
-        if (allFinancialData?.income_statements?.length > 0 && 
-            fieldName in allFinancialData.income_statements[0]) {
-            data = extractMetricData(
-                allFinancialData.income_statements.filter(stmt => stmt.period !== 'FY' && stmt.period !== 'TTM'),
-                fieldName
-            );
-        }
-        // Try balance sheets
-        else if (allFinancialData?.balance_sheets?.length > 0 && 
-                 fieldName in allFinancialData.balance_sheets[0]) {
-            data = extractMetricData(
-                allFinancialData.balance_sheets.filter(stmt => stmt.period !== 'FY' && stmt.period !== 'TTM'),
-                fieldName
-            );
-        }
-        // Try cash flow statements
-        else if (allFinancialData?.cash_flow_statements?.length > 0 && 
-                 fieldName in allFinancialData.cash_flow_statements[0]) {
-            data = extractMetricData(
-                allFinancialData.cash_flow_statements.filter(stmt => stmt.period !== 'FY' && stmt.period !== 'TTM'),
-                fieldName
-            );
-        }
-        // Try revenue segments
-        else if (allFinancialData?.revenue_segments && allFinancialData.revenue_segments.length > 0) {
+        // First try revenue segments and geographic segments since they use raw names
+        if (allFinancialData?.revenue_segments && allFinancialData.revenue_segments.length > 0) {
             const segments = allFinancialData.revenue_segments;
-            const segmentData = segments
-                .filter(stmt => stmt.segments[metricName] !== undefined)
-                .map(stmt => ({
-                    date: stmt.date,
-                    value: stmt.segments[metricName]
-                }))
-                .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-            if (segmentData.length > 0) {
-                data = segmentData;
+            if (segments.some(stmt => metricName in stmt.segments)) {
+                data = segments
+                    .map(stmt => ({
+                        date: stmt.date,
+                        value: stmt.segments[metricName] || 0
+                    }))
+                    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
             }
         }
-        // Try geographic revenue segments
-        else if (allFinancialData?.revenue_geo_segments && allFinancialData.revenue_geo_segments.length > 0) {
+        
+        if (data.length === 0 && allFinancialData?.revenue_geo_segments && allFinancialData.revenue_geo_segments.length > 0) {
             const geoSegments = allFinancialData.revenue_geo_segments;
-            const geoData = geoSegments
-                .filter(stmt => stmt.segments[metricName] !== undefined)
-                .map(stmt => ({
-                    date: stmt.date,
-                    value: stmt.segments[metricName]
-                }))
-                .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-            if (geoData.length > 0) {
-                data = geoData;
+            if (geoSegments.some(stmt => metricName in stmt.segments)) {
+                data = geoSegments
+                    .map(stmt => ({
+                        date: stmt.date,
+                        value: stmt.segments[metricName] || 0
+                    }))
+                    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+            }
+        }
+
+        // If no segment data found, try financial statements using field mapping
+        if (data.length === 0) {
+            const fieldName = getFieldName(metricName);
+            
+            // Try income statements
+            if (allFinancialData?.income_statements?.length > 0 && 
+                fieldName in allFinancialData.income_statements[0]) {
+                data = extractMetricData(
+                    allFinancialData.income_statements.filter(stmt => stmt.period !== 'FY' && stmt.period !== 'TTM'),
+                    fieldName
+                );
+            }
+            // Try balance sheets
+            else if (allFinancialData?.balance_sheets?.length > 0 && 
+                     fieldName in allFinancialData.balance_sheets[0]) {
+                data = extractMetricData(
+                    allFinancialData.balance_sheets.filter(stmt => stmt.period !== 'FY' && stmt.period !== 'TTM'),
+                    fieldName
+                );
+            }
+            // Try cash flow statements
+            else if (allFinancialData?.cash_flow_statements?.length > 0 && 
+                     fieldName in allFinancialData.cash_flow_statements[0]) {
+                data = extractMetricData(
+                    allFinancialData.cash_flow_statements.filter(stmt => stmt.period !== 'FY' && stmt.period !== 'TTM'),
+                    fieldName
+                );
             }
         }
 
