@@ -1,6 +1,6 @@
 <script lang="ts">
     import { chartStore, getFieldName, financialFieldMap } from '$lib/stores/financial-charts';
-    import { extractMetricData } from '$lib/stores/financial-charts/utils/DataProcessing';
+    import { extractMetricData, extractSegmentData } from '$lib/stores/financial-charts/utils/DataProcessing';
     import FinancialChart from './FinancialChart.svelte';
     import MarginSelector from './margins/MarginSelector.svelte';
     import { formatValue, calculateMultiYearGrowth } from './utils/chartUtils';
@@ -52,6 +52,34 @@
                 allFinancialData.cash_flow_statements.filter(stmt => stmt.period !== 'FY' && stmt.period !== 'TTM'),
                 fieldName
             );
+        }
+        // Try revenue segments
+        else if (allFinancialData?.revenue_segments && allFinancialData.revenue_segments.length > 0) {
+            const segments = allFinancialData.revenue_segments;
+            const segmentData = segments
+                .filter(stmt => stmt.segments[metricName] !== undefined)
+                .map(stmt => ({
+                    date: stmt.date,
+                    value: stmt.segments[metricName]
+                }))
+                .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+            if (segmentData.length > 0) {
+                data = segmentData;
+            }
+        }
+        // Try geographic revenue segments
+        else if (allFinancialData?.revenue_geo_segments && allFinancialData.revenue_geo_segments.length > 0) {
+            const geoSegments = allFinancialData.revenue_geo_segments;
+            const geoData = geoSegments
+                .filter(stmt => stmt.segments[metricName] !== undefined)
+                .map(stmt => ({
+                    date: stmt.date,
+                    value: stmt.segments[metricName]
+                }))
+                .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+            if (geoData.length > 0) {
+                data = geoData;
+            }
         }
 
         return data;
