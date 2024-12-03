@@ -14,6 +14,8 @@ export interface UserStock {
   list_name: string;
 }
 
+export type MarketCapCategory = 'Micro' | 'Small' | 'Mid' | 'Large' | 'Mega' | '';
+
 export type SortDirection = 'asc' | 'desc';
 
 export function formatMarketCap(value: number): string {
