@@ -18,8 +18,10 @@ export function getMarginColor(metricName: string): string {
         'Operating Margin',
         'EBITDA Margin',
         'FCF Margin',
-        'Op. Cash Flow Margin'
+        'Operating Cash Flow Margin',  // Fixed: Changed from 'Op. Cash Flow Margin' to match exact name
+        'Op. Cash Flow Margin'         // Added alternative name for safety
     ];
     const index = marginTypes.indexOf(metricName);
-    return marginColors[index % marginColors.length];
+    // If using alternative name, map to same color
+    return marginColors[index === 6 ? 5 : index % marginColors.length];
 }

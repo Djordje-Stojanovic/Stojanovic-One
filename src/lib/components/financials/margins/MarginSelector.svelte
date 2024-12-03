@@ -28,17 +28,17 @@ const margins: MarginOption[] = [
     {
         id: 'ebitda',
         name: 'EBITDA Margin',
-        color: marginColors[0] + '80'
+        color: marginColors[3]
     },
     {
         id: 'fcf',
         name: 'FCF Margin',
-        color: marginColors[1] + '80'
+        color: marginColors[4]
     },
     {
         id: 'operatingCashFlow',
         name: 'Op. Cash Flow Margin',
-        color: marginColors[2] + '80'
+        color: marginColors[5]
     }
 ];
 
@@ -57,7 +57,7 @@ $: marginStates = $chartStore.margins;
                        border border-transparent hover:bg-opacity-10 focus:outline-none"
                 class:bg-opacity-10={marginStates[margin.id]}
                 style="color: {margin.color}; 
-                       background-color: {marginStates[margin.id] ? margin.color + '20' : 'transparent'};
+                       background-color: {marginStates[margin.id] ? margin.color.replace(')', ', 0.1)').replace('rgb', 'rgba') : 'transparent'};
                        border-color: {marginStates[margin.id] ? margin.color : 'transparent'}"
                 on:click={() => toggleMargin(margin)}
             >

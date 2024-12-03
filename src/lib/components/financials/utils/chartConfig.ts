@@ -28,11 +28,14 @@ export const colors = [
     '#06B6D4'  // Cyan - Info
 ];
 
-// Special colors for margin lines - sophisticated and modern
+// Special colors for margin lines - 6 distinct colors
 export const marginColors = [
-    '#E879F9', // Soft Neon Purple - modern but not harsh
-    '#2DD4BF', // Refined Teal - professional and distinct
-    '#FB923C'  // Soft Orange - warm and visible
+    'rgb(147, 51, 234)',    // Purple - Net Income Margin
+    'rgb(6, 182, 212)',     // Cyan - Gross Profit Margin
+    'rgb(245, 158, 11)',    // Amber - Operating Margin
+    'rgb(59, 130, 246)',    // Blue - EBITDA Margin
+    'rgb(16, 185, 129)',    // Emerald - FCF Margin
+    'rgb(239, 68, 68)'      // Red - Op Cash Flow Margin
 ];
 
 export function createChartOptions(currentTheme: typeof theme.dark | typeof theme.light): ChartOptions<'bar'> {
