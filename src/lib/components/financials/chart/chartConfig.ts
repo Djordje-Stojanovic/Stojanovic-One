@@ -7,11 +7,20 @@ export function getChartConfig(metrics: any[], darkMode: boolean | undefined, al
     const isDarkMode = darkMode ?? true; // Default to true if undefined
     const datasets = createDatasets(metrics, allDates);
 
-    // Find min/max values for percentage metrics (both margins and returns)
+    // Find percentage and non-percentage metrics
     const percentageDatasets = datasets.filter(d => {
         const label = d.label || '';
         return label.includes('Margin') || ['ROIC', 'ROCE', 'ROE', 'ROA'].includes(label);
     });
+    
+    const nonPercentageDatasets = datasets.filter(d => {
+        const label = d.label || '';
+        return !label.includes('Margin') && !['ROIC', 'ROCE', 'ROE', 'ROA'].includes(label);
+    });
+
+    // Determine which axis should show grid lines
+    const showLeftGridLines = nonPercentageDatasets.length > 0;
+    const showRightGridLines = !showLeftGridLines && percentageDatasets.length > 0;
     
     let minValue = -50; // Updated default minimum to -50%
     let maxValue = 100; // Default maximum
@@ -27,7 +36,7 @@ export function getChartConfig(metrics: any[], darkMode: boolean | undefined, al
             
             // Set the min/max with padding (15% of the range)
             const padding = range * 0.15;
-            minValue = Math.max(dataMin - padding, -50); // Updated minimum limit to -50%
+            minValue = Math.max(dataMin - padding, -50);
             maxValue = Math.min(dataMax + padding, 100);
             
             // Round the values to make them more readable
@@ -103,8 +112,7 @@ export function getChartConfig(metrics: any[], darkMode: boolean | undefined, al
             scales: {
                 x: {
                     grid: {
-                        color: currentTheme.border,
-                        lineWidth: 0.5
+                        display: false
                     },
                     ticks: {
                         color: currentTheme.text,
@@ -118,8 +126,9 @@ export function getChartConfig(metrics: any[], darkMode: boolean | undefined, al
                     type: 'linear' as const,
                     position: 'left' as const,
                     grid: {
-                        color: currentTheme.border,
-                        lineWidth: 0.5
+                        display: showLeftGridLines,
+                        color: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                        lineWidth: 1
                     },
                     ticks: {
                         color: currentTheme.text,
@@ -137,7 +146,10 @@ export function getChartConfig(metrics: any[], darkMode: boolean | undefined, al
                     type: 'linear' as const,
                     position: 'right' as const,
                     grid: {
-                        drawOnChartArea: false
+                        display: showRightGridLines,
+                        drawOnChartArea: true,
+                        color: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                        lineWidth: 1
                     },
                     ticks: {
                         color: currentTheme.text,
