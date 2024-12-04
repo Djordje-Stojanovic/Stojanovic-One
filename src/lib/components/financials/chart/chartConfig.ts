@@ -122,8 +122,9 @@ export function getChartConfig(metrics: any[], darkMode: boolean | undefined, al
                         maxTicksLimit: 8
                     },
                     display: datasets.some(d => d.yAxisID === 'y1'),
-                    min: 0,
-                    max: 100 // Set max to 100% for percentage metrics
+                    min: -10, // Set minimum to -10%
+                    max: 50,  // Set maximum to 50%
+                    beginAtZero: false
                 }
             }
         }
