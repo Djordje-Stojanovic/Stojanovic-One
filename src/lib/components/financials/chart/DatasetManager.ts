@@ -5,7 +5,7 @@ import { getMarginColor, getReturnMetricColor } from './chartUtils';
 export function createDatasets(metrics: ChartProps['metrics'], allDates: string[]) {
     return metrics.map((metric, index) => {
         const dateValueMap = new Map(metric.data.map(d => [d.date, d.value]));
-        const isMargin = metric.name.toLowerCase().includes('margin');
+        const isMargin = metric.name.includes('Margin'); // Fixed: Remove toLowerCase()
         const isReturnMetric = ['ROIC', 'ROCE', 'ROE', 'ROA'].includes(metric.name);
         
         if (isMargin || isReturnMetric) {

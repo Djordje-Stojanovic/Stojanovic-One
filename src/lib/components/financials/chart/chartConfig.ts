@@ -7,6 +7,35 @@ export function getChartConfig(metrics: any[], darkMode: boolean | undefined, al
     const isDarkMode = darkMode ?? true; // Default to true if undefined
     const datasets = createDatasets(metrics, allDates);
 
+    // Find min/max values for percentage metrics (both margins and returns)
+    const percentageDatasets = datasets.filter(d => {
+        const label = d.label || '';
+        return label.includes('Margin') || ['ROIC', 'ROCE', 'ROE', 'ROA'].includes(label);
+    });
+    
+    let minValue = -10; // Default minimum
+    let maxValue = 100; // Default maximum
+
+    if (percentageDatasets.length > 0) {
+        const allValues = percentageDatasets.flatMap(d => d.data.filter(v => v !== null) as number[]);
+        if (allValues.length > 0) {
+            const dataMin = Math.min(...allValues);
+            const dataMax = Math.max(...allValues);
+            
+            // Calculate the data range
+            const range = dataMax - dataMin;
+            
+            // Set the min/max with padding (15% of the range)
+            const padding = range * 0.15;
+            minValue = Math.max(dataMin - padding, -10);
+            maxValue = Math.min(dataMax + padding, 100);
+            
+            // Round the values to make them more readable
+            minValue = Math.floor(minValue / 5) * 5;
+            maxValue = Math.ceil(maxValue / 5) * 5;
+        }
+    }
+
     return {
         type: 'bar' as const,
         data: {
@@ -121,9 +150,9 @@ export function getChartConfig(metrics: any[], darkMode: boolean | undefined, al
                         },
                         maxTicksLimit: 8
                     },
-                    display: datasets.some(d => d.yAxisID === 'y1'),
-                    min: -10, // Set minimum to -10%
-                    max: 50,  // Set maximum to 50%
+                    display: percentageDatasets.length > 0,
+                    min: minValue,
+                    max: maxValue,
                     beginAtZero: false
                 }
             }
