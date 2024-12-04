@@ -45,8 +45,8 @@ export function getChartConfig(metrics: any[], darkMode: boolean | undefined, al
                             if (value === null || typeof value !== 'number') return '';
                             
                             const label = context.dataset.label || '';
-                            const isMargin = label.includes('Margin');
-                            const formattedValue = isMargin
+                            const isPercentage = label.includes('Margin') || ['ROIC', 'ROCE', 'ROE', 'ROA'].includes(label);
+                            const formattedValue = isPercentage
                                 ? `${value.toFixed(2)}%`
                                 : formatValue(value);
 
@@ -122,7 +122,8 @@ export function getChartConfig(metrics: any[], darkMode: boolean | undefined, al
                         maxTicksLimit: 8
                     },
                     display: datasets.some(d => d.yAxisID === 'y1'),
-                    min: 0
+                    min: 0,
+                    max: 100 // Set max to 100% for percentage metrics
                 }
             }
         }

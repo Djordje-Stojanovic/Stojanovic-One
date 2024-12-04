@@ -1,5 +1,5 @@
 import { writable } from 'svelte/store';
-import type { ChartStoreState, ChartStoreActions, MarginType, ChartMetric } from '../types/ChartTypes';
+import type { ChartStoreState, ChartStoreActions, MarginType, ReturnMetricType, ChartMetric } from '../types/ChartTypes';
 import type { FinancialData } from '$lib/types/financialStatements';
 import { loadShowChart, saveShowChart, loadSelectedMetrics, saveSelectedMetrics } from '$lib/components/financials/state/chartState';
 import { getFieldName } from '../mappings/FieldNameMapping';
@@ -12,6 +12,12 @@ import {
     calculateFCFMargin,
     calculateOperatingCashFlowMargin
 } from '../metrics/margins/Margins';
+import {
+    calculateROICMetric,
+    calculateROCEMetric,
+    calculateROEMetric,
+    calculateROAMetric
+} from '../metrics/returns/Returns';
 
 function createChartStore(): ChartStoreActions {
     const storedMetricNames = loadSelectedMetrics();
@@ -28,6 +34,12 @@ function createChartStore(): ChartStoreActions {
             fcf: false,
             operatingCashFlow: false
         },
+        returnMetrics: {
+            roic: false,
+            roce: false,
+            roe: false,
+            roa: false
+        },
         lastFinancialData: null,
         metricVisibility: {}
     };
@@ -41,37 +53,65 @@ function createChartStore(): ChartStoreActions {
 
         if (state.margins.netIncome) {
             const margin = calculateNetIncomeMargin(financialData.income_statements);
-            if (margin) margins.push({...margin, hidden: false}); // Always visible when enabled
+            if (margin) margins.push({...margin, hidden: false});
         }
 
         if (state.margins.grossProfit) {
             const margin = calculateGrossProfitMargin(financialData.income_statements);
-            if (margin) margins.push({...margin, hidden: false}); // Always visible when enabled
+            if (margin) margins.push({...margin, hidden: false});
         }
 
         if (state.margins.operating) {
             const margin = calculateOperatingMargin(financialData.income_statements);
-            if (margin) margins.push({...margin, hidden: false}); // Always visible when enabled
+            if (margin) margins.push({...margin, hidden: false});
         }
 
         if (state.margins.ebitda) {
             const margin = calculateEBITDAMargin(financialData.income_statements);
-            if (margin) margins.push({...margin, hidden: false}); // Always visible when enabled
+            if (margin) margins.push({...margin, hidden: false});
         }
 
         if (state.margins.fcf) {
             const revenue = financialData.income_statements.map(stmt => stmt.revenue);
             const margin = calculateFCFMargin(financialData.cash_flow_statements, revenue);
-            if (margin) margins.push({...margin, hidden: false}); // Always visible when enabled
+            if (margin) margins.push({...margin, hidden: false});
         }
 
         if (state.margins.operatingCashFlow) {
             const revenue = financialData.income_statements.map(stmt => stmt.revenue);
             const margin = calculateOperatingCashFlowMargin(financialData.cash_flow_statements, revenue);
-            if (margin) margins.push({...margin, hidden: false}); // Always visible when enabled
+            if (margin) margins.push({...margin, hidden: false});
         }
 
         return margins;
+    }
+
+    function calculateReturns(financialData: FinancialData, state: ChartStoreState): ChartMetric[] {
+        const returns: ChartMetric[] = [];
+
+        if (!financialData.income_statements?.length || !financialData.balance_sheets?.length) return returns;
+
+        if (state.returnMetrics.roic) {
+            const metric = calculateROICMetric(financialData.income_statements, financialData.balance_sheets);
+            if (metric) returns.push({...metric, hidden: false});
+        }
+
+        if (state.returnMetrics.roce) {
+            const metric = calculateROCEMetric(financialData.income_statements, financialData.balance_sheets);
+            if (metric) returns.push({...metric, hidden: false});
+        }
+
+        if (state.returnMetrics.roe) {
+            const metric = calculateROEMetric(financialData.income_statements, financialData.balance_sheets);
+            if (metric) returns.push({...metric, hidden: false});
+        }
+
+        if (state.returnMetrics.roa) {
+            const metric = calculateROAMetric(financialData.income_statements, financialData.balance_sheets);
+            if (metric) returns.push({...metric, hidden: false});
+        }
+
+        return returns;
     }
 
     return {
@@ -107,7 +147,8 @@ function createChartStore(): ChartStoreActions {
             });
 
             const marginMetrics = calculateMargins(financialData, state);
-            const allMetrics = [...updatedMetrics, ...marginMetrics];
+            const returnMetrics = calculateReturns(financialData, state);
+            const allMetrics = [...updatedMetrics, ...marginMetrics, ...returnMetrics];
 
             const hasAnyData = allMetrics.some(m => m.data.length > 0);
             const newState = {
@@ -171,8 +212,8 @@ function createChartStore(): ChartStoreActions {
         }),
 
         toggleMetricVisibility: (metricName: string) => update(state => {
-            // Only handle visibility for non-margin metrics
-            if (!metricName.includes('Margin')) {
+            // Only handle visibility for non-margin and non-return metrics
+            if (!metricName.includes('Margin') && !['ROIC', 'ROCE', 'ROE', 'ROA'].includes(metricName)) {
                 const newVisibility = {
                     ...state.metricVisibility,
                     [metricName]: !state.metricVisibility[metricName]
@@ -206,7 +247,7 @@ function createChartStore(): ChartStoreActions {
             };
 
             const baseMetrics = state.selectedMetrics.filter(m => 
-                !m.name.includes('Margin')
+                !m.name.includes('Margin') && !['ROIC', 'ROCE', 'ROE', 'ROA'].includes(m.name)
             );
 
             const marginMetrics = calculateMargins(state.lastFinancialData, {
@@ -214,10 +255,37 @@ function createChartStore(): ChartStoreActions {
                 margins: newMargins
             });
 
+            const returnMetrics = calculateReturns(state.lastFinancialData, state);
+
             return {
                 ...state,
                 margins: newMargins,
-                selectedMetrics: [...baseMetrics, ...marginMetrics]
+                selectedMetrics: [...baseMetrics, ...marginMetrics, ...returnMetrics]
+            };
+        }),
+
+        toggleReturnMetric: (returnType: ReturnMetricType) => update(state => {
+            if (!state.lastFinancialData) return state;
+
+            const newReturnMetrics = {
+                ...state.returnMetrics,
+                [returnType]: !state.returnMetrics[returnType]
+            };
+
+            const baseMetrics = state.selectedMetrics.filter(m => 
+                !m.name.includes('Margin') && !['ROIC', 'ROCE', 'ROE', 'ROA'].includes(m.name)
+            );
+
+            const marginMetrics = calculateMargins(state.lastFinancialData, state);
+            const returnMetrics = calculateReturns(state.lastFinancialData, {
+                ...state,
+                returnMetrics: newReturnMetrics
+            });
+
+            return {
+                ...state,
+                returnMetrics: newReturnMetrics,
+                selectedMetrics: [...baseMetrics, ...marginMetrics, ...returnMetrics]
             };
         }),
 
@@ -235,6 +303,12 @@ function createChartStore(): ChartStoreActions {
                     ebitda: false,
                     fcf: false,
                     operatingCashFlow: false
+                },
+                returnMetrics: {
+                    roic: false,
+                    roce: false,
+                    roe: false,
+                    roa: false
                 },
                 lastFinancialData: null,
                 metricVisibility: {}

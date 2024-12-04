@@ -38,6 +38,14 @@ export const marginColors = [
     'rgb(239, 68, 68)'      // Red - Op Cash Flow Margin
 ];
 
+// Special colors for return metrics - 4 distinct colors
+export const returnMetricColors = [
+    'rgb(220, 38, 38)',     // Red - ROIC
+    'rgb(8, 145, 178)',     // Cyan - ROCE
+    'rgb(132, 204, 22)',    // Lime - ROE
+    'rgb(249, 115, 22)'     // Orange - ROA
+];
+
 export function createChartOptions(currentTheme: typeof theme.dark | typeof theme.light): ChartOptions<'bar'> {
     return {
         responsive: true,

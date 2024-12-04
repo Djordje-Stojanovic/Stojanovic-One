@@ -3,7 +3,8 @@ export type {
     ChartMetric,
     ChartDataPoint,
     ChartStoreState,
-    ChartStoreActions
+    ChartStoreActions,
+    ReturnMetricType
 } from './types/ChartTypes';
 
 // Re-export field name mapping utilities
@@ -31,6 +32,14 @@ export {
     calculateFCFMargin,
     calculateOperatingCashFlowMargin
 } from './metrics/margins/Margins';
+
+// Re-export return metric calculations
+export {
+    calculateROICMetric,
+    calculateROCEMetric,
+    calculateROEMetric,
+    calculateROAMetric
+} from './metrics/returns/Returns';
 
 // Export the store instance
 export { chartStore } from './store/ChartStore';

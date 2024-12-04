@@ -1,14 +1,15 @@
 import { colors } from '../utils/chartConfig';
 import type { ChartProps } from '../types';
-import { getMarginColor } from './chartUtils';
+import { getMarginColor, getReturnMetricColor } from './chartUtils';
 
 export function createDatasets(metrics: ChartProps['metrics'], allDates: string[]) {
     return metrics.map((metric, index) => {
         const dateValueMap = new Map(metric.data.map(d => [d.date, d.value]));
         const isMargin = metric.name.toLowerCase().includes('margin');
+        const isReturnMetric = ['ROIC', 'ROCE', 'ROE', 'ROA'].includes(metric.name);
         
-        if (isMargin) {
-            const color = getMarginColor(metric.name);
+        if (isMargin || isReturnMetric) {
+            const color = isMargin ? getMarginColor(metric.name) : getReturnMetricColor(metric.name);
             // Ensure the line is visible on dark background
             return {
                 type: 'line' as const,
