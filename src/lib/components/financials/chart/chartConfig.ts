@@ -13,7 +13,7 @@ export function getChartConfig(metrics: any[], darkMode: boolean | undefined, al
         return label.includes('Margin') || ['ROIC', 'ROCE', 'ROE', 'ROA'].includes(label);
     });
     
-    let minValue = -10; // Default minimum
+    let minValue = -50; // Updated default minimum to -50%
     let maxValue = 100; // Default maximum
 
     if (percentageDatasets.length > 0) {
@@ -27,7 +27,7 @@ export function getChartConfig(metrics: any[], darkMode: boolean | undefined, al
             
             // Set the min/max with padding (15% of the range)
             const padding = range * 0.15;
-            minValue = Math.max(dataMin - padding, -10);
+            minValue = Math.max(dataMin - padding, -50); // Updated minimum limit to -50%
             maxValue = Math.min(dataMax + padding, 100);
             
             // Round the values to make them more readable
