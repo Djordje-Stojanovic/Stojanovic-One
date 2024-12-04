@@ -7,19 +7,19 @@ export function getChartConfig(metrics: any[], darkMode: boolean | undefined, al
     const isDarkMode = darkMode ?? true; // Default to true if undefined
     const datasets = createDatasets(metrics, allDates);
 
-    // Find percentage and non-percentage metrics
+    // Find visible percentage and non-percentage metrics
     const percentageDatasets = datasets.filter(d => {
         const label = d.label || '';
-        return label.includes('Margin') || ['ROIC', 'ROCE', 'ROE', 'ROA'].includes(label);
+        return (label.includes('Margin') || ['ROIC', 'ROCE', 'ROE', 'ROA'].includes(label)) && !d.hidden;
     });
     
-    const nonPercentageDatasets = datasets.filter(d => {
+    const visibleNonPercentageDatasets = datasets.filter(d => {
         const label = d.label || '';
-        return !label.includes('Margin') && !['ROIC', 'ROCE', 'ROE', 'ROA'].includes(label);
+        return !label.includes('Margin') && !['ROIC', 'ROCE', 'ROE', 'ROA'].includes(label) && !d.hidden;
     });
 
     // Determine which axis should show grid lines
-    const showLeftGridLines = nonPercentageDatasets.length > 0;
+    const showLeftGridLines = visibleNonPercentageDatasets.length > 0;
     const showRightGridLines = !showLeftGridLines && percentageDatasets.length > 0;
     
     let minValue = -50; // Updated default minimum to -50%
