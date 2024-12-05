@@ -14,6 +14,7 @@
 
   let symbol = '';
   let stockMetadata: any = null;
+  let incomeStatements: any[] = [];
   let loading = true;
   let error: string | null = null;
   let companyList: ListName | null = null;
@@ -35,6 +36,21 @@
     } catch (err) {
       console.error('Error loading stock metadata:', err);
       error = (err as Error).message;
+    }
+  }
+
+  async function loadIncomeStatements() {
+    try {
+      const { data, error: fetchError } = await db
+        .from('income_statements')
+        .select('*')
+        .eq('symbol', symbol)
+        .order('date', { ascending: false });
+
+      if (fetchError) throw fetchError;
+      incomeStatements = data || [];
+    } catch (err) {
+      console.error('Error loading income statements:', err);
     }
   }
 
@@ -81,8 +97,11 @@
       if (syncError) throw new Error(syncError);
       if (!data) throw new Error('No data received');
 
-      // Reload stock metadata to reflect changes
-      await loadStockMetadata();
+      // Reload all data to reflect changes
+      await Promise.all([
+        loadStockMetadata(),
+        loadIncomeStatements()
+      ]);
 
       syncStatus = 'All data synced successfully!';
       setTimeout(() => {
@@ -99,8 +118,11 @@
 
   onMount(async () => {
     try {
-      await loadStockMetadata();
-      await findCompanyList();
+      await Promise.all([
+        loadStockMetadata(),
+        findCompanyList(),
+        loadIncomeStatements()
+      ]);
     } catch (err) {
       error = (err as Error).message;
     } finally {
@@ -173,7 +195,7 @@
       <p class="text-red-500">{error}</p>
     {:else}
       <!-- Company Info Section -->
-      <CompanyInfo {stockMetadata} />
+      <CompanyInfo {stockMetadata} {incomeStatements} />
 
       <!-- Wiki Sections -->
       <WikiSection {symbol} section="Founding and Early History" />

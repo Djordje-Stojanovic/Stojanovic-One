@@ -1,10 +1,61 @@
 <script lang="ts">
     import { formatCurrency, formatNumber } from '$lib/utils/numberFormat';
     export let stockMetadata: any;
+    export let incomeStatements: any[] = [];
+
+    // Sort income statements by date in descending order and filter out any without links
+    $: sortedStatements = incomeStatements
+        .filter(stmt => stmt.final_link)
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    let showFilings = false;
 </script>
 
 <div class="mt-8 rounded-xl bg-gradient-to-r from-blue-50 to-blue-100 p-6 shadow-lg dark:bg-gradient-to-r dark:from-gray-800 dark:to-gray-700 transition-colors">
-    <h2 class="mb-4 text-3xl font-extrabold text-gray-900 dark:text-gray-100 border-b pb-2">Company Information</h2>
+    <div class="relative">
+        <h2 class="mb-4 text-3xl font-extrabold text-gray-900 dark:text-gray-100 border-b pb-2 flex justify-between items-center">
+            Company Information
+            {#if sortedStatements.length > 0}
+                <div class="relative">
+                    <button
+                        class="text-sm px-3 py-1 bg-primary-600 text-white rounded hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 transition-colors"
+                        on:click={() => showFilings = !showFilings}
+                        aria-haspopup="true"
+                        aria-expanded={showFilings}
+                        aria-controls="sec-filings-menu"
+                    >
+                        SEC Filings
+                    </button>
+                    {#if showFilings}
+                        <div
+                            id="sec-filings-menu"
+                            role="menu"
+                            tabindex="0"
+                            class="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-lg z-50 border dark:border-gray-700"
+                            on:mouseleave={() => showFilings = false}
+                            on:keydown={e => e.key === 'Escape' && (showFilings = false)}
+                            aria-label="SEC Filings Menu"
+                        >
+                            <div class="max-h-96 overflow-y-auto">
+                                {#each sortedStatements as stmt}
+                                    <a
+                                        href={stmt.final_link}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 border-b dark:border-gray-700 last:border-0"
+                                        role="menuitem"
+                                        tabindex="0"
+                                    >
+                                        {new Date(stmt.date).getFullYear()} {stmt.period} Report
+                                    </a>
+                                {/each}
+                            </div>
+                        </div>
+                    {/if}
+                </div>
+            {/if}
+        </h2>
+    </div>
     <div class="space-y-3">
         {#if stockMetadata}
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
