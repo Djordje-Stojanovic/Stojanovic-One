@@ -18,6 +18,7 @@
   let questions: any[] = [];
   let listName: string;
   let symbol: string;
+  let incomeStatements: any[] = [];
 
   // Compute allowed moves based on the current stock item
   $: currentAllowedMoves = stockItem ? allowedMoves[stockItem.list_name as keyof typeof allowedMoves] || [] : [];
@@ -32,27 +33,38 @@
     loading = true;
     error = null;
     try {
-      // Fetch user_stocks and stock_metadata
-      const { data: userStockData, error: userStockError } = await db
-        .from('user_stocks')
-        .select(`
-          *,
-          stock_metadata!inner(*)
-        `)
-        .eq('user_id', $session?.user?.id)
-        .eq('list_name', listNameParam)
-        .eq('stock_metadata.symbol', symbolParam)
-        .single();
+      // Fetch user_stocks, stock_metadata, and income statements in parallel
+      const [userStockResult, incomeStatementsResult] = await Promise.all([
+        db
+          .from('user_stocks')
+          .select(`
+            *,
+            stock_metadata!inner(*)
+          `)
+          .eq('user_id', $session?.user?.id)
+          .eq('list_name', listNameParam)
+          .eq('stock_metadata.symbol', symbolParam)
+          .single(),
+        
+        db
+          .from('income_statements')
+          .select('*')
+          .eq('symbol', symbolParam)
+          .order('date', { ascending: false })
+      ]);
 
-      if (userStockError) throw userStockError;
-      if (!userStockData) throw new Error('Stock not found');
+      if (userStockResult.error) throw userStockResult.error;
+      if (!userStockResult.data) throw new Error('Stock not found');
 
       stockItem = {
-        ...userStockData.stock_metadata,
-        notes: userStockData.notes,
-        list_name: userStockData.list_name,
-        id: userStockData.id
+        ...userStockResult.data.stock_metadata,
+        notes: userStockResult.data.notes,
+        list_name: userStockResult.data.list_name,
+        id: userStockResult.data.id
       };
+
+      if (incomeStatementsResult.error) throw incomeStatementsResult.error;
+      incomeStatements = incomeStatementsResult.data || [];
 
       // Fetch meta questions for the current list
       const { data: questionsData, error: questionsError } = await db
@@ -188,6 +200,6 @@
     </div>
 
     <QuestionSection {stockItem} {questions} />
-    <CompanyInfo stockMetadata={stockItem} />
+    <CompanyInfo stockMetadata={stockItem} {incomeStatements} />
   </div>
 {/if}
