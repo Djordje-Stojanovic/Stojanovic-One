@@ -40,8 +40,7 @@ export async function upsertFinancialData<T extends { symbol: string; date: stri
         const query = db
             .from(tableName)
             .upsert(data, {
-                onConflict: 'symbol,date,period',
-                ignoreDuplicates: true
+                onConflict: 'symbol,date,period'  // Removed ignoreDuplicates: true to allow updates
             });
 
         if (returnData) {
@@ -73,8 +72,7 @@ export async function upsertRevenueSegments(
             const { error: annualError } = await db
                 .from('revenue_segments')
                 .upsert(annualData, {
-                    onConflict: 'symbol,date,period',
-                    ignoreDuplicates: true
+                    onConflict: 'symbol,date,period'  // Removed ignoreDuplicates: true
                 })
                 .select();
 
@@ -89,8 +87,7 @@ export async function upsertRevenueSegments(
             const { error: quarterlyError } = await db
                 .from('revenue_segments')
                 .upsert(quarterlyData, {
-                    onConflict: 'symbol,date,period',
-                    ignoreDuplicates: true
+                    onConflict: 'symbol,date,period'  // Removed ignoreDuplicates: true
                 })
                 .select();
 
@@ -130,8 +127,7 @@ export async function upsertRevenueGeoSegments(
             const { error: annualError } = await db
                 .from('revenue_geo_segments')
                 .upsert(annualData, {
-                    onConflict: 'symbol,date,period',
-                    ignoreDuplicates: true
+                    onConflict: 'symbol,date,period'  // Removed ignoreDuplicates: true
                 })
                 .select();
 
@@ -146,8 +142,7 @@ export async function upsertRevenueGeoSegments(
             const { error: quarterlyError } = await db
                 .from('revenue_geo_segments')
                 .upsert(quarterlyData, {
-                    onConflict: 'symbol,date,period',
-                    ignoreDuplicates: true
+                    onConflict: 'symbol,date,period'  // Removed ignoreDuplicates: true
                 })
                 .select();
 

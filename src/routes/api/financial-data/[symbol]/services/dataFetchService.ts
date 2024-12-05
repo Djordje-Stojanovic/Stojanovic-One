@@ -14,6 +14,14 @@ export async function fetchFinancialData(symbol: string, period: 'annual' | 'qua
         cashFlowStmtsRes.json()
     ]);
 
+    // Log the first income statement to check link fields
+    if (Array.isArray(incomeStmts) && incomeStmts.length > 0) {
+        console.log('First income statement link fields:', {
+            link: incomeStmts[0].link,
+            finalLink: incomeStmts[0].finalLink
+        });
+    }
+
     if (!Array.isArray(incomeStmts) || !Array.isArray(balanceSheets) || !Array.isArray(cashFlowStmts)) {
         const errorResponse = [incomeStmts, balanceSheets, cashFlowStmts].find(resp => !Array.isArray(resp));
         if (typeof errorResponse === 'object' && errorResponse !== null) {
