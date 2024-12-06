@@ -10,6 +10,7 @@
   import { syncAllStocks, stopSync, cleanup, type SyncState } from '$lib/services/stockSyncService';
   import { filterStocks } from '$lib/utils/stockFilters';
   import type { StockMetadata, UserStock, MarketCapCategory } from '$lib/components/stock-lookup/Types';
+  import type { ListName } from '$lib/constants/listNames';
 
   // State
   let stocks: StockMetadata[] = [];
@@ -26,6 +27,7 @@
   let exchangeFilter = '';
   let marketCapFilter: MarketCapCategory = '';
   let countryFilter = '';
+  let listFilter: ListName | '' = '';
 
   // Sync state
   let syncing = false;
@@ -51,7 +53,9 @@
     countryFilter,
     marketCapFilter,
     sortColumn,
-    sortDirection
+    sortDirection,
+    listFilter,
+    userStocks
   );
 
   // Load user stocks whenever session changes
@@ -177,6 +181,7 @@
       bind:sectorFilter
       bind:exchangeFilter
       bind:countryFilter
+      bind:listFilter
       {sectors}
       {exchanges}
       {countries}

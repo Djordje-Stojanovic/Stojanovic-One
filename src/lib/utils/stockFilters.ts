@@ -1,4 +1,5 @@
-import type { StockMetadata, MarketCapCategory } from '$lib/components/stock-lookup/Types';
+import type { StockMetadata, MarketCapCategory, UserStock } from '$lib/components/stock-lookup/Types';
+import type { ListName } from '$lib/constants/listNames';
 
 const marketCapRanges = {
   Micro: { max: 2_000_000_000 },
@@ -36,7 +37,9 @@ export function filterStocks(
   countryFilter: string,
   marketCapFilter: MarketCapCategory,
   sortColumn: keyof StockMetadata,
-  sortDirection: number
+  sortDirection: number,
+  listFilter: ListName | '',
+  userStocks: UserStock[] = []
 ): StockMetadata[] {
   return stocks
     .filter((stock) => {
@@ -48,7 +51,8 @@ export function filterStocks(
       const matchesExchange = !exchangeFilter || stock.exchange === exchangeFilter;
       const matchesCountry = !countryFilter || stock.country === countryFilter;
       const matchesMarketCap = !marketCapFilter || getMarketCapCategory(stock.market_cap) === marketCapFilter;
-      return matchesSearch && matchesSector && matchesExchange && matchesCountry && matchesMarketCap;
+      const matchesList = !listFilter || userStocks.some(us => us.stock_metadata_id === stock.id && us.list_name === listFilter);
+      return matchesSearch && matchesSector && matchesExchange && matchesCountry && matchesMarketCap && matchesList;
     })
     .sort((a, b) => compareValues(a[sortColumn], b[sortColumn], sortDirection));
 }

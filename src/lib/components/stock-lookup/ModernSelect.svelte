@@ -1,6 +1,7 @@
 <script lang="ts">
   export let value: string = '';
-  export let countries: string[] = [];
+  export let options: { value: string; label: string }[] = [];
+  export let placeholder = '';
 
   let isOpen = false;
   let containerRef: HTMLDivElement;
@@ -17,13 +18,15 @@
     }
   }
 
-  function handleOptionKeydown(event: KeyboardEvent, country: string = '') {
+  function handleOptionKeydown(event: KeyboardEvent, optionValue: string = '') {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
-      value = country;
+      value = optionValue;
       isOpen = false;
     }
   }
+
+  $: selectedLabel = options.find(opt => opt.value === value)?.label || placeholder;
 </script>
 
 <svelte:window on:click={handleClickOutside} on:keydown={handleKeydown} />
@@ -36,14 +39,7 @@
     aria-haspopup="listbox"
     aria-expanded={isOpen}
   >
-    {#if value}
-      <div class="flex items-center">
-        <span class="fi fi-{value.toLowerCase()}"></span>
-        <span class="ml-2">{value}</span>
-      </div>
-    {:else}
-      <span>All Countries</span>
-    {/if}
+    <span>{selectedLabel}</span>
     <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
     </svg>
@@ -53,35 +49,21 @@
     <div 
       class="absolute z-50 w-full mt-1 bg-[#1F2937] border border-[#4B5563] rounded-[0.375rem] shadow-lg max-h-60 overflow-y-auto"
       role="listbox"
-      aria-label="Select a country"
+      aria-label="Select an option"
     >
-      <button
-        type="button"
-        class="w-full px-4 py-2 text-left text-[#F9FAFB] hover:bg-[#374151] focus:outline-none focus:bg-[#374151] transition-colors duration-200"
-        on:click={() => {
-          value = '';
-          isOpen = false;
-        }}
-        on:keydown={(e) => handleOptionKeydown(e)}
-        role="option"
-        aria-selected={value === ''}
-      >
-        All Countries
-      </button>
-      {#each countries as country}
+      {#each options as option}
         <button
           type="button"
-          class="w-full px-4 py-2 text-left text-[#F9FAFB] hover:bg-[#374151] focus:outline-none focus:bg-[#374151] transition-colors duration-200 flex items-center"
+          class="w-full px-4 py-2 text-left text-[#F9FAFB] hover:bg-[#374151] focus:outline-none focus:bg-[#374151] transition-colors duration-200"
           on:click={() => {
-            value = country;
+            value = option.value;
             isOpen = false;
           }}
-          on:keydown={(e) => handleOptionKeydown(e, country)}
+          on:keydown={(e) => handleOptionKeydown(e, option.value)}
           role="option"
-          aria-selected={value === country}
+          aria-selected={value === option.value}
         >
-          <span class="fi fi-{country.toLowerCase()}"></span>
-          <span class="ml-2">{country}</span>
+          {option.label}
         </button>
       {/each}
     </div>
