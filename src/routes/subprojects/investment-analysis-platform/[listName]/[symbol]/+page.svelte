@@ -171,6 +171,10 @@
         <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">{stockItem.symbol}</h1>
       </div>
       <div class="flex items-center space-x-4">
+        <StockPageButton onClick={() => goto(`/subprojects/investment-analysis-platform?list=${encodeURIComponent(stockItem.list_name)}`)}>
+          Go to IAP
+        </StockPageButton>
+
         <StockPageButton onClick={() => goto(`/subprojects/investment-analysis-platform/company/${symbol}`)}>
           Go to Wiki
         </StockPageButton>
@@ -192,10 +196,6 @@
             <option value={moveListName}>{moveListName}</option>
           {/each}
         </select>
-        
-        <StockPageButton onClick={() => goto(`/subprojects/investment-analysis-platform?list=${encodeURIComponent(stockItem.list_name)}`)}>
-          Back to List
-        </StockPageButton>
       </div>
     </div>
 
