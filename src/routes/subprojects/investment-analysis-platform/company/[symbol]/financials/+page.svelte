@@ -40,7 +40,7 @@
     let selectedPeriod: 'annual' | 'quarterly' | 'ttm' = loadSelectedPeriod();
     let tablesComponent: FinancialStatementTables;
 
-    async function loadData(forceRefresh = false) {
+    async function loadData() {
         if (!$session) return;
         
         loading = true;
@@ -51,7 +51,7 @@
             $session.access_token,
             selectedPeriod,
             selectedYears,
-            forceRefresh
+            true // Always force refresh for sync all data
         );
 
         ({ financialData, allFinancialData, companyName, companyList, error } = result);
@@ -140,7 +140,7 @@
         {numberFormat}
         {selectedYears}
         period={selectedPeriod}
-        on:refresh={() => loadData(true)}
+        on:sync={loadData}
         on:formatChange={(e) => numberFormat = e.detail}
         on:yearChange={handleYearChange}
         on:periodChange={handlePeriodChange}
