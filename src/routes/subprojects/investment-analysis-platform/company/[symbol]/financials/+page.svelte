@@ -40,7 +40,7 @@
     let selectedPeriod: 'annual' | 'quarterly' | 'ttm' = loadSelectedPeriod();
     let tablesComponent: FinancialStatementTables;
 
-    async function loadData() {
+    async function loadData(forceRefresh = false) {
         if (!$session) return;
         
         loading = true;
@@ -51,7 +51,7 @@
             $session.access_token,
             selectedPeriod,
             selectedYears,
-            true // Always force refresh for sync all data
+            forceRefresh // Only force refresh when sync button is clicked
         );
 
         ({ financialData, allFinancialData, companyName, companyList, error } = result);
@@ -93,7 +93,7 @@
     // Watch for symbol changes
     $: if ($page.params.symbol !== symbol) {
         symbol = $page.params.symbol;
-        loadData();
+        loadData(); // Initial load without force refresh
     }
 
     // Watch for tab changes
@@ -104,7 +104,7 @@
 
     onMount(() => {
         if ($session && symbol) {
-            loadData();
+            loadData(); // Initial load without force refresh
         }
     });
 
@@ -140,7 +140,7 @@
         {numberFormat}
         {selectedYears}
         period={selectedPeriod}
-        on:sync={loadData}
+        on:sync={() => loadData(true)}
         on:formatChange={(e) => numberFormat = e.detail}
         on:yearChange={handleYearChange}
         on:periodChange={handlePeriodChange}
