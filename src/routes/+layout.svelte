@@ -11,6 +11,7 @@
     let isMenuOpen = false;
 
     $: isMainIAPRoute = $page.url.pathname === '/subprojects/investment-analysis-platform';
+    $: isIAPRelatedRoute = $page.url.pathname.startsWith('/subprojects/investment-analysis-platform');
 
     onMount(() => {
         // Initialize session
@@ -65,8 +66,12 @@
                 {#if $sessionStore.session}
                     <a href="/profile" class="hover:text-primary-300">Profile</a>
                     <button on:click={handleLogout} class="hover:text-primary-300">Logout</button>
-                    {#if isMainIAPRoute}
-                        <a href="/subprojects/investment-analysis-platform/meta-questions" class="hover:text-primary-300">Meta Questions</a>
+                    {#if isIAPRelatedRoute}
+                        {#if !isMainIAPRoute}
+                            <a href="/subprojects/investment-analysis-platform" class="hover:text-primary-300">IAP</a>
+                        {:else}
+                            <a href="/subprojects/investment-analysis-platform/meta-questions" class="hover:text-primary-300">Meta Questions</a>
+                        {/if}
                         <a href="/subprojects/investment-analysis-platform/global-lookup" class="hover:text-primary-300">Global Stock Lookup</a>
                     {:else}
                         <a href="/subprojects/investment-analysis-platform" class="hover:text-primary-300">IAP</a>
@@ -92,8 +97,13 @@
             {#if $sessionStore.session}
                 <a href="/profile" class="block py-2 hover:text-primary-300">Profile</a>
                 <button on:click={handleLogout} class="block w-full py-2 text-left hover:text-primary-300">Logout</button>
-                {#if isMainIAPRoute}
-                    <a href="/subprojects/investment-analysis-platform/meta-questions" class="block py-2 hover:text-primary-300">Meta Questions</a>
+                {#if isIAPRelatedRoute}
+                    {#if !isMainIAPRoute}
+                        <a href="/subprojects/investment-analysis-platform" class="block py-2 hover:text-primary-300">IAP</a>
+                    {:else}
+                        <a href="/subprojects/investment-analysis-platform/meta-questions" class="block py-2 hover:text-primary-300">Meta Questions</a>
+                    {/if}
+                    <a href="/subprojects/investment-analysis-platform/global-lookup" class="block py-2 hover:text-primary-300">Global Stock Lookup</a>
                 {:else}
                     <a href="/subprojects/investment-analysis-platform" class="block py-2 hover:text-primary-300">IAP</a>
                 {/if}
