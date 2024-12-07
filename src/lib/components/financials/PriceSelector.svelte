@@ -5,20 +5,50 @@
 
     let symbol = $page.params.symbol;
 
+    // Get the selected years from the URL
+    $: selectedYears = (() => {
+        const searchParams = new URLSearchParams(window.location.search);
+        const period = searchParams.get('period') || '5Y';
+        switch (period) {
+            case '3Y': return 3;
+            case '5Y': return 5;
+            case '10Y': return 10;
+            case '20Y': return 20;
+            case 'All': return 100;
+            default: {
+                const customYears = parseInt(period);
+                return !isNaN(customYears) ? customYears : 5;
+            }
+        }
+    })();
+
     async function togglePrice() {
-        const prices = await getHistoricalPrices(symbol, 260); // Get ~5 years of weekly data
+        const prices = await getHistoricalPrices(symbol);
         if (!prices.length) return;
 
-        // Filter to weekly data and map to chart format
-        const weeklyPrices = prices
-            .filter((_, index) => index % 5 === 0)
+        // Calculate cutoff date based on selected years
+        const cutoffDate = new Date();
+        cutoffDate.setFullYear(cutoffDate.getFullYear() - selectedYears);
+
+        // Filter and sort data
+        const filteredPrices = prices
+            .filter(price => new Date(price.date) >= cutoffDate)
             .map(price => ({
                 date: price.date,
                 value: Number(price.adj_close) || 0
             }))
             .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-        chartStore.handleMetricClick('Stock Price (Weekly)', weeklyPrices.map(p => p.value), weeklyPrices.map(p => p.date));
+        chartStore.handleMetricClick('Stock Price', filteredPrices.map(p => p.value), filteredPrices.map(p => p.date));
+    }
+
+    // Watch for URL changes to update the chart when time period changes
+    $: {
+        const searchParams = new URLSearchParams(window.location.search);
+        const period = searchParams.get('period');
+        if (period) {
+            togglePrice();
+        }
     }
 </script>
 
@@ -30,7 +60,7 @@
             on:click={togglePrice}
         >
             <span class="w-1.5 h-1.5 rounded-full mr-1.5" style="background-color: #10B981;"></span>
-            5Y Weekly Price
+            Stock Price
         </button>
     </div>
 </div>

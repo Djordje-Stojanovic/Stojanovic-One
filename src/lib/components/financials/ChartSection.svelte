@@ -88,7 +88,7 @@
     function calculateGrowthRates(metrics: ChartMetric[]): GrowthRate[] {
         const results: GrowthRate[] = [];
         metrics.forEach((metric, index) => {
-            if (!metric.hidden && !metric.name.includes('Margin') && !['ROIC', 'ROCE', 'ROE', 'ROA', 'Stock Price (Weekly)'].includes(metric.name)) {
+            if (!metric.hidden && !metric.name.includes('Margin') && !['ROIC', 'ROCE', 'ROE', 'ROA', 'Stock Price'].includes(metric.name)) {
                 // Get complete data for calculations
                 const allData = getCompleteMetricData(metric.name);
                 

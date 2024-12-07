@@ -5,24 +5,29 @@ import { getMarginColor, getReturnMetricColor } from './chartUtils';
 export function createDatasets(metrics: ChartProps['metrics'], allDates: string[]) {
     return metrics.map((metric, index) => {
         const dateValueMap = new Map(metric.data.map(d => [d.date, d.value]));
-        const isMargin = metric.name.includes('Margin'); // Fixed: Remove toLowerCase()
+        const isMargin = metric.name.includes('Margin');
         const isReturnMetric = ['ROIC', 'ROCE', 'ROE', 'ROA'].includes(metric.name);
+        const isPrice = metric.name === 'Stock Price';
         
-        if (isMargin || isReturnMetric) {
-            const color = isMargin ? getMarginColor(metric.name) : getReturnMetricColor(metric.name);
-            // Ensure the line is visible on dark background
+        if (isMargin || isReturnMetric || isPrice) {
+            const color = isMargin 
+                ? getMarginColor(metric.name) 
+                : isReturnMetric 
+                    ? getReturnMetricColor(metric.name)
+                    : '#10B981'; // Emerald color for price line
+
             return {
                 type: 'line' as const,
                 label: metric.name,
                 data: allDates.map(date => dateValueMap.get(date) ?? null),
                 borderColor: color,
                 backgroundColor: 'transparent',
-                borderWidth: 2.5,
-                pointRadius: 4,
-                pointHoverRadius: 6,
+                borderWidth: isPrice ? 1.5 : 2.5, // Thinner line for price
+                pointRadius: isPrice ? 0 : 4, // No points for price line
+                pointHoverRadius: isPrice ? 4 : 6,
                 pointBackgroundColor: color,
                 pointBorderColor: color,
-                yAxisID: 'y1',
+                yAxisID: isPrice ? 'y' : 'y1', // Use left axis for price
                 order: 0,
                 tension: 0.2,
                 hidden: metric.hidden
