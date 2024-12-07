@@ -10,7 +10,7 @@
     import UserStockSearch from '$lib/components/financials/UserStockSearch.svelte';
     import ChartSection from '$lib/components/financials/ChartSection.svelte';
     import FinancialNavigation from '$lib/components/financials/FinancialNavigation.svelte';
-    import { loadFinancialPageData } from '$lib/services/financialPageService';
+    import { loadFinancialPageData, loadStockPriceData } from '$lib/services/financialPageService';
     import { chartStore } from '$lib/stores/chartStore';
     import { filterFinancialStatementsByPeriod } from '$lib/utils/financialStatementFilters';
     import { loadSelectedPeriod, saveSelectedPeriod, loadSelectedYears, saveSelectedYears } from '$lib/components/financials/state/chartState';
@@ -46,19 +46,59 @@
         loading = true;
         error = null;
 
-        const result = await loadFinancialPageData(
+        // Only load financial data initially, not stock prices
+        const financialResult = await loadFinancialPageData(
             symbol,
             $session.access_token,
             selectedPeriod,
             selectedYears,
-            forceRefresh // Only force refresh when sync button is clicked
+            forceRefresh
         );
 
-        ({ financialData, allFinancialData, companyName, companyList, error } = result);
+        ({ financialData, allFinancialData, companyName, companyList, error } = financialResult);
         
         if (!error && financialData) {
             console.log('Loaded financial data:', financialData);
             chartStore.updateMetrics(financialData);
+        }
+
+        loading = false;
+    }
+
+    // Separate function to handle sync button click
+    async function handleSync() {
+        if (!$session) return;
+        
+        loading = true;
+        error = null;
+
+        // Load both financial and stock price data when sync is clicked
+        const [financialResult, stockPriceResult] = await Promise.all([
+            loadFinancialPageData(
+                symbol,
+                $session.access_token,
+                selectedPeriod,
+                selectedYears,
+                true
+            ),
+            loadStockPriceData(
+                symbol,
+                $session.access_token,
+                true
+            )
+        ]);
+
+        ({ financialData, allFinancialData, companyName, companyList, error } = financialResult);
+        
+        if (!error && financialData) {
+            console.log('Loaded financial data:', financialData);
+            chartStore.updateMetrics(financialData);
+        }
+
+        if (stockPriceResult.error) {
+            console.error('Error loading stock prices:', stockPriceResult.error);
+        } else if (stockPriceResult.stockPrices) {
+            console.log('Loaded stock prices:', stockPriceResult.stockPrices);
         }
 
         loading = false;
@@ -90,10 +130,10 @@
         updateData();
     }
 
-    // Watch for symbol changes
+    // Watch for symbol changes - only load financial data, not stock prices
     $: if ($page.params.symbol !== symbol) {
         symbol = $page.params.symbol;
-        loadData(); // Initial load without force refresh
+        loadData(false); // Load financial data without force refresh
     }
 
     // Watch for tab changes
@@ -104,7 +144,7 @@
 
     onMount(() => {
         if ($session && symbol) {
-            loadData(); // Initial load without force refresh
+            loadData(false); // Initial load without force refresh
         }
     });
 
@@ -140,7 +180,7 @@
         {numberFormat}
         {selectedYears}
         period={selectedPeriod}
-        on:sync={() => loadData(true)}
+        on:sync={handleSync}
         on:formatChange={(e) => numberFormat = e.detail}
         on:yearChange={handleYearChange}
         on:periodChange={handlePeriodChange}

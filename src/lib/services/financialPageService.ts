@@ -1,7 +1,9 @@
 import type { FinancialData } from '$lib/types/financialStatements';
 import { filterFinancialStatementsByPeriod } from '$lib/utils/financialStatementFilters';
 import { findCompanyList, fetchCompanyName, loadFinancialData } from './companyFinancialsService';
+import { loadStockPrices } from './stockPriceService';
 import type { ListName } from '$lib/constants/listNames';
+import type { StockPriceData } from '$lib/types/stockPrices';
 import { goto } from '$app/navigation';
 
 const emptyFinancialData: FinancialData = {
@@ -70,6 +72,37 @@ export async function loadFinancialPageData(
             companyName: null,
             companyList: null,
             error: 'Failed to load financial data'
+        };
+    }
+}
+
+// New function to handle stock price loading separately
+export async function loadStockPriceData(
+    symbol: string,
+    accessToken: string,
+    forceRefresh = false
+): Promise<{
+    stockPrices: StockPriceData | null;
+    error: string | null;
+}> {
+    if (!accessToken) {
+        return {
+            stockPrices: null,
+            error: 'Not authenticated'
+        };
+    }
+
+    try {
+        const result = await loadStockPrices(symbol, accessToken, undefined, undefined, forceRefresh);
+        return {
+            stockPrices: result.data,
+            error: result.error
+        };
+    } catch (e) {
+        console.error('Error loading stock price data:', e);
+        return {
+            stockPrices: null,
+            error: 'Failed to load stock price data'
         };
     }
 }

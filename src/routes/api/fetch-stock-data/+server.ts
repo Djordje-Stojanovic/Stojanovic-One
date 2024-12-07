@@ -141,6 +141,36 @@ async function convertMetadataToUSD(stockData: FMPStockData): Promise<Record<str
     };
 }
 
+async function initializeStockData(symbol: string, token: string) {
+    try {
+        // Fetch financial data
+        await fetch(`/api/financial-data/${symbol}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        // Fetch stock prices starting from IPO date if available
+        const { data: metadata } = await db
+            .from('stock_metadata')
+            .select('ipo, currency')
+            .eq('symbol', symbol)
+            .single();
+
+        if (metadata?.ipo) {
+            await fetch(`/api/stock-prices/${symbol}?from=${metadata.ipo}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+        } else {
+            // If no IPO date, fetch from a default date
+            await fetch(`/api/stock-prices/${symbol}?from=1980-01-01`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+        }
+    } catch (error) {
+        console.error('Error initializing stock data:', error);
+        // Don't throw error as this is a background task
+    }
+}
+
 export const POST: RequestHandler = async ({ request }) => {
     try {
         const { identifier, identifierType, notes, listName } = await request.json();
@@ -170,10 +200,12 @@ export const POST: RequestHandler = async ({ request }) => {
         }
 
         let stockMetadataId;
+        let symbol: string;
 
         if (existingStock) {
             // Use existing stock metadata
             stockMetadataId = existingStock.id;
+            symbol = existingStock.symbol;
         } else {
             // Fetch stock data from Financial Modeling Prep
             const fmpResponse = await fetch(
@@ -192,6 +224,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
             // Convert the data to USD before inserting
             const convertedData = await convertMetadataToUSD(stockDataArray[0] as FMPStockData);
+            symbol = convertedData.symbol as string;
 
             // Insert into stock_metadata
             const { data: newStockMetadata, error: insertError } = await db
@@ -234,6 +267,9 @@ export const POST: RequestHandler = async ({ request }) => {
             }
             return json({ error: userStockError.message }, { status: 500 });
         }
+
+        // Initialize stock data in the background
+        initializeStockData(symbol, token);
 
         return json({ data: userStock });
     } catch (error) {
