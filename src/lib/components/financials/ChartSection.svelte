@@ -4,6 +4,7 @@
     import FinancialChart from './FinancialChart.svelte';
     import MarginSelector from './margins/MarginSelector.svelte';
     import ReturnMetricsSelector from './returns/ReturnMetricsSelector.svelte';
+    import PriceSelector from './PriceSelector.svelte';
     import { formatValue, calculateMultiYearGrowth } from './utils/chartUtils';
     import { colors } from './utils/chartConfig';
     import { getMarginColor } from './chart/chartUtils';
@@ -87,7 +88,7 @@
     function calculateGrowthRates(metrics: ChartMetric[]): GrowthRate[] {
         const results: GrowthRate[] = [];
         metrics.forEach((metric, index) => {
-            if (!metric.hidden && !metric.name.includes('Margin') && !['ROIC', 'ROCE', 'ROE', 'ROA'].includes(metric.name)) {
+            if (!metric.hidden && !metric.name.includes('Margin') && !['ROIC', 'ROCE', 'ROE', 'ROA', 'Stock Price (Weekly)'].includes(metric.name)) {
                 // Get complete data for calculations
                 const allData = getCompleteMetricData(metric.name);
                 
@@ -121,6 +122,7 @@
     <div class="space-y-2">
         <MarginSelector />
         <ReturnMetricsSelector />
+        <PriceSelector />
     </div>
     <div class="bg-white dark:bg-[#1F2937] rounded-lg">
         <FinancialChart 
