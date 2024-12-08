@@ -4,51 +4,44 @@
     import { page } from '$app/stores';
 
     let symbol = $page.params.symbol;
-
-    // Get the selected years from the URL
-    $: selectedYears = (() => {
-        const searchParams = new URLSearchParams(window.location.search);
-        const period = searchParams.get('period') || '5Y';
-        switch (period) {
-            case '3Y': return 3;
-            case '5Y': return 5;
-            case '10Y': return 10;
-            case '20Y': return 20;
-            case 'All': return 100;
-            default: {
-                const customYears = parseInt(period);
-                return !isNaN(customYears) ? customYears : 5;
-            }
-        }
-    })();
+    let isActive = false;
 
     async function togglePrice() {
-        const prices = await getHistoricalPrices(symbol);
-        if (!prices.length) return;
+        try {
+            console.log('Fetching prices for symbol:', symbol);
+            const prices = await getHistoricalPrices(symbol);
+            console.log('Got prices:', prices.length);
+            if (!prices.length) return;
 
-        // Calculate cutoff date based on selected years
-        const cutoffDate = new Date();
-        cutoffDate.setFullYear(cutoffDate.getFullYear() - selectedYears);
+            // Sort by date ascending
+            const sortedPrices = [...prices].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+            console.log('First price:', sortedPrices[0], 'Last price:', sortedPrices[sortedPrices.length - 1]);
 
-        // Filter and sort data
-        const filteredPrices = prices
-            .filter(price => new Date(price.date) >= cutoffDate)
-            .map(price => ({
-                date: price.date,
-                value: Number(price.adj_close) || 0
-            }))
-            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+            // Create metric data
+            const values = sortedPrices.map(p => Number(p.adj_close) || 0);
+            const dates = sortedPrices.map(p => p.date);
 
-        chartStore.handleMetricClick('Stock Price', filteredPrices.map(p => p.value), filteredPrices.map(p => p.date));
+            console.log('Sending to chart store:', {
+                name: 'Stock Price',
+                valueCount: values.length,
+                dateCount: dates.length,
+                firstValue: values[0],
+                lastValue: values[values.length - 1]
+            });
+
+            // Toggle price data
+            chartStore.handleMetricClick('Stock Price', values, dates);
+            isActive = !isActive;
+            console.log('Toggle complete, isActive:', isActive);
+        } catch (error) {
+            console.error('Error in togglePrice:', error);
+        }
     }
 
-    // Watch for URL changes to update the chart when time period changes
-    $: {
-        const searchParams = new URLSearchParams(window.location.search);
-        const period = searchParams.get('period');
-        if (period) {
-            togglePrice();
-        }
+    // Reset active state when symbol changes
+    $: if ($page.params.symbol !== symbol) {
+        symbol = $page.params.symbol;
+        isActive = false;
     }
 </script>
 
@@ -56,7 +49,7 @@
     <div class="flex-grow flex flex-wrap gap-2 items-center justify-center">
         <button
             class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-all duration-200 border border-transparent hover:bg-opacity-10 focus:outline-none"
-            style="color: #10B981; background-color: transparent; border-color: transparent;"
+            style="color: #10B981; background-color: {isActive ? 'rgba(16, 185, 129, 0.1)' : 'transparent'}; border-color: transparent;"
             on:click={togglePrice}
         >
             <span class="w-1.5 h-1.5 rounded-full mr-1.5" style="background-color: #10B981;"></span>

@@ -40,6 +40,7 @@ export interface ChartStoreState {
     returnMetrics: ReturnMetricState;
     lastFinancialData: FinancialData | null;
     metricVisibility: Record<string, boolean>;
+    showPrice?: boolean;
 }
 
 export interface ChartStoreActions {
@@ -48,6 +49,7 @@ export interface ChartStoreActions {
     handleMetricClick: (name: string, values: number[], dates: string[]) => void;
     toggleMargin: (marginType: MarginType) => void;
     toggleReturnMetric: (returnType: ReturnMetricType) => void;
+    togglePrice?: () => void;
     clearChart: () => void;
     toggleMetricVisibility: (metricName: string) => void;
 }
