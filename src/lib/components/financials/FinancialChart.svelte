@@ -16,19 +16,23 @@
     
     let canvas: HTMLCanvasElement;
     let chart: Chart | null = null;
-    let showPriceChart = false;
     let priceData: any[] = [];
+    let showPriceChart = false;
 
     // Subscribe to chartStore to detect price selection/deselection
     $: {
         const priceMetric = $chartStore.selectedMetrics.find(m => m.name === 'Stock Price');
-        if (priceMetric && priceMetric.data.length > 0) {
-            priceData = priceMetric.data.map(d => ({
-                date: d.date,
-                adj_close: d.value
-            }));
+        if (priceMetric) {
+            // Only update showPriceChart when metric is added or removed
             showPriceChart = true;
-        } else if (!priceMetric || priceMetric.data.length === 0) {
+            // Only update priceData when there is data
+            if (priceMetric.data.length > 0) {
+                priceData = priceMetric.data.map(d => ({
+                    date: d.date,
+                    adj_close: d.value
+                }));
+            }
+        } else {
             showPriceChart = false;
             priceData = [];
         }
@@ -101,13 +105,10 @@
 </script>
 
 <div class="w-full bg-white dark:bg-[#1F2937] rounded-lg">
-    {#if showPriceChart && priceData.length > 0}
+    {#if showPriceChart}
         <PriceChart 
-            {priceData} 
-            {darkMode} 
-            onClose={() => {
-                chartStore.handleMetricClick('Stock Price', [], []);
-            }} 
+            priceData={priceData.length > 0 ? priceData : []}
+            {darkMode}
         />
     {/if}
     

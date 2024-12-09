@@ -4,42 +4,64 @@
     import type { Chart as ChartType } from 'chart.js';
     import { getPriceChartConfig } from './priceChartConfig';
     import { theme } from '../utils/chartConfig';
+    import { chartStore } from '$lib/stores/financial-charts';
+    import { loadSelectedYears } from '../state/chartState';
     import type { StockPrice } from '$lib/types/stockPrices';
     import 'chartjs-adapter-date-fns';
     
     export let priceData: StockPrice[] = [];
     export let darkMode: boolean = true;
-    export let onClose: () => void;
     
     let canvas: HTMLCanvasElement;
     let chart: ChartType | null = null;
+    let isUpdating = false;
+
+    // Subscribe to both store changes and priceData
+    $: selectedYears = loadSelectedYears();
+    $: priceMetric = $chartStore.selectedMetrics.find(m => m.name === 'Stock Price');
+    $: if ((selectedYears || priceMetric) && canvas && !isUpdating) {
+        updateChart();
+    }
+
+    function handleClose() {
+        chartStore.handleMetricClick('Stock Price', [], []);
+    }
 
     function updateChart() {
-        if (!canvas || !priceData.length) return;
+        if (!canvas) return;
         
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
         const currentTheme = darkMode ? theme.dark : theme.light;
-        const config = getPriceChartConfig(priceData, darkMode, currentTheme);
+        
+        // Calculate date range based on selected years
+        const endDate = new Date();
+        const startDate = new Date();
+        startDate.setFullYear(endDate.getFullYear() - selectedYears);
+
+        const config = getPriceChartConfig(priceData, darkMode, currentTheme, startDate.getTime(), endDate.getTime());
 
         if (chart) {
-            if (config.data) {
-                chart.data = config.data;
+            isUpdating = true;
+            try {
+                if (config.data) {
+                    chart.data = config.data;
+                }
+                if (config.options) {
+                    chart.options = config.options;
+                }
+                chart.update('none');
+            } finally {
+                isUpdating = false;
             }
-            if (config.options) {
-                chart.options = config.options;
-            }
-            chart.update('none');
         } else {
             chart = new Chart(ctx, config);
         }
     }
 
     onMount(() => {
-        if (priceData.length > 0) {
-            updateChart();
-        }
+        updateChart();
     });
 
     onDestroy(() => {
@@ -48,17 +70,12 @@
             chart = null;
         }
     });
-
-    // Watch priceData changes
-    $: if (priceData.length > 0 && canvas) {
-        updateChart();
-    }
 </script>
 
 <div class="w-full bg-white dark:bg-[#1F2937] rounded-lg mb-4 relative">
     <div class="absolute top-2 right-2 z-10">
         <button 
-            on:click={onClose}
+            on:click={handleClose}
             class="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full"
             title="Close price chart"
         >

@@ -9,15 +9,43 @@
     let isLoading = false;
     let currentPriceData: { values: number[], dates: string[] } | null = null;
 
-    // Subscribe to chartStore to sync active state
+    // Subscribe to chartStore to sync active state and data
     $: {
         const priceMetric = $chartStore.selectedMetrics.find(m => m.name === 'Stock Price');
         isActive = !!priceMetric;
-        if (priceMetric && !currentPriceData) {
+        if (priceMetric) {  // Always update currentPriceData when priceMetric exists
             currentPriceData = {
                 values: priceMetric.data.map(d => d.value),
                 dates: priceMetric.data.map(d => d.date)
             };
+        }
+    }
+
+    // Subscribe to store updates to detect metric updates
+    $: {
+        if (isActive && !isLoading) {
+            const years = loadSelectedYears();
+            updatePriceData(years);
+        }
+    }
+
+    async function updatePriceData(years: number) {
+        try {
+            isLoading = true;
+            const prices = await getHistoricalPrices(symbol, years);
+            if (prices.length > 0) {
+                const sortedPrices = [...prices].sort((a, b) => 
+                    new Date(a.date).getTime() - new Date(b.date).getTime()
+                );
+                const values = sortedPrices.map(p => Number(p.adj_close) || 0);
+                const dates = sortedPrices.map(p => p.date);
+                currentPriceData = { values, dates };
+                chartStore.handleMetricClick('Stock Price', values, dates);
+            }
+        } catch (error) {
+            console.error('Error updating price data:', error);
+        } finally {
+            isLoading = false;
         }
     }
 
@@ -62,39 +90,6 @@
             currentPriceData = null;
             chartStore.handleMetricClick('Stock Price', [], []);
         }
-    }
-
-    // Watch for changes in selected years and reload price data if active
-    let lastYears = loadSelectedYears();
-    $: {
-        const years = loadSelectedYears();
-        if (years !== lastYears && isActive && !isLoading) {
-            lastYears = years;
-            (async () => {
-                try {
-                    isLoading = true;
-                    const prices = await getHistoricalPrices(symbol, years);
-                    if (prices.length > 0) {
-                        const sortedPrices = [...prices].sort((a, b) => 
-                            new Date(a.date).getTime() - new Date(b.date).getTime()
-                        );
-                        const values = sortedPrices.map(p => Number(p.adj_close) || 0);
-                        const dates = sortedPrices.map(p => p.date);
-                        currentPriceData = { values, dates };
-                        chartStore.handleMetricClick('Stock Price', values, dates);
-                    }
-                } catch (error) {
-                    console.error('Error updating price data:', error);
-                } finally {
-                    isLoading = false;
-                }
-            })();
-        }
-    }
-
-    // Watch for store updates and reapply price data if needed
-    $: if (isActive && currentPriceData && !$chartStore.selectedMetrics.find(m => m.name === 'Stock Price')) {
-        chartStore.handleMetricClick('Stock Price', currentPriceData.values, currentPriceData.dates);
     }
 </script>
 

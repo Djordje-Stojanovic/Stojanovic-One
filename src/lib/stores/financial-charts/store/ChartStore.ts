@@ -165,8 +165,10 @@ function createChartStore(): ChartStoreActions {
 
         handleMetricClick: (name: string, values: number[], dates: string[]) => update(state => {
             const existingIndex = state.selectedMetricNames.indexOf(name);
+            const existingMetric = state.selectedMetrics.find(m => m.name === name);
 
-            if (existingIndex !== -1) {
+            if (existingIndex !== -1 && values.length === 0) {
+                // Remove metric
                 const newMetrics = state.selectedMetrics.filter(m => m.name !== name);
                 const newMetricNames = state.selectedMetricNames.filter(n => n !== name);
                 const newVisibility = { ...state.metricVisibility };
@@ -183,17 +185,30 @@ function createChartStore(): ChartStoreActions {
                     metricVisibility: newVisibility
                 };
             } else {
+                // Add or update metric
                 const newMetric = {
                     name,
                     data: dates.map((date, i) => ({
                         date,
                         value: values[i]
                     })).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()),
-                    hidden: false
+                    hidden: existingMetric ? existingMetric.hidden : false
                 };
 
-                const newMetrics = [...state.selectedMetrics, newMetric];
-                const newMetricNames = [...state.selectedMetricNames, name];
+                let newMetrics: ChartMetric[];
+                let newMetricNames: string[];
+
+                if (existingIndex !== -1) {
+                    // Update existing metric
+                    newMetrics = state.selectedMetrics.map(m => 
+                        m.name === name ? newMetric : m
+                    );
+                    newMetricNames = [...state.selectedMetricNames];
+                } else {
+                    // Add new metric
+                    newMetrics = [...state.selectedMetrics, newMetric];
+                    newMetricNames = [...state.selectedMetricNames, name];
+                }
 
                 saveShowChart(true);
                 saveSelectedMetrics(newMetricNames);

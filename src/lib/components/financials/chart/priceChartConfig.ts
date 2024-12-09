@@ -6,22 +6,36 @@ import 'chartjs-adapter-date-fns';
 
 type ThemeType = typeof theme.dark | typeof theme.light;
 
-export function getPriceChartConfig(priceData: StockPrice[], darkMode: boolean | undefined, currentTheme: ThemeType): ChartConfiguration {
+export function getPriceChartConfig(
+    priceData: StockPrice[], 
+    darkMode: boolean | undefined, 
+    currentTheme: ThemeType,
+    startDate?: number,
+    endDate?: number
+): ChartConfiguration {
     const isDarkMode = darkMode ?? true;
 
-    // Calculate price axis range
+    // Handle empty data gracefully
     const allPrices = priceData.map(d => Number(d.adj_close)).filter((v): v is number => v !== null);
-    const priceMin = Math.min(...allPrices);
-    const priceMax = Math.max(...allPrices);
-    const priceRange = priceMax - priceMin;
-    const pricePadding = priceRange * 0.15;
-    const minPrice = Math.max(0, priceMin - pricePadding);
-    const maxPrice = priceMax + pricePadding;
 
-    // Convert dates to timestamps for time scale
+    // Set default ranges if no data
+    let minPrice = 0;
+    let maxPrice = 100;
+
+    // Only calculate price ranges if we have data
+    if (allPrices.length > 0) {
+        const priceMin = Math.min(...allPrices);
+        const priceMax = Math.max(...allPrices);
+        const priceRange = priceMax - priceMin;
+        const pricePadding = priceRange * 0.15;
+        minPrice = Math.max(0, priceMin - pricePadding);
+        maxPrice = priceMax + pricePadding;
+    }
+
+    // Use provided date range or calculate from data
     const timestamps = priceData.map(d => new Date(d.date).getTime());
-    const minDate = Math.min(...timestamps);
-    const maxDate = Math.max(...timestamps);
+    const minDate = startDate || (timestamps.length > 0 ? Math.min(...timestamps) : Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const maxDate = endDate || (timestamps.length > 0 ? Math.max(...timestamps) : Date.now());
 
     return {
         type: 'line',
@@ -54,6 +68,7 @@ export function getPriceChartConfig(priceData: StockPrice[], darkMode: boolean |
             },
             plugins: {
                 tooltip: {
+                    enabled: priceData.length > 0,
                     backgroundColor: isDarkMode ? '#374151' : '#FFFFFF',
                     titleColor: isDarkMode ? '#F3F4F6' : '#111827',
                     bodyColor: isDarkMode ? '#F3F4F6' : '#111827',
