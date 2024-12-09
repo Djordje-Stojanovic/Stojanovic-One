@@ -11,37 +11,25 @@
         try {
             if (!isActive) {
                 const years = loadSelectedYears();
-                console.log(`Fetching ${years} years of prices for symbol:`, symbol);
                 const prices = await getHistoricalPrices(symbol, years);
-                console.log('Got prices:', prices.length, 'First:', prices[0], 'Last:', prices[prices.length - 1]);
                 if (!prices.length) return;
 
                 // Sort by date ascending
-                const sortedPrices = [...prices].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-                console.log('Sorted prices - First:', sortedPrices[0], 'Last:', sortedPrices[sortedPrices.length - 1]);
+                const sortedPrices = [...prices].sort((a, b) => 
+                    new Date(a.date).getTime() - new Date(b.date).getTime()
+                );
 
-                // Create metric data
+                // Create metric data - use adj_close for price values
                 const values = sortedPrices.map(p => Number(p.adj_close) || 0);
                 const dates = sortedPrices.map(p => p.date);
 
-                console.log('Price data prepared:', {
-                    name: 'Stock Price',
-                    valueCount: values.length,
-                    dateCount: dates.length,
-                    firstValue: values[0],
-                    lastValue: values[values.length - 1],
-                    firstDate: dates[0],
-                    lastDate: dates[dates.length - 1]
-                });
-
-                // Add price data
+                // Add price data to store
                 chartStore.handleMetricClick('Stock Price', values, dates);
             } else {
                 // Remove price data
                 chartStore.handleMetricClick('Stock Price', [], []);
             }
             isActive = !isActive;
-            console.log('Toggle complete, isActive:', isActive);
         } catch (error) {
             console.error('Error in togglePrice:', error);
         }

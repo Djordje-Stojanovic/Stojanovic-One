@@ -58,3 +58,4 @@ supabase/config.toml
 
 # AI Sensitive file
 AI.MD
+static/chartjs_documentation.md
