@@ -1,21 +1,26 @@
 import { formatDate, formatValue, calculateGrowth } from '../utils/chartUtils';
 import { createDatasets } from './DatasetManager';
-import type { TooltipItem, ChartType, ChartEvent, LegendItem, Chart } from 'chart.js';
+import type { TooltipItem, ChartType, ChartEvent, LegendItem, Chart, Scale, CoreScaleOptions } from 'chart.js';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function getChartConfig(metrics: any[], darkMode: boolean | undefined, allDates: string[], currentTheme: any, onLegendClick: (e: ChartEvent, legendItem: LegendItem, legend: Chart['legend']) => void) {
     const isDarkMode = darkMode ?? true; // Default to true if undefined
     const datasets = createDatasets(metrics, allDates);
 
-    // Find visible percentage and non-percentage metrics
+    // Find visible percentage and price metrics
     const percentageDatasets = datasets.filter(d => {
         const label = d.label || '';
         return (label.includes('Margin') || ['ROIC', 'ROCE', 'ROE', 'ROA'].includes(label)) && !d.hidden;
     });
     
+    const priceDatasets = datasets.filter(d => {
+        const label = d.label || '';
+        return label === 'Stock Price' && !d.hidden;
+    });
+
     const visibleNonPercentageDatasets = datasets.filter(d => {
         const label = d.label || '';
-        return !label.includes('Margin') && !['ROIC', 'ROCE', 'ROE', 'ROA'].includes(label) && !d.hidden;
+        return !label.includes('Margin') && !['ROIC', 'ROCE', 'ROE', 'ROA', 'Stock Price'].includes(label) && !d.hidden;
     });
 
     // Determine which axis should show grid lines
@@ -30,18 +35,27 @@ export function getChartConfig(metrics: any[], darkMode: boolean | undefined, al
         if (allValues.length > 0) {
             const dataMin = Math.min(...allValues);
             const dataMax = Math.max(...allValues);
-            
-            // Calculate the data range
             const range = dataMax - dataMin;
-            
-            // Set the min/max with padding (15% of the range)
             const padding = range * 0.15;
             minValue = Math.max(dataMin - padding, -50);
             maxValue = Math.min(dataMax + padding, 100);
-            
-            // Round the values to make them more readable
             minValue = Math.floor(minValue / 5) * 5;
             maxValue = Math.ceil(maxValue / 5) * 5;
+        }
+    }
+
+    // Calculate price axis range
+    let minPrice = 0;
+    let maxPrice = 100;
+    if (priceDatasets.length > 0) {
+        const allPrices = priceDatasets.flatMap(d => d.data.filter(v => v !== null) as number[]);
+        if (allPrices.length > 0) {
+            const priceMin = Math.min(...allPrices);
+            const priceMax = Math.max(...allPrices);
+            const priceRange = priceMax - priceMin;
+            const pricePadding = priceRange * 0.15;
+            minPrice = Math.max(0, priceMin - pricePadding);
+            maxPrice = priceMax + pricePadding;
         }
     }
 
@@ -84,9 +98,12 @@ export function getChartConfig(metrics: any[], darkMode: boolean | undefined, al
                             
                             const label = context.dataset.label || '';
                             const isPercentage = label.includes('Margin') || ['ROIC', 'ROCE', 'ROE', 'ROA'].includes(label);
+                            const isPrice = label === 'Stock Price';
                             const formattedValue = isPercentage
                                 ? `${value.toFixed(2)}%`
-                                : formatValue(value);
+                                : isPrice
+                                    ? `$${value.toFixed(2)}`
+                                    : formatValue(value);
 
                             const growthRate = calculateGrowth(
                                 context.dataset.data as number[], 
@@ -133,8 +150,9 @@ export function getChartConfig(metrics: any[], darkMode: boolean | undefined, al
                     ticks: {
                         color: currentTheme.text,
                         padding: 12,
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        callback: (value: any) => formatValue(value),
+                        callback: function(this: Scale<CoreScaleOptions>, tickValue: number | string) {
+                            return formatValue(Number(tickValue));
+                        },
                         font: {
                             size: 12,
                             weight: 500
@@ -154,8 +172,9 @@ export function getChartConfig(metrics: any[], darkMode: boolean | undefined, al
                     ticks: {
                         color: currentTheme.text,
                         padding: 12,
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        callback: (value: any) => `${value.toFixed(1)}%`,
+                        callback: function(this: Scale<CoreScaleOptions>, tickValue: number | string) {
+                            return `${Number(tickValue).toFixed(1)}%`;
+                        },
                         font: {
                             size: 12,
                             weight: 500
@@ -165,6 +184,19 @@ export function getChartConfig(metrics: any[], darkMode: boolean | undefined, al
                     display: percentageDatasets.length > 0,
                     min: minValue,
                     max: maxValue,
+                    beginAtZero: false
+                },
+                y2: {
+                    type: 'linear' as const,
+                    position: 'right' as const,
+                    grid: {
+                        display: false // No grid lines for price axis
+                    },
+                    ticks: {
+                        display: false // Hide price axis ticks
+                    },
+                    min: minPrice,
+                    max: maxPrice,
                     beginAtZero: false
                 }
             }

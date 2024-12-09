@@ -25,17 +25,18 @@ export function createDatasets(metrics: ChartProps['metrics'], allDates: string[
                 type: 'line' as const,
                 label: metric.name,
                 data,
-                borderColor: color,
+                borderColor: isPrice ? `rgba(16, 185, 129, 0.3)` : color, // Lower opacity for price line
                 backgroundColor: 'transparent',
-                borderWidth: isPrice ? 1.5 : 2.5,
+                borderWidth: isPrice ? 1 : 2.5,
                 pointRadius: isPrice ? 0 : 4,
                 pointHoverRadius: isPrice ? 4 : 6,
                 pointBackgroundColor: color,
                 pointBorderColor: color,
-                yAxisID: isPrice ? 'y2' : 'y1', // Use separate axis for price
-                order: 0,
+                yAxisID: isPrice ? 'y2' : 'y1',
+                order: isPrice ? 3 : 0, // Higher order for price to draw it behind
                 tension: 0.2,
-                hidden: metric.hidden
+                hidden: metric.hidden,
+                z: isPrice ? -1 : 0 // Ensure price is drawn behind other elements
             };
         }
 
