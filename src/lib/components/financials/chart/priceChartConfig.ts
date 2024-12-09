@@ -18,6 +18,11 @@ export function getPriceChartConfig(priceData: StockPrice[], darkMode: boolean |
     const minPrice = Math.max(0, priceMin - pricePadding);
     const maxPrice = priceMax + pricePadding;
 
+    // Convert dates to timestamps for time scale
+    const timestamps = priceData.map(d => new Date(d.date).getTime());
+    const minDate = Math.min(...timestamps);
+    const maxDate = Math.max(...timestamps);
+
     return {
         type: 'line',
         data: {
@@ -83,6 +88,8 @@ export function getPriceChartConfig(priceData: StockPrice[], darkMode: boolean |
                             day: 'MMM d, yyyy'
                         }
                     },
+                    min: minDate,
+                    max: maxDate,
                     grid: {
                         display: false
                     },

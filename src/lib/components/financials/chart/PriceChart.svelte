@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onMount } from 'svelte';
+    import { onMount, onDestroy } from 'svelte';
     import Chart from 'chart.js/auto';
     import type { Chart as ChartType } from 'chart.js';
     import { getPriceChartConfig } from './priceChartConfig';
@@ -40,16 +40,17 @@
         if (priceData.length > 0) {
             updateChart();
         }
-        return () => {
-            if (chart) {
-                chart.destroy();
-                chart = null;
-            }
-        };
+    });
+
+    onDestroy(() => {
+        if (chart) {
+            chart.destroy();
+            chart = null;
+        }
     });
 
     // Watch priceData changes
-    $: if (priceData.length > 0) {
+    $: if (priceData.length > 0 && canvas) {
         updateChart();
     }
 </script>

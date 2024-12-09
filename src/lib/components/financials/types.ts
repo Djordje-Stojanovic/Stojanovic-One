@@ -37,4 +37,6 @@ export interface ChartMetric {
 export interface ChartProps {
     metrics: ChartMetric[];
     darkMode?: boolean;
+    showGrowthRates?: boolean;
+    selectedYears?: number;
 }

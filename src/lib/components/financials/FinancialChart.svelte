@@ -8,9 +8,6 @@
     import { chartStore } from '$lib/stores/financial-charts';
     import { theme } from './utils/chartConfig';
     import PriceChart from './chart/PriceChart.svelte';
-    import { getHistoricalPrices } from '$lib/services/stockPriceService';
-    import { page } from '$app/stores';
-    import { loadSelectedYears } from './state/chartState';
     import 'chartjs-adapter-date-fns';
     
     export let metrics: ChartProps['metrics'] = [];
@@ -19,34 +16,21 @@
     
     let canvas: HTMLCanvasElement;
     let chart: Chart | null = null;
-    let priceData: any[] = [];
     let showPriceChart = false;
+    let priceData: any[] = [];
 
     // Subscribe to chartStore to detect price selection/deselection
     $: {
         const priceMetric = $chartStore.selectedMetrics.find(m => m.name === 'Stock Price');
-        if (priceMetric && !showPriceChart) {
-            loadPriceData();
-        } else if (!priceMetric && showPriceChart) {
+        if (priceMetric && priceMetric.data.length > 0) {
+            priceData = priceMetric.data.map(d => ({
+                date: d.date,
+                adj_close: d.value
+            }));
+            showPriceChart = true;
+        } else if (!priceMetric || priceMetric.data.length === 0) {
             showPriceChart = false;
             priceData = [];
-        }
-    }
-
-    async function loadPriceData() {
-        try {
-            const symbol = $page.params.symbol;
-            const years = loadSelectedYears();
-            const prices = await getHistoricalPrices(symbol, years);
-            if (prices.length > 0) {
-                // Sort prices by date ascending
-                priceData = [...prices].sort((a, b) => 
-                    new Date(a.date).getTime() - new Date(b.date).getTime()
-                );
-                showPriceChart = true;
-            }
-        } catch (error) {
-            console.error('Error loading price data:', error);
         }
     }
 
@@ -122,8 +106,6 @@
             {priceData} 
             {darkMode} 
             onClose={() => {
-                showPriceChart = false;
-                priceData = [];
                 chartStore.handleMetricClick('Stock Price', [], []);
             }} 
         />
