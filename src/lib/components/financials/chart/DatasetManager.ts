@@ -18,12 +18,8 @@ export function createDatasets(metrics: ChartProps['metrics'], allDates: string[
                     ? getReturnMetricColor(metric.name)
                     : '#10B981'; // Emerald color for price
 
-            // Convert price values to percentage change from first value
-            let data = allDates.map(date => dateValueMap.get(date) ?? null);
-            if (isPrice && data.length > 0) {
-                const firstValue = data.find(v => v !== null) || 1;
-                data = data.map(v => v !== null ? ((v - firstValue) / firstValue) * 100 : null);
-            }
+            // Use raw price values for stock price, no conversion to percentage
+            const data = allDates.map(date => dateValueMap.get(date) ?? null);
 
             return {
                 type: 'line' as const,
@@ -36,7 +32,7 @@ export function createDatasets(metrics: ChartProps['metrics'], allDates: string[
                 pointHoverRadius: isPrice ? 4 : 6,
                 pointBackgroundColor: color,
                 pointBorderColor: color,
-                yAxisID: 'y1', // Use right axis for all line charts
+                yAxisID: isPrice ? 'y2' : 'y1', // Use separate axis for price
                 order: 0,
                 tension: 0.2,
                 hidden: metric.hidden

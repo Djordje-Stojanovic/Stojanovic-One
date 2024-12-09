@@ -88,15 +88,21 @@ export async function getPriceRange(
 
 export async function getHistoricalPrices(
     symbol: string,
-    limit: number = 252 // Default to ~1 year of trading days
+    years: number = 1
 ): Promise<StockPrice[]> {
     try {
+        // Calculate start date based on years parameter
+        const endDate = new Date();
+        const startDate = new Date();
+        startDate.setFullYear(endDate.getFullYear() - years);
+
         const { data, error } = await db
             .from('stock_prices')
             .select('*')
             .eq('symbol', symbol)
-            .order('date', { ascending: false })
-            .limit(limit);
+            .gte('date', startDate.toISOString().split('T')[0])
+            .lte('date', endDate.toISOString().split('T')[0])
+            .order('date', { ascending: true });
 
         if (error) throw error;
         return data || [];

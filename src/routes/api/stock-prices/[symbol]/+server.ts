@@ -18,18 +18,6 @@ async function getStockCurrency(symbol: string): Promise<string> {
     return data?.currency || 'USD';
 }
 
-async function getLatestPriceDate(symbol: string): Promise<string | null> {
-    const { data, error: dbError } = await db
-        .from('stock_prices')
-        .select('date')
-        .eq('symbol', symbol)
-        .order('date', { ascending: false })
-        .limit(1)
-        .single();
-
-    if (dbError || !data) return null;
-    return data.date;
-}
 
 async function fetchStockPrices(symbol: string, from?: string): Promise<FMPStockPrice[]> {
     const url = new URL(`${BASE_URL}/historical-price-full/${symbol}`);
@@ -85,9 +73,9 @@ async function convertFMPToDBFormat(
         volume: price.volume || 0,
         unadjusted_volume: price.unadjustedVolume || price.volume || 0,
         change: price.change ? convertToUSD(price.change, exchangeRate) : null,
-        change_percent: price.changePercent || null, // Percentage remains the same
+        change_percent: price.changePercent || null,
         vwap: price.vwap ? convertToUSD(price.vwap, exchangeRate) : null,
-        change_over_time: price.changeOverTime || null // This is also a percentage
+        change_over_time: price.changeOverTime || null
     };
 }
 
@@ -111,7 +99,7 @@ async function syncStockPrices(symbol: string, prices: FMPStockPrice[], currency
             .from('stock_prices')
             .upsert(batch, {
                 onConflict: 'symbol,date',
-                ignoreDuplicates: false // Set to false to update existing records
+                ignoreDuplicates: false
             });
 
         if (upsertError) {
@@ -128,16 +116,7 @@ export async function GET({ params }: RequestEvent) {
         }
 
         // Get the latest date from our database
-        const latestDate = await getLatestPriceDate(symbol);
-        
-        // If we have data, use that date as the from parameter
-        // If no data, start from 1980
-        let fromDate: string;
-        if (latestDate) {
-            fromDate = latestDate; // Use the exact latest date to ensure we update that day's data too
-        } else {
-            fromDate = '1980-01-01'; // If no data exists, start from 1980
-        }
+        const fromDate = '1980-01-01'; // Always fetch from 1980
 
         // Get the stock's currency
         const currency = await getStockCurrency(symbol);

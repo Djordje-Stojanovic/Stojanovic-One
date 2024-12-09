@@ -2,35 +2,44 @@
     import { chartStore } from '$lib/stores/financial-charts';
     import { getHistoricalPrices } from '$lib/services/stockPriceService';
     import { page } from '$app/stores';
+    import { loadSelectedYears } from './state/chartState';
 
     let symbol = $page.params.symbol;
     let isActive = false;
 
     async function togglePrice() {
         try {
-            console.log('Fetching prices for symbol:', symbol);
-            const prices = await getHistoricalPrices(symbol);
-            console.log('Got prices:', prices.length);
-            if (!prices.length) return;
+            if (!isActive) {
+                const years = loadSelectedYears();
+                console.log(`Fetching ${years} years of prices for symbol:`, symbol);
+                const prices = await getHistoricalPrices(symbol, years);
+                console.log('Got prices:', prices.length, 'First:', prices[0], 'Last:', prices[prices.length - 1]);
+                if (!prices.length) return;
 
-            // Sort by date ascending
-            const sortedPrices = [...prices].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-            console.log('First price:', sortedPrices[0], 'Last price:', sortedPrices[sortedPrices.length - 1]);
+                // Sort by date ascending
+                const sortedPrices = [...prices].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+                console.log('Sorted prices - First:', sortedPrices[0], 'Last:', sortedPrices[sortedPrices.length - 1]);
 
-            // Create metric data
-            const values = sortedPrices.map(p => Number(p.adj_close) || 0);
-            const dates = sortedPrices.map(p => p.date);
+                // Create metric data
+                const values = sortedPrices.map(p => Number(p.adj_close) || 0);
+                const dates = sortedPrices.map(p => p.date);
 
-            console.log('Sending to chart store:', {
-                name: 'Stock Price',
-                valueCount: values.length,
-                dateCount: dates.length,
-                firstValue: values[0],
-                lastValue: values[values.length - 1]
-            });
+                console.log('Price data prepared:', {
+                    name: 'Stock Price',
+                    valueCount: values.length,
+                    dateCount: dates.length,
+                    firstValue: values[0],
+                    lastValue: values[values.length - 1],
+                    firstDate: dates[0],
+                    lastDate: dates[dates.length - 1]
+                });
 
-            // Toggle price data
-            chartStore.handleMetricClick('Stock Price', values, dates);
+                // Add price data
+                chartStore.handleMetricClick('Stock Price', values, dates);
+            } else {
+                // Remove price data
+                chartStore.handleMetricClick('Stock Price', [], []);
+            }
             isActive = !isActive;
             console.log('Toggle complete, isActive:', isActive);
         } catch (error) {
