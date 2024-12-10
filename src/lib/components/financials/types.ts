@@ -1,5 +1,6 @@
 import type { IncomeStatement, BalanceSheet, CashFlowStatement } from '$lib/types/financialStatements';
 import type { NumberFormat } from '$lib/utils/numberFormat';
+import type { ChartDataPoint } from '$lib/stores/financial-charts/types/ChartTypes';
 
 // Common props interface for financial statement sections
 export interface FinancialSectionProps<T extends IncomeStatement | BalanceSheet | CashFlowStatement> {
@@ -29,7 +30,7 @@ export interface MetricRowProps {
 // Chart metric type
 export interface ChartMetric {
     name: string;
-    data: { date: string; value: number }[];
+    data: ChartDataPoint[];
     hidden?: boolean;
 }
 
@@ -39,4 +40,11 @@ export interface ChartProps {
     darkMode?: boolean;
     showGrowthRates?: boolean;
     selectedYears?: number;
+}
+
+// Price chart props interface
+export interface PriceChartProps {
+    data: ChartDataPoint[];
+    darkMode?: boolean;
+    selectedYears: number;
 }

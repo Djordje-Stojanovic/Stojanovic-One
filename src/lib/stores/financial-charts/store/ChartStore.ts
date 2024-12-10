@@ -122,33 +122,45 @@ function createChartStore(): ChartStoreActions {
 
             state.lastFinancialData = financialData;
 
-            const updatedMetrics = state.selectedMetricNames.map(name => {
-                const fieldName = getFieldName(name);
+            // Preserve price metric if it exists
+            const priceMetric = state.selectedMetrics.find(m => m.name === 'Stock Price');
 
-                const incomeData = extractMetricData(financialData.income_statements || [], fieldName);
-                const balanceData = extractMetricData(financialData.balance_sheets || [], fieldName);
-                const cashFlowData = extractMetricData(financialData.cash_flow_statements || [], fieldName);
-                const revenueSegmentsData = extractSegmentData(financialData.revenue_segments, name);
-                const geoSegmentsData = extractSegmentData(financialData.revenue_geo_segments, name);
+            const updatedMetrics = state.selectedMetricNames
+                .filter(name => name !== 'Stock Price') // Don't process price metric
+                .map(name => {
+                    const fieldName = getFieldName(name);
 
-                const metricData = combineDataSets(
-                    incomeData, 
-                    balanceData, 
-                    cashFlowData, 
-                    revenueSegmentsData, 
-                    geoSegmentsData
-                );
+                    const incomeData = extractMetricData(financialData.income_statements || [], fieldName);
+                    const balanceData = extractMetricData(financialData.balance_sheets || [], fieldName);
+                    const cashFlowData = extractMetricData(financialData.cash_flow_statements || [], fieldName);
+                    const revenueSegmentsData = extractSegmentData(financialData.revenue_segments, name);
+                    const geoSegmentsData = extractSegmentData(financialData.revenue_geo_segments, name);
 
-                return {
-                    name,
-                    data: metricData,
-                    hidden: !state.metricVisibility[name]
-                };
-            });
+                    const metricData = combineDataSets(
+                        incomeData, 
+                        balanceData, 
+                        cashFlowData, 
+                        revenueSegmentsData, 
+                        geoSegmentsData
+                    );
+
+                    return {
+                        name,
+                        data: metricData,
+                        hidden: !state.metricVisibility[name]
+                    };
+                });
 
             const marginMetrics = calculateMargins(financialData, state);
             const returnMetrics = calculateReturns(financialData, state);
-            const allMetrics = [...updatedMetrics, ...marginMetrics, ...returnMetrics];
+            
+            // Add price metric back if it exists
+            const allMetrics = [
+                ...updatedMetrics,
+                ...marginMetrics,
+                ...returnMetrics,
+                ...(priceMetric ? [priceMetric] : [])
+            ];
 
             const hasAnyData = allMetrics.some(m => m.data.length > 0);
             const newState = {
@@ -261,8 +273,11 @@ function createChartStore(): ChartStoreActions {
                 [marginType]: !state.margins[marginType]
             };
 
+            // Preserve price metric
+            const priceMetric = state.selectedMetrics.find(m => m.name === 'Stock Price');
+
             const baseMetrics = state.selectedMetrics.filter(m => 
-                !m.name.includes('Margin') && !['ROIC', 'ROCE', 'ROE', 'ROA'].includes(m.name)
+                !m.name.includes('Margin') && !['ROIC', 'ROCE', 'ROE', 'ROA', 'Stock Price'].includes(m.name)
             );
 
             const marginMetrics = calculateMargins(state.lastFinancialData, {
@@ -275,7 +290,7 @@ function createChartStore(): ChartStoreActions {
             return {
                 ...state,
                 margins: newMargins,
-                selectedMetrics: [...baseMetrics, ...marginMetrics, ...returnMetrics]
+                selectedMetrics: [...baseMetrics, ...marginMetrics, ...returnMetrics, ...(priceMetric ? [priceMetric] : [])]
             };
         }),
 
@@ -287,8 +302,11 @@ function createChartStore(): ChartStoreActions {
                 [returnType]: !state.returnMetrics[returnType]
             };
 
+            // Preserve price metric
+            const priceMetric = state.selectedMetrics.find(m => m.name === 'Stock Price');
+
             const baseMetrics = state.selectedMetrics.filter(m => 
-                !m.name.includes('Margin') && !['ROIC', 'ROCE', 'ROE', 'ROA'].includes(m.name)
+                !m.name.includes('Margin') && !['ROIC', 'ROCE', 'ROE', 'ROA', 'Stock Price'].includes(m.name)
             );
 
             const marginMetrics = calculateMargins(state.lastFinancialData, state);
@@ -300,7 +318,7 @@ function createChartStore(): ChartStoreActions {
             return {
                 ...state,
                 returnMetrics: newReturnMetrics,
-                selectedMetrics: [...baseMetrics, ...marginMetrics, ...returnMetrics]
+                selectedMetrics: [...baseMetrics, ...marginMetrics, ...returnMetrics, ...(priceMetric ? [priceMetric] : [])]
             };
         }),
 

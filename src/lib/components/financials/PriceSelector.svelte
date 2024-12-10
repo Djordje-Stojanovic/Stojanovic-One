@@ -1,79 +1,45 @@
 <script lang="ts">
     import { chartStore } from '$lib/stores/financial-charts';
-    import { getHistoricalPrices } from '$lib/services/stockPriceService';
     import { page } from '$app/stores';
+    import { db } from '$lib/supabaseClient';
     import { loadSelectedYears } from './state/chartState';
 
     let symbol = $page.params.symbol;
-    let isActive = false;
     let isLoading = false;
-    let currentPriceData: { values: number[], dates: string[] } | null = null;
+    let isActive = false;
 
-    // Subscribe to chartStore to sync active state and data
+    // Subscribe to store to sync active state
     $: {
         const priceMetric = $chartStore.selectedMetrics.find(m => m.name === 'Stock Price');
-        isActive = !!priceMetric;
-        if (priceMetric) {  // Always update currentPriceData when priceMetric exists
-            currentPriceData = {
-                values: priceMetric.data.map(d => d.value),
-                dates: priceMetric.data.map(d => d.date)
-            };
-        }
-    }
-
-    // Subscribe to store updates to detect metric updates
-    $: {
-        if (isActive && !isLoading) {
-            const years = loadSelectedYears();
-            updatePriceData(years);
-        }
-    }
-
-    async function updatePriceData(years: number) {
-        try {
-            isLoading = true;
-            const prices = await getHistoricalPrices(symbol, years);
-            if (prices.length > 0) {
-                const sortedPrices = [...prices].sort((a, b) => 
-                    new Date(a.date).getTime() - new Date(b.date).getTime()
-                );
-                const values = sortedPrices.map(p => Number(p.adj_close) || 0);
-                const dates = sortedPrices.map(p => p.date);
-                currentPriceData = { values, dates };
-                chartStore.handleMetricClick('Stock Price', values, dates);
-            }
-        } catch (error) {
-            console.error('Error updating price data:', error);
-        } finally {
-            isLoading = false;
-        }
+        isActive = !!priceMetric && !priceMetric.hidden;
     }
 
     async function togglePrice() {
-        if (isLoading) return; // Prevent multiple clicks while loading
+        if (isLoading) return;
         
         try {
             isLoading = true;
             
             if (!isActive) {
                 const years = loadSelectedYears();
-                const prices = await getHistoricalPrices(symbol, years);
-                if (!prices.length) return;
+                const endDate = new Date();
+                const startDate = new Date();
+                startDate.setFullYear(endDate.getFullYear() - years);
 
-                // Sort by date ascending
-                const sortedPrices = [...prices].sort((a, b) => 
-                    new Date(a.date).getTime() - new Date(b.date).getTime()
-                );
+                const { data: prices } = await db
+                    .from('stock_prices')
+                    .select('*')
+                    .eq('symbol', symbol)
+                    .gte('date', startDate.toISOString().split('T')[0])
+                    .lte('date', endDate.toISOString().split('T')[0])
+                    .order('date', { ascending: true });
 
-                // Create metric data - use adj_close for price values
-                const values = sortedPrices.map(p => Number(p.adj_close) || 0);
-                const dates = sortedPrices.map(p => p.date);
-
-                currentPriceData = { values, dates };
-                chartStore.handleMetricClick('Stock Price', values, dates);
+                if (prices?.length) {
+                    const values = prices.map(p => Number(p.adj_close));
+                    const dates = prices.map(p => p.date);
+                    chartStore.handleMetricClick('Stock Price', values, dates);
+                }
             } else {
-                // Remove price data
-                currentPriceData = null;
                 chartStore.handleMetricClick('Stock Price', [], []);
             }
         } catch (error) {
@@ -83,11 +49,10 @@
         }
     }
 
-    // Reset active state when symbol changes
+    // Reset when symbol changes
     $: if ($page.params.symbol !== symbol) {
         symbol = $page.params.symbol;
         if (isActive) {
-            currentPriceData = null;
             chartStore.handleMetricClick('Stock Price', [], []);
         }
     }

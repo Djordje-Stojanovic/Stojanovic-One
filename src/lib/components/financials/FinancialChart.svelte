@@ -16,27 +16,11 @@
     
     let canvas: HTMLCanvasElement;
     let chart: Chart | null = null;
-    let priceData: any[] = [];
-    let showPriceChart = false;
+    let isUpdating = false;
 
-    // Subscribe to chartStore to detect price selection/deselection
-    $: {
-        const priceMetric = $chartStore.selectedMetrics.find(m => m.name === 'Stock Price');
-        if (priceMetric) {
-            // Only update showPriceChart when metric is added or removed
-            showPriceChart = true;
-            // Only update priceData when there is data
-            if (priceMetric.data.length > 0) {
-                priceData = priceMetric.data.map(d => ({
-                    date: d.date,
-                    adj_close: d.value
-                }));
-            }
-        } else {
-            showPriceChart = false;
-            priceData = [];
-        }
-    }
+    // Check if price chart should be shown
+    $: priceMetric = $chartStore.selectedMetrics.find(m => m.name === 'Stock Price');
+    $: showPriceChart = !!priceMetric && !priceMetric.hidden;
 
     function handleLegendClick(e: ChartEvent, legendItem: LegendItem, legend: Chart['legend']) {
         const index = legendItem.datasetIndex;
@@ -44,10 +28,8 @@
             const dataset = chart.data.datasets[index];
             const label = dataset.label || '';
             
-            // Use the store's toggleMetricVisibility action
             chartStore.toggleMetricVisibility(label);
             
-            // Update chart visibility
             const ci = legend.chart;
             if (ci.isDatasetVisible(index)) {
                 ci.hide(index);
@@ -59,31 +41,38 @@
     }
 
     function updateChart() {
-        if (!canvas || !metrics.length) return;
+        if (!canvas || !metrics.length || isUpdating) return;
         
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
         const currentTheme = darkMode ? theme.dark : theme.light;
 
-        // Filter out price metric from main chart when showing price chart
+        // Filter out price metric from main chart
         const filteredMetrics = metrics.filter(m => m.name !== 'Stock Price');
 
         // Get all unique dates and sort them
         const allDates = [...new Set(filteredMetrics.flatMap(m => m.data.map(d => d.date)))].sort();
 
-        // Get chart configuration
-        const config = getChartConfig(filteredMetrics, darkMode, allDates, currentTheme, handleLegendClick);
+        isUpdating = true;
+        try {
+            const config = getChartConfig(filteredMetrics, darkMode, allDates, currentTheme, handleLegendClick);
 
-        if (chart) {
-            // Update existing chart
-            chart.data = config.data;
-            chart.options = config.options;
-            chart.update('none');
-        } else {
-            // Create new chart
-            chart = new Chart(ctx, config);
+            if (chart) {
+                chart.data = config.data;
+                chart.options = config.options;
+                chart.update('none');
+            } else {
+                chart = new Chart(ctx, config);
+            }
+        } finally {
+            isUpdating = false;
         }
+    }
+
+    // Watch metrics changes
+    $: if (metrics.length > 0 && !isUpdating) {
+        updateChart();
     }
 
     onMount(() => {
@@ -97,19 +86,11 @@
             }
         };
     });
-
-    // Watch metrics changes
-    $: if (metrics.length > 0) {
-        updateChart();
-    }
 </script>
 
 <div class="w-full bg-white dark:bg-[#1F2937] rounded-lg">
     {#if showPriceChart}
-        <PriceChart 
-            priceData={priceData.length > 0 ? priceData : []}
-            {darkMode}
-        />
+        <PriceChart {darkMode} />
     {/if}
     
     <div class="h-[600px]">
