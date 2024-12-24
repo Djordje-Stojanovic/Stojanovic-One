@@ -179,8 +179,8 @@ function createChartStore(): ChartStoreActions {
             const existingIndex = state.selectedMetricNames.indexOf(name);
             const existingMetric = state.selectedMetrics.find(m => m.name === name);
 
-            if (existingIndex !== -1 && values.length === 0) {
-                // Remove metric
+            if (existingIndex !== -1) {
+                // Remove metric on second click
                 const newMetrics = state.selectedMetrics.filter(m => m.name !== name);
                 const newMetricNames = state.selectedMetricNames.filter(n => n !== name);
                 const newVisibility = { ...state.metricVisibility };
