@@ -43,7 +43,7 @@ export function createDatasets(metrics: ChartProps['metrics'], allDates: string[
                 }
             }
 
-            // Use raw price values for stock price, no conversion to percentage
+            // Use raw values for price and valuation metrics
             const data = allDates.map(date => dateValueMap.get(date) ?? null);
 
             return {
