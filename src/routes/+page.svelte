@@ -10,6 +10,12 @@
 			title: 'Investment Analysis Platform',
 			description: 'Analyze investments, manage watchlists, and make informed decisions.',
 			route: '/subprojects/investment-analysis-platform'
+		},
+		{
+			id: 'backtesting-platform',
+			title: 'Backtesting Platform',
+			description: 'Test investment strategies against historical data.',
+			route: '/subprojects/backtesting-platform'
 		}
 	];
 	let loading = true;
