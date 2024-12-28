@@ -150,10 +150,25 @@ export interface RevenueGeoSegment {
     updated_at?: string;
 }
 
+export interface StockPrice {
+    id?: bigint;
+    symbol: string;
+    date: string;
+    open: number;
+    high: number;
+    low: number;
+    close: number;
+    adj_close: number;
+    volume: number;
+    created_at?: string;
+    updated_at?: string;
+}
+
 export interface FinancialData {
     income_statements: IncomeStatement[];
     balance_sheets: BalanceSheet[];
     cash_flow_statements: CashFlowStatement[];
     revenue_segments?: RevenueSegment[];
     revenue_geo_segments?: RevenueGeoSegment[];
+    stock_prices?: StockPrice[];
 }

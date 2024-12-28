@@ -1,5 +1,5 @@
 import { writable } from 'svelte/store';
-import type { ChartStoreState, ChartStoreActions, MarginType, ReturnMetricType, ChartMetric } from '../types/ChartTypes';
+import type { ChartStoreState, ChartStoreActions, MarginType, ReturnMetricType, ValuationMetricType, ChartMetric } from '../types/ChartTypes';
 import type { FinancialData } from '$lib/types/financialStatements';
 import { loadShowChart, saveShowChart, loadSelectedMetrics, saveSelectedMetrics } from '$lib/components/financials/state/chartState';
 import { getFieldName } from '../mappings/FieldNameMapping';
@@ -39,6 +39,13 @@ function createChartStore(): ChartStoreActions {
             roce: false,
             roe: false,
             roa: false
+        },
+        valuationMetrics: {
+            pe: false,
+            fcfYield: false,
+            ps: false,
+            evEbitda: false,
+            pgp: false
         },
         lastFinancialData: null,
         metricVisibility: {}
@@ -160,7 +167,7 @@ function createChartStore(): ChartStoreActions {
                 ...marginMetrics,
                 ...returnMetrics,
                 ...(priceMetric ? [priceMetric] : [])
-            ];
+            ].filter(m => !m.name.includes('P/E Ratio')); // Filter out P/E Ratio since it's handled separately
 
             const hasAnyData = allMetrics.some(m => m.data.length > 0);
             const newState = {
@@ -277,7 +284,8 @@ function createChartStore(): ChartStoreActions {
             const priceMetric = state.selectedMetrics.find(m => m.name === 'Stock Price');
 
             const baseMetrics = state.selectedMetrics.filter(m => 
-                !m.name.includes('Margin') && !['ROIC', 'ROCE', 'ROE', 'ROA', 'Stock Price'].includes(m.name)
+                !m.name.includes('Margin') && 
+                !['ROIC', 'ROCE', 'ROE', 'ROA', 'Stock Price', 'P/E Ratio'].includes(m.name)
             );
 
             const marginMetrics = calculateMargins(state.lastFinancialData, {
@@ -322,6 +330,18 @@ function createChartStore(): ChartStoreActions {
             };
         }),
 
+        toggleValuationMetric: (valuationType: ValuationMetricType) => update(state => {
+            const newValuationMetrics = {
+                ...state.valuationMetrics,
+                [valuationType]: !state.valuationMetrics[valuationType]
+            };
+
+            return {
+                ...state,
+                valuationMetrics: newValuationMetrics
+            };
+        }),
+
         clearChart: () => {
             saveShowChart(false);
             saveSelectedMetrics([]);
@@ -342,6 +362,13 @@ function createChartStore(): ChartStoreActions {
                     roce: false,
                     roe: false,
                     roa: false
+                },
+                valuationMetrics: {
+                    pe: false,
+                    fcfYield: false,
+                    ps: false,
+                    evEbitda: false,
+                    pgp: false
                 },
                 lastFinancialData: null,
                 metricVisibility: {}

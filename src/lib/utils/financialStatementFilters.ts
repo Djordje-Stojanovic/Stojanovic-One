@@ -31,7 +31,6 @@ function calculateTTM(statements: FinancialStatement[]): FinancialStatement[] {
             if (
                 typeof value === 'number' && 
                 !key.includes('ratio') && 
-                !key.includes('eps') && 
                 key !== 'id' &&
                 key !== 'weighted_average_shs_out' &&
                 key !== 'weighted_average_shs_out_dil'

@@ -13,6 +13,7 @@ export interface ChartDataPoint {
 
 export type MarginType = 'netIncome' | 'grossProfit' | 'operating' | 'ebitda' | 'fcf' | 'operatingCashFlow';
 export type ReturnMetricType = 'roic' | 'roce' | 'roe' | 'roa';
+export type ValuationMetricType = 'pe' | 'fcfYield' | 'ps' | 'evEbitda' | 'pgp';
 
 export interface MarginState {
     [key: string]: boolean;
@@ -32,15 +33,24 @@ export interface ReturnMetricState {
     roa: boolean;
 }
 
+export interface ValuationMetricState {
+    [key: string]: boolean;
+    pe: boolean;
+    fcfYield: boolean;
+    ps: boolean;
+    evEbitda: boolean;
+    pgp: boolean;
+}
+
 export interface ChartStoreState {
     showChart: boolean;
     selectedMetrics: ChartMetric[];
     selectedMetricNames: string[];
     margins: MarginState;
     returnMetrics: ReturnMetricState;
+    valuationMetrics: ValuationMetricState;
     lastFinancialData: FinancialData | null;
     metricVisibility: Record<string, boolean>;
-    showPrice?: boolean;
 }
 
 export interface ChartStoreActions {
@@ -49,7 +59,7 @@ export interface ChartStoreActions {
     handleMetricClick: (name: string, values: number[], dates: string[]) => void;
     toggleMargin: (marginType: MarginType) => void;
     toggleReturnMetric: (returnType: ReturnMetricType) => void;
-    togglePrice?: () => void;
+    toggleValuationMetric: (valuationType: ValuationMetricType) => void;
     clearChart: () => void;
     toggleMetricVisibility: (metricName: string) => void;
 }
