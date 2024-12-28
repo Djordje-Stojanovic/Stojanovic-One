@@ -83,6 +83,8 @@
     }
   }
 
+  let priceSelector: any;
+
   async function syncAllData() {
     if (syncing) return;
     syncing = true;
@@ -93,9 +95,15 @@
         throw new Error('No session token available');
       }
 
+      // Sync financial data first
       const { data, error: syncError } = await loadFinancialData(symbol, $session.access_token, true);
       if (syncError) throw new Error(syncError);
       if (!data) throw new Error('No data received');
+
+      // Sync stock price data with full history
+      if (priceSelector) {
+        await priceSelector.togglePrice(true);
+      }
 
       // Reload all data to reflect changes
       await Promise.all([

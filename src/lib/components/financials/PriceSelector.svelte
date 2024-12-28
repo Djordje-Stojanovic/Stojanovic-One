@@ -21,17 +21,11 @@
             isLoading = true;
             
             if (!isActive) {
-                const years = loadSelectedYears();
-                const endDate = new Date();
-                const startDate = new Date();
-                startDate.setFullYear(endDate.getFullYear() - years);
-
+                // Get all price data
                 const { data: prices } = await db
                     .from('stock_prices')
                     .select('*')
                     .eq('symbol', symbol)
-                    .gte('date', startDate.toISOString().split('T')[0])
-                    .lte('date', endDate.toISOString().split('T')[0])
                     .order('date', { ascending: true });
 
                 if (prices?.length) {

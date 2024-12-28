@@ -39,78 +39,78 @@
             y: d.value
         }));
 
+        // Destroy existing chart if it exists
         if (chart) {
-            chart.data.datasets[0].data = chartData;
-            chart.options.scales!.x!.min = startDate.getTime();
-            chart.options.scales!.x!.max = endDate.getTime();
-            chart.update('none');
-        } else {
-            chart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    datasets: [{
-                        label: 'Stock Price',
-                        data: chartData,
-                        borderColor: '#10B981',
-                        backgroundColor: 'transparent',
-                        borderWidth: 2,
-                        pointRadius: 0,
-                        pointHoverRadius: 4,
-                        pointHoverBackgroundColor: '#10B981',
-                        tension: 0.4
-                    }]
+            chart.destroy();
+            chart = null;
+        }
+
+        // Create new chart
+        chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                datasets: [{
+                    label: 'Stock Price',
+                    data: chartData,
+                    borderColor: '#10B981',
+                    backgroundColor: 'transparent',
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    pointHoverRadius: 4,
+                    pointHoverBackgroundColor: '#10B981',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: {
-                        mode: 'index',
-                        intersect: false
+                plugins: {
+                    tooltip: {
+                        backgroundColor: darkMode ? '#374151' : '#FFFFFF',
+                        titleColor: darkMode ? '#F3F4F6' : '#111827',
+                        bodyColor: darkMode ? '#F3F4F6' : '#111827',
+                        borderColor: darkMode ? '#4B5563' : '#E5E7EB',
+                        borderWidth: 1,
+                        padding: 16,
+                        cornerRadius: 8,
+                        callbacks: {
+                            label: (context) => `$${context.parsed.y.toFixed(2)}`
+                        }
                     },
-                    plugins: {
-                        tooltip: {
-                            backgroundColor: darkMode ? '#374151' : '#FFFFFF',
-                            titleColor: darkMode ? '#F3F4F6' : '#111827',
-                            bodyColor: darkMode ? '#F3F4F6' : '#111827',
-                            borderColor: darkMode ? '#4B5563' : '#E5E7EB',
-                            borderWidth: 1,
-                            padding: 16,
-                            cornerRadius: 8,
-                            callbacks: {
-                                label: (context) => `$${context.parsed.y.toFixed(2)}`
-                            }
+                    legend: { display: false }
+                },
+                scales: {
+                    x: {
+                        type: 'time',
+                        time: {
+                            unit: 'month',
+                            displayFormats: { month: 'MMM yyyy' }
                         },
-                        legend: { display: false }
+                        min: startDate.getTime(),
+                        max: endDate.getTime(),
+                        grid: { display: false },
+                        ticks: {
+                            color: darkMode ? '#9CA3AF' : '#4B5563',
+                            maxRotation: 0
+                        }
                     },
-                    scales: {
-                        x: {
-                            type: 'time',
-                            time: {
-                                unit: 'month',
-                                displayFormats: { month: 'MMM yyyy' }
-                            },
-                            min: startDate.getTime(),
-                            max: endDate.getTime(),
-                            grid: { display: false },
-                            ticks: {
-                                color: darkMode ? '#9CA3AF' : '#4B5563',
-                                maxRotation: 0
-                            }
+                    y: {
+                        position: 'right',
+                        grid: {
+                            color: darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
                         },
-                        y: {
-                            position: 'right',
-                            grid: {
-                                color: darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
-                            },
-                            ticks: {
-                                color: darkMode ? '#9CA3AF' : '#4B5563',
-                                callback: (value) => `$${value}`
-                            }
+                        ticks: {
+                            color: darkMode ? '#9CA3AF' : '#4B5563',
+                            callback: (value) => `$${value}`
                         }
                     }
                 }
-            });
-        }
+            }
+        });
     }
 
     // Watch for store changes
