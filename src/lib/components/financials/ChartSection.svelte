@@ -5,6 +5,7 @@
     import MarginSelector from './margins/MarginSelector.svelte';
     import ReturnMetricsSelector from './returns/ReturnMetricsSelector.svelte';
     import PriceSelector from './PriceSelector.svelte';
+    import ValuationMetricsSelector from './valuation/ValuationMetricsSelector.svelte';
     import { formatValue, calculateMultiYearGrowth } from './utils/chartUtils';
     import { colors } from './utils/chartConfig';
     import { getMarginColor } from './chart/chartUtils';
@@ -122,6 +123,7 @@
     <div class="space-y-2">
         <MarginSelector />
         <ReturnMetricsSelector />
+        <ValuationMetricsSelector />
         <PriceSelector />
     </div>
     <div class="bg-white dark:bg-[#1F2937] rounded-lg">
