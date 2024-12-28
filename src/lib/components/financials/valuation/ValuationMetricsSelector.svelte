@@ -37,72 +37,37 @@
 
             if (valuationType === 'pe') {
                 if (!valuationMetrics.pe) {
-                    console.log('Handling P/E Ratio click');
-                    console.log('Financial data:', financialData);
-
                     // Get stock prices
                     const { data: prices } = await db.from('stock_prices')
                         .select('*')
                         .eq('symbol', symbol)
                         .order('date', { ascending: true });
 
-                    console.log('Stock prices:', prices);
-
                     if (!prices?.length || !financialData?.income_statements.length) {
                         throw new Error('No data available');
                     }
 
-                    // Check all income statements
-                    console.log('All income statements:', financialData.income_statements.map(stmt => ({
-                        date: stmt.date,
-                        period: stmt.period,
-                        eps: stmt.eps_diluted
-                    })));
-
                     // Get TTM EPS data
                     let ttmEpsData: TTMEpsData[] = financialData.income_statements
-                        .filter(stmt => {
-                            console.log('Checking statement:', stmt.date, stmt.period);
-                            return stmt.period === 'TTM';
-                        })
+                        .filter(stmt => stmt.period === 'TTM')
                         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
-                    console.log('Initial TTM EPS data:', ttmEpsData);
 
                     // If no TTM data found, calculate it manually
                     if (!ttmEpsData.length) {
-                        console.log('No TTM data found, calculating TTM manually');
                         const quarterlyData = financialData.income_statements
                             .filter(stmt => stmt.period !== 'FY' && stmt.period !== 'TTM')
                             .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-                        console.log('Quarterly data:', quarterlyData.map(q => ({
-                            date: q.date,
-                            eps: q.eps_diluted
-                        })));
-
                         ttmEpsData = (quarterlyData as IncomeStatement[])
                             .map((stmt: IncomeStatement, index: number, arr: IncomeStatement[]) => {
-                                if (index < 3) {
-                                    console.log('Skipping index', index, 'not enough quarters');
-                                    return null;
-                                }
+                                if (index < 3) return null;
                                 
                                 // Get last 4 quarters
                                 const last4Quarters = arr.slice(index - 3, index + 1);
-                                console.log('Last 4 quarters for', stmt.date, ':', last4Quarters.map(q => ({
-                                    date: q.date,
-                                    eps: q.eps_diluted
-                                })));
                                 
                                 // Sum EPS for last 4 quarters
                                 const ttmEps = last4Quarters
-                                    .reduce((sum: number, q: IncomeStatement) => {
-                                        console.log('Adding EPS:', q.eps_diluted, 'to sum:', sum);
-                                        return sum + (q.eps_diluted || 0);
-                                    }, 0);
-                                
-                                console.log('TTM EPS for', stmt.date, ':', ttmEps);
+                                    .reduce((sum: number, q: IncomeStatement) => sum + (q.eps_diluted || 0), 0);
                                 
                                 return {
                                     date: stmt.date,
@@ -112,26 +77,19 @@
                             .filter((d): d is TTMEpsData => d !== null)
                             .sort((a: TTMEpsData, b: TTMEpsData) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-                        console.log('Calculated TTM data:', ttmEpsData);
-
                         if (!ttmEpsData.length) {
                             throw new Error('Could not calculate TTM data');
                         }
                     }
 
                     // Calculate P/E ratio for each price point
-                    console.log('Calculating P/E ratios');
                     const peData = prices.map(price => {
-                        console.log('Processing price:', price.date, price.adj_close);
                         const priceDate = new Date(price.date);
                         
                         // Find the most recent TTM EPS data point before or equal to this price date
-                        const validEps = ttmEpsData.find(stmt => {
-                            const stmtDate = new Date(stmt.date);
-                            console.log('Comparing dates:', stmtDate, '<=', priceDate);
-                            return stmtDate <= priceDate;
-                        });
-                        console.log('Valid EPS for', price.date, ':', validEps?.eps_diluted);
+                        const validEps = ttmEpsData.find(stmt => 
+                            new Date(stmt.date) <= priceDate
+                        );
 
                         // Only calculate P/E if we have valid EPS (non-zero and not negative)
                         if (validEps?.eps_diluted && validEps.eps_diluted > 0) {
@@ -149,15 +107,12 @@
                     .filter(d => d !== null)
                     .sort((a, b) => new Date(a!.date).getTime() - new Date(b!.date).getTime());
 
-                    console.log('Final P/E data:', peData);
-
                     if (!peData.length) {
                         throw new Error('No valid P/E data available');
                     }
 
                     const values = peData.map(d => d!.value);
                     const dates = peData.map(d => d!.date);
-                    console.log('Sending to chart store:', { values, dates });
 
                     chartStore.handleMetricClick('P/E Ratio', values, dates);
                     chartStore.toggleValuationMetric('pe');

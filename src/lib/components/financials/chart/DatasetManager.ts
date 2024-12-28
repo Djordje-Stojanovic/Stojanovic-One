@@ -3,8 +3,6 @@ import type { ChartProps } from '../types';
 import { getMarginColor, getReturnMetricColor } from './chartUtils';
 
 export function createDatasets(metrics: ChartProps['metrics'], allDates: string[]) {
-    console.log('Creating datasets with metrics:', metrics.map(m => m.name));
-    
     return metrics.map((metric, index) => {
         const dateValueMap = new Map(metric.data.map(d => [d.date, d.value]));
         const isMargin = metric.name.includes('Margin');

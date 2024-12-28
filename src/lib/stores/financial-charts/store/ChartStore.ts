@@ -165,7 +165,6 @@ function createChartStore(): ChartStoreActions {
             const valuationMetrics = state.selectedMetrics.filter(m => 
                 ['P/E Ratio', 'FCF Yield', 'P/S Ratio', 'EV/EBITDA', 'P/GP Ratio'].includes(m.name)
             );
-            console.log('Existing valuation metrics:', valuationMetrics);
 
             // Add price and valuation metrics back
             const allMetrics = [
@@ -175,18 +174,13 @@ function createChartStore(): ChartStoreActions {
                 ...valuationMetrics,
                 ...(priceMetric ? [priceMetric] : [])
             ];
-            console.log('All metrics after update:', allMetrics);
 
             const hasAnyData = allMetrics.some(m => m.data.length > 0);
-            console.log('Has any data:', hasAnyData);
-            console.log('Metrics with data:', allMetrics.filter(m => m.data.length > 0).map(m => m.name));
-
             const newState = {
                 ...state,
                 selectedMetrics: allMetrics,
                 showChart: hasAnyData
             };
-            console.log('New state:', newState);
 
             saveShowChart(newState.showChart);
             saveSelectedMetrics(newState.selectedMetricNames);
@@ -345,39 +339,28 @@ function createChartStore(): ChartStoreActions {
         toggleValuationMetric: (valuationType: ValuationMetricType) => update(state => {
             if (!state.lastFinancialData) return state;
 
-            console.log('Toggling valuation metric:', valuationType);
-            console.log('Current state:', state);
-
             const newValuationMetrics = {
                 ...state.valuationMetrics,
                 [valuationType]: !state.valuationMetrics[valuationType]
             };
 
-            console.log('New valuation metrics state:', newValuationMetrics);
-
             // Preserve price metric
             const priceMetric = state.selectedMetrics.find(m => m.name === 'Stock Price');
-            console.log('Price metric:', priceMetric);
 
             // Get existing valuation metrics except the one being toggled
             const valuationMetrics = state.selectedMetrics.filter(m => 
                 ['P/E Ratio', 'FCF Yield', 'P/S Ratio', 'EV/EBITDA', 'P/GP Ratio'].includes(m.name) &&
                 !m.name.includes(valuationType)
             );
-            console.log('Existing valuation metrics:', valuationMetrics);
 
             // Filter out margin, return, price, and valuation metrics from base metrics
             const baseMetrics = state.selectedMetrics.filter(m => 
                 !m.name.includes('Margin') && 
                 !['ROIC', 'ROCE', 'ROE', 'ROA', 'Stock Price', 'P/E Ratio', 'FCF Yield', 'P/S Ratio', 'EV/EBITDA', 'P/GP Ratio'].includes(m.name)
             );
-            console.log('Base metrics:', baseMetrics);
 
             const marginMetrics = calculateMargins(state.lastFinancialData, state);
-            console.log('Margin metrics:', marginMetrics);
-
             const returnMetrics = calculateReturns(state.lastFinancialData, state);
-            console.log('Return metrics:', returnMetrics);
 
             const newMetrics = [
                 ...baseMetrics,
@@ -386,7 +369,6 @@ function createChartStore(): ChartStoreActions {
                 ...valuationMetrics,
                 ...(priceMetric ? [priceMetric] : [])
             ];
-            console.log('New metrics:', newMetrics);
 
             return {
                 ...state,
