@@ -331,14 +331,29 @@ function createChartStore(): ChartStoreActions {
         }),
 
         toggleValuationMetric: (valuationType: ValuationMetricType) => update(state => {
+            if (!state.lastFinancialData) return state;
+
             const newValuationMetrics = {
                 ...state.valuationMetrics,
                 [valuationType]: !state.valuationMetrics[valuationType]
             };
 
+            // Preserve price metric
+            const priceMetric = state.selectedMetrics.find(m => m.name === 'Stock Price');
+
+            // Filter out valuation metrics from base metrics
+            const baseMetrics = state.selectedMetrics.filter(m => 
+                !m.name.includes('Margin') && 
+                !['ROIC', 'ROCE', 'ROE', 'ROA', 'Stock Price', 'P/E Ratio'].includes(m.name)
+            );
+
+            const marginMetrics = calculateMargins(state.lastFinancialData, state);
+            const returnMetrics = calculateReturns(state.lastFinancialData, state);
+
             return {
                 ...state,
-                valuationMetrics: newValuationMetrics
+                valuationMetrics: newValuationMetrics,
+                selectedMetrics: [...baseMetrics, ...marginMetrics, ...returnMetrics, ...(priceMetric ? [priceMetric] : [])]
             };
         }),
 

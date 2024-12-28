@@ -7,7 +7,7 @@ export function getChartConfig(metrics: any[], darkMode: boolean | undefined, al
     const isDarkMode = darkMode ?? true; // Default to true if undefined
     const datasets = createDatasets(metrics, allDates);
 
-    // Find visible percentage and price metrics
+    // Find visible percentage, price, and valuation metrics
     const percentageDatasets = datasets.filter(d => {
         const label = d.label || '';
         return (label.includes('Margin') || ['ROIC', 'ROCE', 'ROE', 'ROA'].includes(label)) && !d.hidden;
@@ -18,9 +18,16 @@ export function getChartConfig(metrics: any[], darkMode: boolean | undefined, al
         return label === 'Stock Price' && !d.hidden;
     });
 
+    const valuationDatasets = datasets.filter(d => {
+        const label = d.label || '';
+        return ['P/E Ratio', 'FCF Yield', 'P/S Ratio', 'EV/EBITDA', 'P/GP Ratio'].includes(label) && !d.hidden;
+    });
+
     const visibleNonPercentageDatasets = datasets.filter(d => {
         const label = d.label || '';
-        return !label.includes('Margin') && !['ROIC', 'ROCE', 'ROE', 'ROA', 'Stock Price'].includes(label) && !d.hidden;
+        return !label.includes('Margin') && 
+               !['ROIC', 'ROCE', 'ROE', 'ROA', 'Stock Price', 'P/E Ratio', 'FCF Yield', 'P/S Ratio', 'EV/EBITDA', 'P/GP Ratio'].includes(label) && 
+               !d.hidden;
     });
 
     // Determine which axis should show grid lines
@@ -44,18 +51,19 @@ export function getChartConfig(metrics: any[], darkMode: boolean | undefined, al
         }
     }
 
-    // Calculate price axis range
+    // Calculate price and valuation axis range
     let minPrice = 0;
     let maxPrice = 100;
-    if (priceDatasets.length > 0) {
-        const allPrices = priceDatasets.flatMap(d => d.data.filter(v => v !== null) as number[]);
-        if (allPrices.length > 0) {
-            const priceMin = Math.min(...allPrices);
-            const priceMax = Math.max(...allPrices);
-            const priceRange = priceMax - priceMin;
-            const pricePadding = priceRange * 0.15;
-            minPrice = Math.max(0, priceMin - pricePadding);
-            maxPrice = priceMax + pricePadding;
+    const priceAndValuationDatasets = [...priceDatasets, ...valuationDatasets];
+    if (priceAndValuationDatasets.length > 0) {
+        const allValues = priceAndValuationDatasets.flatMap(d => d.data.filter(v => v !== null) as number[]);
+        if (allValues.length > 0) {
+            const dataMin = Math.min(...allValues);
+            const dataMax = Math.max(...allValues);
+            const range = dataMax - dataMin;
+            const padding = range * 0.15;
+            minPrice = Math.max(0, dataMin - padding);
+            maxPrice = dataMax + padding;
         }
     }
 
@@ -99,11 +107,14 @@ export function getChartConfig(metrics: any[], darkMode: boolean | undefined, al
                             const label = context.dataset.label || '';
                             const isPercentage = label.includes('Margin') || ['ROIC', 'ROCE', 'ROE', 'ROA'].includes(label);
                             const isPrice = label === 'Stock Price';
-                            const formattedValue = isPercentage
+                            const isValuation = ['P/E Ratio', 'FCF Yield', 'P/S Ratio', 'EV/EBITDA', 'P/GP Ratio'].includes(label);
+                            const formattedValue = isPercentage || label === 'FCF Yield'
                                 ? `${value.toFixed(2)}%`
                                 : isPrice
                                     ? `$${value.toFixed(2)}`
-                                    : formatValue(value);
+                                    : isValuation
+                                        ? value.toFixed(2)
+                                        : formatValue(value);
 
                             const growthRate = calculateGrowth(
                                 context.dataset.data as number[], 
@@ -192,12 +203,24 @@ export function getChartConfig(metrics: any[], darkMode: boolean | undefined, al
                     grid: {
                         display: false // No grid lines for price axis
                     },
-                    ticks: {
-                        display: false // Hide price axis ticks
-                    },
                     min: minPrice,
                     max: maxPrice,
-                    beginAtZero: false
+                    beginAtZero: false,
+                    display: priceAndValuationDatasets.length > 0,
+                    ticks: {
+                        display: true,
+                        color: currentTheme.text,
+                        padding: 12,
+                        callback: function(this: Scale<CoreScaleOptions>, tickValue: number | string) {
+                            const value = Number(tickValue);
+                            return value.toFixed(1);
+                        },
+                        font: {
+                            size: 12,
+                            weight: 500
+                        },
+                        maxTicksLimit: 8
+                    }
                 }
             }
         }

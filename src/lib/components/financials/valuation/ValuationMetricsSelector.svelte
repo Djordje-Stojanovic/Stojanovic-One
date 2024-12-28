@@ -61,14 +61,18 @@
                             new Date(stmt.date) <= priceDate
                         );
 
-                        // Only calculate P/E if we have positive EPS
-                        if (validEps?.eps_diluted > 0) {
-                            return {
-                                date: price.date,
-                                value: price.adj_close / validEps.eps_diluted
-                            };
-                        }
-                        return null;
+                            // Only calculate P/E if we have valid EPS (non-zero and not negative)
+                            if (validEps?.eps_diluted && validEps.eps_diluted > 0) {
+                                const peRatio = price.adj_close / validEps.eps_diluted;
+                                // Filter out unreasonable P/E ratios (e.g., > 1000)
+                                if (peRatio > 0 && peRatio < 1000) {
+                                    return {
+                                        date: price.date,
+                                        value: peRatio
+                                    };
+                                }
+                            }
+                            return null;
                     })
                     .filter(d => d !== null)
                     .sort((a, b) => new Date(a!.date).getTime() - new Date(b!.date).getTime());
