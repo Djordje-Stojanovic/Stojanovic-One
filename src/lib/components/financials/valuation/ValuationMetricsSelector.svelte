@@ -35,7 +35,99 @@
         try {
             loadingMetric = valuationType;
 
-            if (valuationType === 'pe') {
+            if (valuationType === 'fcfYield') {
+                if (!valuationMetrics.fcfYield) {
+                    // Get stock prices
+                    const { data: prices } = await db.from('stock_prices')
+                        .select('*')
+                        .eq('symbol', symbol)
+                        .order('date', { ascending: true });
+
+                    if (!prices?.length || !financialData?.cash_flow_statements.length || !financialData?.income_statements.length || !financialData.income_statements[0]?.weighted_average_shs_out) {
+                        throw new Error('No data available');
+                    }
+
+                    // Get TTM FCF data
+                    let ttmFcfData = financialData.cash_flow_statements
+                        .filter(stmt => stmt.period === 'TTM')
+                        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                        .map(stmt => ({
+                            date: stmt.date,
+                            fcf: stmt.free_cash_flow
+                        }));
+
+                    // If no TTM data found, calculate it manually
+                    if (!ttmFcfData.length) {
+                        const quarterlyData = financialData.cash_flow_statements
+                            .filter(stmt => stmt.period !== 'FY' && stmt.period !== 'TTM')
+                            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+                        ttmFcfData = quarterlyData
+                            .map((stmt, index, arr) => {
+                                if (index < 3) return null;
+                                
+                                // Get last 4 quarters
+                                const last4Quarters = arr.slice(index - 3, index + 1);
+                                
+                                // Sum FCF for last 4 quarters
+                                const ttmFcf = last4Quarters
+                                    .reduce((sum, q) => sum + (q.free_cash_flow || 0), 0);
+                                
+                                return {
+                                    date: stmt.date,
+                                    fcf: ttmFcf
+                                };
+                            })
+                            .filter((d): d is { date: string; fcf: number } => d !== null)
+                            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+                        if (!ttmFcfData.length) {
+                            throw new Error('Could not calculate TTM data');
+                        }
+                    }
+
+                    // Calculate FCF Yield for each price point
+                    const fcfYieldData = prices.map(price => {
+                        const priceDate = new Date(price.date);
+                        
+                        // Find the most recent TTM FCF data point before or equal to this price date
+                        const validFcf = ttmFcfData.find(stmt => 
+                            new Date(stmt.date) <= priceDate
+                        );
+
+                        // Only calculate FCF Yield if we have valid FCF (non-zero)
+                        if (validFcf?.fcf && validFcf.fcf !== 0) {
+                            // Calculate FCF per share using weighted average shares outstanding
+                            const fcfPerShare = validFcf.fcf / financialData!.income_statements[0].weighted_average_shs_out;
+                            const fcfYield = (fcfPerShare / price.adj_close) * 100; // Convert to percentage
+                            
+                            // Filter out unreasonable FCF Yields (similar to P/E ratio filtering)
+                            if (fcfYield > 0 && fcfYield < 100) {
+                                return {
+                                    date: price.date,
+                                    value: fcfYield
+                                };
+                            }
+                        }
+                        return null;
+                    })
+                    .filter(d => d !== null)
+                    .sort((a, b) => new Date(a!.date).getTime() - new Date(b!.date).getTime());
+
+                    if (!fcfYieldData.length) {
+                        throw new Error('No valid FCF Yield data available');
+                    }
+
+                    const values = fcfYieldData.map(d => d!.value);
+                    const dates = fcfYieldData.map(d => d!.date);
+
+                    chartStore.handleMetricClick('FCF Yield', values, dates);
+                    chartStore.toggleValuationMetric('fcfYield');
+                } else {
+                    chartStore.handleMetricClick('FCF Yield', [], []);
+                    chartStore.toggleValuationMetric('fcfYield');
+                }
+            } else if (valuationType === 'pe') {
                 if (!valuationMetrics.pe) {
                     // Get stock prices
                     const { data: prices } = await db.from('stock_prices')
@@ -135,9 +227,15 @@
     // Reset when symbol changes
     $: if ($page.params.symbol !== symbol) {
         symbol = $page.params.symbol;
-        if (valuationMetrics.pe) {
-            chartStore.handleMetricClick('P/E Ratio', [], []);
-            chartStore.toggleValuationMetric('pe');
+        if (valuationMetrics.pe || valuationMetrics.fcfYield) {
+            if (valuationMetrics.pe) {
+                chartStore.handleMetricClick('P/E Ratio', [], []);
+                chartStore.toggleValuationMetric('pe');
+            }
+            if (valuationMetrics.fcfYield) {
+                chartStore.handleMetricClick('FCF Yield', [], []);
+                chartStore.toggleValuationMetric('fcfYield');
+            }
         }
     }
 </script>
