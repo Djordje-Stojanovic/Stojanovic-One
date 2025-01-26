@@ -51,8 +51,8 @@ export function createDatasets(metrics: ChartProps['metrics'], allDates: string[
                 borderColor: isPrice ? `rgba(16, 185, 129, 0.3)` : color,
                 backgroundColor: 'transparent',
                 borderWidth: isPrice ? 1 : 2.5,
-                pointRadius: isPrice ? 0 : 4,
-                pointHoverRadius: isPrice ? 4 : 6,
+                pointRadius: 0, // Hide points by default for cleaner lines
+                pointHoverRadius: 6, // Show points only on hover
                 pointBackgroundColor: color,
                 pointBorderColor: color,
                 yAxisID: isPrice || isValuation ? 'y2' : 'y1',
