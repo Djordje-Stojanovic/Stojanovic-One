@@ -161,17 +161,11 @@ function createChartStore(): ChartStoreActions {
             const marginMetrics = calculateMargins(financialData, state);
             const returnMetrics = calculateReturns(financialData, state);
             
-            // Get valuation metrics
-            const valuationMetrics = state.selectedMetrics.filter(m => 
-                ['P/E Ratio', 'FCF Yield', 'P/S Ratio', 'EV/EBITDA', 'P/GP Ratio'].includes(m.name)
-            );
-
-            // Add price and valuation metrics back
+            // Add price metric back
             const allMetrics = [
                 ...updatedMetrics,
                 ...marginMetrics,
                 ...returnMetrics,
-                ...valuationMetrics,
                 ...(priceMetric ? [priceMetric] : [])
             ];
 
@@ -344,36 +338,41 @@ function createChartStore(): ChartStoreActions {
                 [valuationType]: !state.valuationMetrics[valuationType]
             };
 
-            // Preserve price metric
-            const priceMetric = state.selectedMetrics.find(m => m.name === 'Stock Price');
+            // Get the metric name based on valuation type
+            const metricName = {
+                pe: 'P/E Ratio',
+                fcfYield: 'FCF Yield',
+                ps: 'P/S Ratio',
+                evEbitda: 'EV/EBITDA',
+                pgp: 'P/GP Ratio'
+            }[valuationType];
 
-            // Get existing valuation metrics except the one being toggled
-            const valuationMetrics = state.selectedMetrics.filter(m => 
-                ['P/E Ratio', 'FCF Yield', 'P/S Ratio', 'EV/EBITDA', 'P/GP Ratio'].includes(m.name) &&
-                !m.name.includes(valuationType)
+            if (!metricName) return state;
+
+            // If turning on, add to selectedMetricNames
+            // If turning off, remove from selectedMetricNames
+            let newMetricNames = [...state.selectedMetricNames];
+            if (newValuationMetrics[valuationType]) {
+                if (!newMetricNames.includes(metricName)) {
+                    newMetricNames.push(metricName);
+                }
+            } else {
+                newMetricNames = newMetricNames.filter(name => name !== metricName);
+            }
+
+            saveSelectedMetrics(newMetricNames);
+
+            // Update selectedMetrics based on the new metric names
+            const updatedMetrics = state.selectedMetrics.filter(m => 
+                !['P/E Ratio', 'FCF Yield', 'P/S Ratio', 'EV/EBITDA', 'P/GP Ratio'].includes(m.name) ||
+                newMetricNames.includes(m.name)
             );
-
-            // Filter out margin, return, price, and valuation metrics from base metrics
-            const baseMetrics = state.selectedMetrics.filter(m => 
-                !m.name.includes('Margin') && 
-                !['ROIC', 'ROCE', 'ROE', 'ROA', 'Stock Price', 'P/E Ratio', 'FCF Yield', 'P/S Ratio', 'EV/EBITDA', 'P/GP Ratio'].includes(m.name)
-            );
-
-            const marginMetrics = calculateMargins(state.lastFinancialData, state);
-            const returnMetrics = calculateReturns(state.lastFinancialData, state);
-
-            const newMetrics = [
-                ...baseMetrics,
-                ...marginMetrics,
-                ...returnMetrics,
-                ...valuationMetrics,
-                ...(priceMetric ? [priceMetric] : [])
-            ];
 
             return {
                 ...state,
                 valuationMetrics: newValuationMetrics,
-                selectedMetrics: newMetrics
+                selectedMetricNames: newMetricNames,
+                selectedMetrics: updatedMetrics
             };
         }),
 

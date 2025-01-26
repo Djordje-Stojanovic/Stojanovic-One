@@ -18,9 +18,12 @@
     let chart: Chart | null = null;
     let isUpdating = false;
 
-    // Check if price chart should be shown
+    // Check if price/valuation chart should be shown
     $: priceMetric = $chartStore.selectedMetrics.find(m => m.name === 'Stock Price');
-    $: showPriceChart = !!priceMetric && !priceMetric.hidden;
+    $: valuationMetrics = $chartStore.selectedMetrics.filter(m => 
+        ['P/E Ratio', 'FCF Yield', 'P/S Ratio', 'EV/EBITDA', 'P/GP Ratio'].includes(m.name) && !m.hidden
+    );
+    $: showPriceChart = (!!priceMetric && !priceMetric.hidden) || valuationMetrics.length > 0;
 
     function handleLegendClick(e: ChartEvent, legendItem: LegendItem, legend: Chart['legend']) {
         const index = legendItem.datasetIndex;

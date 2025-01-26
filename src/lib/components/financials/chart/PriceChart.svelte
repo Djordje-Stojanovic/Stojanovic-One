@@ -30,8 +30,21 @@
     let selectedYears = loadSelectedYears();
     let priceMetric = $chartStore.selectedMetrics.find(m => m.name === 'Stock Price');
     let valuationMetrics = $chartStore.selectedMetrics.filter(m => 
-        ['P/E Ratio', 'FCF Yield', 'P/S Ratio', 'EV/EBITDA', 'P/GP Ratio'].includes(m.name) && !m.hidden
+        ['P/E Ratio', 'FCF Yield', 'P/S Ratio', 'EV/EBITDA', 'P/GP Ratio'].includes(m.name)
     );
+
+    // Deduplicate data points by date for each metric
+    function deduplicateData(data: any[]) {
+        const seen = new Set();
+        return data.filter(d => {
+            const dateStr = d.date;
+            if (seen.has(dateStr)) {
+                return false;
+            }
+            seen.add(dateStr);
+            return true;
+        });
+    }
 
     function handleClose() {
         chartStore.handleMetricClick('Stock Price', [], []);
@@ -55,7 +68,7 @@
         // Process price data if available
         const priceDataset = priceMetric ? {
             label: 'Stock Price',
-            data: priceMetric.data
+            data: deduplicateData(priceMetric.data)
                 .filter(d => {
                     const date = new Date(d.date);
                     return date >= startDate && date <= endDate;
@@ -63,7 +76,8 @@
                 .map(d => ({
                     x: new Date(d.date).getTime(),
                     y: d.value
-                })),
+                }))
+                .sort((a, b) => a.x - b.x),
             borderColor: '#10B981',
             backgroundColor: 'transparent',
             borderWidth: 2,
@@ -76,10 +90,12 @@
 
         // Process valuation metrics data
         const valuationData = valuationMetrics.map(metric => {
-            const filteredMetricData = metric.data.filter(d => {
-                const date = new Date(d.date);
-                return date >= startDate && date <= endDate;
-            });
+            const filteredMetricData = deduplicateData(metric.data)
+                .filter(d => {
+                    const date = new Date(d.date);
+                    return date >= startDate && date <= endDate;
+                })
+                .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
             return {
                 label: metric.name,
@@ -222,7 +238,7 @@
         <button 
             on:click={handleClose}
             class="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full"
-            title="Close price chart"
+            title="Close price/valuation chart"
         >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 dark:text-gray-400" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
