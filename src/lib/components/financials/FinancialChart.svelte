@@ -48,8 +48,12 @@
 
         const currentTheme = darkMode ? theme.dark : theme.light;
 
-        // Filter out price metric from main chart
-        const filteredMetrics = metrics.filter(m => m.name !== 'Stock Price');
+        // Filter out price and valuation metrics from main chart
+        const filteredMetrics = metrics.filter(m => {
+            const name = m.name || '';
+            return name !== 'Stock Price' && 
+                !['P/E Ratio', 'FCF Yield', 'P/S Ratio', 'EV/EBITDA', 'P/GP Ratio'].includes(name);
+        });
 
         // Get all unique dates and sort them
         const allDates = [...new Set(filteredMetrics.flatMap(m => m.data.map(d => d.date)))].sort();

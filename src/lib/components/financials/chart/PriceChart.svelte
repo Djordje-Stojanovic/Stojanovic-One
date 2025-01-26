@@ -5,6 +5,23 @@
     import { chartStore } from '$lib/stores/financial-charts';
     import { loadSelectedYears } from '../state/chartState';
     import 'chartjs-adapter-date-fns';
+
+    function getMetricColor(name: string): string {
+        switch (name) {
+            case 'P/E Ratio':
+                return '#9333EA'; // Purple
+            case 'FCF Yield':
+                return '#06B6D4'; // Cyan
+            case 'P/S Ratio':
+                return '#F59E0B'; // Amber
+            case 'EV/EBITDA':
+                return '#3B82F6'; // Blue
+            case 'P/GP Ratio':
+                return '#10B981'; // Emerald
+            default:
+                return '#6B7280'; // Gray
+        }
+    }
     
     export let darkMode: boolean = true;
     
@@ -12,13 +29,20 @@
     let chart: ChartType | null = null;
     let selectedYears = loadSelectedYears();
     let priceMetric = $chartStore.selectedMetrics.find(m => m.name === 'Stock Price');
+    let valuationMetrics = $chartStore.selectedMetrics.filter(m => 
+        ['P/E Ratio', 'FCF Yield', 'P/S Ratio', 'EV/EBITDA', 'P/GP Ratio'].includes(m.name) && !m.hidden
+    );
 
     function handleClose() {
         chartStore.handleMetricClick('Stock Price', [], []);
+        // Clear any selected valuation metrics
+        valuationMetrics.forEach(m => {
+            chartStore.handleMetricClick(m.name, [], []);
+        });
     }
 
     function updateChart() {
-        if (!canvas || !priceMetric?.data.length) return;
+        if (!canvas || (!priceMetric?.data.length && !valuationMetrics.length)) return;
         
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
@@ -28,16 +52,50 @@
         const startDate = new Date();
         startDate.setFullYear(endDate.getFullYear() - selectedYears);
 
-        // Filter data based on selected years
-        const filteredData = priceMetric.data.filter(d => {
-            const date = new Date(d.date);
-            return date >= startDate && date <= endDate;
-        });
+        // Process price data if available
+        const priceDataset = priceMetric ? {
+            label: 'Stock Price',
+            data: priceMetric.data
+                .filter(d => {
+                    const date = new Date(d.date);
+                    return date >= startDate && date <= endDate;
+                })
+                .map(d => ({
+                    x: new Date(d.date).getTime(),
+                    y: d.value
+                })),
+            borderColor: '#10B981',
+            backgroundColor: 'transparent',
+            borderWidth: 2,
+            pointRadius: 0,
+            pointHoverRadius: 4,
+            pointHoverBackgroundColor: '#10B981',
+            yAxisID: 'y',
+            tension: 0.4
+        } : null;
 
-        const chartData = filteredData.map(d => ({
-            x: new Date(d.date).getTime(),
-            y: d.value
-        }));
+        // Process valuation metrics data
+        const valuationData = valuationMetrics.map(metric => {
+            const filteredMetricData = metric.data.filter(d => {
+                const date = new Date(d.date);
+                return date >= startDate && date <= endDate;
+            });
+
+            return {
+                label: metric.name,
+                data: filteredMetricData.map(d => ({
+                    x: new Date(d.date).getTime(),
+                    y: d.value
+                })),
+                borderColor: getMetricColor(metric.name),
+                backgroundColor: 'transparent',
+                borderWidth: 2,
+                pointRadius: 0,
+                pointHoverRadius: 4,
+                yAxisID: 'y1',
+                tension: 0.4
+            };
+        });
 
         // Destroy existing chart if it exists
         if (chart) {
@@ -49,17 +107,10 @@
         chart = new Chart(ctx, {
             type: 'line',
             data: {
-                datasets: [{
-                    label: 'Stock Price',
-                    data: chartData,
-                    borderColor: '#10B981',
-                    backgroundColor: 'transparent',
-                    borderWidth: 2,
-                    pointRadius: 0,
-                    pointHoverRadius: 4,
-                    pointHoverBackgroundColor: '#10B981',
-                    tension: 0.4
-                }]
+                datasets: [
+                    ...(priceDataset ? [priceDataset] : []),
+                    ...valuationData
+                ]
             },
             options: {
                 responsive: true,
@@ -78,10 +129,27 @@
                         padding: 16,
                         cornerRadius: 8,
                         callbacks: {
-                            label: (context) => `$${context.parsed.y.toFixed(2)}`
+                            label: (context) => {
+                                const label = context.dataset.label || '';
+                                const value = context.parsed.y as number;
+                                if (label === 'Stock Price') {
+                                    return `${label}: $${value.toFixed(2)}`;
+                                } else if (label === 'FCF Yield') {
+                                    return `${label}: ${value.toFixed(2)}%`;
+                                } else {
+                                    return `${label}: ${value.toFixed(2)}`;
+                                }
+                            }
                         }
                     },
-                    legend: { display: false }
+                    legend: { 
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            color: darkMode ? '#9CA3AF' : '#4B5563',
+                            usePointStyle: true
+                        }
+                    }
                 },
                 scales: {
                     x: {
@@ -107,6 +175,16 @@
                             color: darkMode ? '#9CA3AF' : '#4B5563',
                             callback: (value) => `$${value}`
                         }
+                    },
+                    y1: {
+                        position: 'left',
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: darkMode ? '#9CA3AF' : '#4B5563',
+                            callback: (value) => typeof value === 'number' ? value.toFixed(1) : value
+                        }
                     }
                 }
             }
@@ -117,13 +195,16 @@
     $: {
         selectedYears = loadSelectedYears();
         priceMetric = $chartStore.selectedMetrics.find(m => m.name === 'Stock Price');
-        if (priceMetric?.data.length) {
+        valuationMetrics = $chartStore.selectedMetrics.filter(m => 
+            ['P/E Ratio', 'FCF Yield', 'P/S Ratio', 'EV/EBITDA', 'P/GP Ratio'].includes(m.name) && !m.hidden
+        );
+        if (priceMetric?.data.length || valuationMetrics.length > 0) {
             updateChart();
         }
     }
 
     onMount(() => {
-        if (priceMetric?.data.length) {
+        if (priceMetric?.data.length || valuationMetrics.length > 0) {
             updateChart();
         }
     });
