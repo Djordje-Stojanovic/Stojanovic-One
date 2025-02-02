@@ -5,6 +5,8 @@
     import type { ValuationMetricType } from '$lib/stores/financial-charts/types/ChartTypes';
     import type { FinancialData } from '$lib/types/financialStatements';
     import type { ValuationMetricState } from '$lib/stores/financial-charts/types/ChartTypes';
+    import { loadSelectedYears, loadSelectedPeriod } from '../state/chartState';
+    import { getHistoricalPrices } from '$lib/services/stockPriceService';
     import { metricConfigs } from './config';
     import { calculatePERatio } from './metrics/peRatio';
     import { calculateFCFYield } from './metrics/fcfYield';
@@ -15,6 +17,8 @@
     let symbol = $page.params.symbol;
     let loadingMetric: ValuationMetricType | null = null;
     let errorMetric: ValuationMetricType | null = null;
+    let selectedYears = loadSelectedYears();
+    let selectedPeriod = loadSelectedPeriod();
     let valuationMetrics: ValuationMetricState = {
         pe: false,
         fcfYield: false,
@@ -42,6 +46,44 @@
         return !!financialData;
     }
 
+    async function updateMetricData(type: ValuationMetricType) {
+        if (loadingMetric || !valuationMetrics[type]) return;
+        
+        try {
+            loadingMetric = type;
+            const prices = await getHistoricalPrices(symbol, selectedYears);
+            
+            if (!prices?.length) {
+                throw new Error('No price data available');
+            }
+
+            if (!financialData) {
+                throw new Error('Financial data not available');
+            }
+
+            const calculator = metricCalculators[type];
+            const { values, dates } = calculator(prices, financialData);
+
+            if (!values.length || !dates.length) {
+                throw new Error('Calculation returned no data');
+            }
+
+            // Update data without toggling the metric state
+            chartStore.handleMetricClick(metricConfigs[type].name, values, dates);
+            if (!valuationMetrics[type]) {
+                chartStore.toggleValuationMetric(type);
+            }
+        } catch (error) {
+            console.error('Error updating valuation metric:', error);
+            errorMetric = type;
+            setTimeout(() => {
+                errorMetric = null;
+            }, 2000);
+        } finally {
+            loadingMetric = null;
+        }
+    }
+
     async function handleMetricClick(type: string) {
         if (!isValuationMetricType(type)) return;
         if (loadingMetric) return;
@@ -50,51 +92,25 @@
             loadingMetric = type;
 
             if (!valuationMetrics[type]) {
-                // Get stock prices with retry logic
-                let retryCount = 0;
-                let prices: any[] | null = null;
+                const prices = await getHistoricalPrices(symbol, selectedYears);
                 
-                while (retryCount < 3 && !prices) {
-                    const { data, error } = await db.from('stock_prices')
-                        .select('*')
-                        .eq('symbol', symbol)
-                        .order('date', { ascending: true });
-                    
-                    if (error) throw error;
-                    if (data?.length) {
-                        prices = data;
-                        break;
-                    }
-                    
-                    retryCount++;
-                    if (retryCount < 3) {
-                        await new Promise(resolve => setTimeout(resolve, 500 * retryCount));
-                    }
-                }
-
                 if (!prices?.length) {
                     throw new Error('No price data available');
                 }
 
-                // Ensure financialData is not null before proceeding
                 if (!financialData) {
                     throw new Error('Financial data not available');
                 }
 
-                try {
-                    const calculator = metricCalculators[type];
-                    const { values, dates } = calculator(prices, financialData);
+                const calculator = metricCalculators[type];
+                const { values, dates } = calculator(prices, financialData);
 
-                    if (!values.length || !dates.length) {
-                        throw new Error('Calculation returned no data');
-                    }
-
-                    chartStore.handleMetricClick(metricConfigs[type].name, values, dates);
-                    chartStore.toggleValuationMetric(type);
-                } catch (calcError) {
-                    console.error('Calculation error:', calcError);
-                    throw new Error(`Failed to calculate ${metricConfigs[type].name}`);
+                if (!values.length || !dates.length) {
+                    throw new Error('Calculation returned no data');
                 }
+
+                chartStore.handleMetricClick(metricConfigs[type].name, values, dates);
+                chartStore.toggleValuationMetric(type);
             } else {
                 chartStore.handleMetricClick(metricConfigs[type].name, [], []);
                 chartStore.toggleValuationMetric(type);
@@ -108,6 +124,20 @@
         } finally {
             loadingMetric = null;
         }
+    }
+
+    // Update metrics when time period changes
+    $: if ($chartStore.selectedYears !== selectedYears) {
+        selectedYears = $chartStore.selectedYears;
+        // Get currently active metrics before update
+        const activeMetrics = Object.entries(valuationMetrics)
+            .filter(([type, isActive]) => isActive && isValuationMetricType(type))
+            .map(([type]) => type as ValuationMetricType);
+        
+        // Update each active metric
+        activeMetrics.forEach(type => {
+            updateMetricData(type);
+        });
     }
 
     // Reset when symbol changes

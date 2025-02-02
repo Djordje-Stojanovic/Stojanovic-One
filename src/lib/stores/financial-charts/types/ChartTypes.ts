@@ -46,6 +46,7 @@ export interface ChartStoreState {
     showChart: boolean;
     selectedMetrics: ChartMetric[];
     selectedMetricNames: string[];
+    selectedYears: number;
     margins: MarginState;
     returnMetrics: ReturnMetricState;
     valuationMetrics: ValuationMetricState;
@@ -62,4 +63,5 @@ export interface ChartStoreActions {
     toggleValuationMetric: (valuationType: ValuationMetricType) => void;
     clearChart: () => void;
     toggleMetricVisibility: (metricName: string) => void;
+    setSelectedYears: (years: number) => void;
 }

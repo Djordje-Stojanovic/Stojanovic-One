@@ -132,6 +132,7 @@
     function handleYearChange(event: CustomEvent<{ years: number }>) {
         selectedYears = event.detail.years;
         saveSelectedYears(selectedYears);
+        chartStore.setSelectedYears(selectedYears);
         updateData();
     }
 

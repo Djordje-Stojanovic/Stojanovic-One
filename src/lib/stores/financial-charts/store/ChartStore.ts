@@ -1,7 +1,7 @@
 import { writable } from 'svelte/store';
 import type { ChartStoreState, ChartStoreActions, MarginType, ReturnMetricType, ValuationMetricType, ChartMetric } from '../types/ChartTypes';
 import type { FinancialData } from '$lib/types/financialStatements';
-import { loadShowChart, saveShowChart, loadSelectedMetrics, saveSelectedMetrics } from '$lib/components/financials/state/chartState';
+import { loadShowChart, saveShowChart, loadSelectedMetrics, saveSelectedMetrics, loadSelectedYears, saveSelectedYears } from '$lib/components/financials/state/chartState';
 import { getFieldName } from '../mappings/FieldNameMapping';
 import { extractMetricData, extractSegmentData, combineDataSets } from '../utils/DataProcessing';
 import { 
@@ -26,6 +26,7 @@ function createChartStore(): ChartStoreActions {
         showChart: loadShowChart(),
         selectedMetrics: [],
         selectedMetricNames: storedMetricNames,
+        selectedYears: loadSelectedYears(),
         margins: {
             netIncome: false,
             grossProfit: false,
@@ -124,6 +125,14 @@ function createChartStore(): ChartStoreActions {
     return {
         subscribe,
 
+        setSelectedYears: (years: number) => update(state => {
+            saveSelectedYears(years);
+            return {
+                ...state,
+                selectedYears: years
+            };
+        }),
+
         updateMetrics: (financialData: FinancialData) => update(state => {
             if (!financialData) return state;
 
@@ -185,8 +194,8 @@ function createChartStore(): ChartStoreActions {
             const existingIndex = state.selectedMetricNames.indexOf(name);
             const existingMetric = state.selectedMetrics.find(m => m.name === name);
 
-            if (existingIndex !== -1) {
-                // Remove metric on second click
+            // If no data provided, remove the metric
+            if (!values.length || !dates.length) {
                 const newMetrics = state.selectedMetrics.filter(m => m.name !== name);
                 const newMetricNames = state.selectedMetricNames.filter(n => n !== name);
                 const newVisibility = { ...state.metricVisibility };
@@ -202,46 +211,46 @@ function createChartStore(): ChartStoreActions {
                     showChart: newMetrics.length > 0,
                     metricVisibility: newVisibility
                 };
-            } else {
-                // Add or update metric
-                const newMetric = {
-                    name,
-                    data: dates.map((date, i) => ({
-                        date,
-                        value: values[i]
-                    })).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()),
-                    hidden: existingMetric ? existingMetric.hidden : false
-                };
-
-                let newMetrics: ChartMetric[];
-                let newMetricNames: string[];
-
-                if (existingIndex !== -1) {
-                    // Update existing metric
-                    newMetrics = state.selectedMetrics.map(m => 
-                        m.name === name ? newMetric : m
-                    );
-                    newMetricNames = [...state.selectedMetricNames];
-                } else {
-                    // Add new metric
-                    newMetrics = [...state.selectedMetrics, newMetric];
-                    newMetricNames = [...state.selectedMetricNames, name];
-                }
-
-                saveShowChart(true);
-                saveSelectedMetrics(newMetricNames);
-
-                return {
-                    ...state,
-                    selectedMetrics: newMetrics,
-                    selectedMetricNames: newMetricNames,
-                    showChart: true,
-                    metricVisibility: {
-                        ...state.metricVisibility,
-                        [name]: true
-                    }
-                };
             }
+
+            // Create or update metric
+            const newMetric = {
+                name,
+                data: dates.map((date, i) => ({
+                    date,
+                    value: values[i]
+                })).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()),
+                hidden: existingMetric ? existingMetric.hidden : false
+            };
+
+            let newMetrics: ChartMetric[];
+            let newMetricNames: string[];
+
+            if (existingIndex !== -1) {
+                // Update existing metric
+                newMetrics = state.selectedMetrics.map(m => 
+                    m.name === name ? newMetric : m
+                );
+                newMetricNames = [...state.selectedMetricNames];
+            } else {
+                // Add new metric
+                newMetrics = [...state.selectedMetrics, newMetric];
+                newMetricNames = [...state.selectedMetricNames, name];
+            }
+
+            saveShowChart(true);
+            saveSelectedMetrics(newMetricNames);
+
+            return {
+                ...state,
+                selectedMetrics: newMetrics,
+                selectedMetricNames: newMetricNames,
+                showChart: true,
+                metricVisibility: {
+                    ...state.metricVisibility,
+                    [name]: true
+                }
+            };
         }),
 
         toggleMetricVisibility: (metricName: string) => update(state => {
@@ -382,6 +391,7 @@ function createChartStore(): ChartStoreActions {
                 showChart: false,
                 selectedMetrics: [],
                 selectedMetricNames: [],
+                selectedYears: loadSelectedYears(),
                 margins: {
                     netIncome: false,
                     grossProfit: false,
