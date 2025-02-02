@@ -1,23 +1,20 @@
 import { writable } from 'svelte/store';
-import type { ChartStoreState, ChartStoreActions, MarginType, ReturnMetricType, ValuationMetricType, ChartMetric } from '../types/ChartTypes';
+import type { ChartStoreState, ChartStoreActions } from '../types/ChartTypes';
 import type { FinancialData } from '$lib/types/financialStatements';
-import { loadShowChart, saveShowChart, loadSelectedMetrics, saveSelectedMetrics, loadSelectedYears, saveSelectedYears } from '$lib/components/financials/state/chartState';
+import { 
+    loadShowChart, 
+    saveShowChart, 
+    loadSelectedMetrics, 
+    saveSelectedMetrics, 
+    loadSelectedYears, 
+    saveSelectedYears 
+} from './statePersistence';
+import { calculateMargins, handleMarginToggle } from './marginCalculations';
+import { calculateReturns, handleReturnToggle } from './returnCalculations';
+import { handleMetricVisibility, handleMetricClick } from './metricVisibility';
+import { handleValuationToggle } from './valuationHandlers';
 import { getFieldName } from '../mappings/FieldNameMapping';
 import { extractMetricData, extractSegmentData, combineDataSets } from '../utils/DataProcessing';
-import { 
-    calculateNetIncomeMargin,
-    calculateGrossProfitMargin,
-    calculateOperatingMargin,
-    calculateEBITDAMargin,
-    calculateFCFMargin,
-    calculateOperatingCashFlowMargin
-} from '../metrics/margins/Margins';
-import {
-    calculateROICMetric,
-    calculateROCEMetric,
-    calculateROEMetric,
-    calculateROAMetric
-} from '../metrics/returns/Returns';
 
 function createChartStore(): ChartStoreActions {
     const storedMetricNames = loadSelectedMetrics();
@@ -54,83 +51,12 @@ function createChartStore(): ChartStoreActions {
 
     const { subscribe, set, update } = writable(initialState);
 
-    function calculateMargins(financialData: FinancialData, state: ChartStoreState): ChartMetric[] {
-        const margins: ChartMetric[] = [];
-
-        if (!financialData.income_statements?.length) return margins;
-
-        if (state.margins.netIncome) {
-            const margin = calculateNetIncomeMargin(financialData.income_statements);
-            if (margin) margins.push({...margin, hidden: false});
-        }
-
-        if (state.margins.grossProfit) {
-            const margin = calculateGrossProfitMargin(financialData.income_statements);
-            if (margin) margins.push({...margin, hidden: false});
-        }
-
-        if (state.margins.operating) {
-            const margin = calculateOperatingMargin(financialData.income_statements);
-            if (margin) margins.push({...margin, hidden: false});
-        }
-
-        if (state.margins.ebitda) {
-            const margin = calculateEBITDAMargin(financialData.income_statements);
-            if (margin) margins.push({...margin, hidden: false});
-        }
-
-        if (state.margins.fcf) {
-            const revenue = financialData.income_statements.map(stmt => stmt.revenue);
-            const margin = calculateFCFMargin(financialData.cash_flow_statements, revenue);
-            if (margin) margins.push({...margin, hidden: false});
-        }
-
-        if (state.margins.operatingCashFlow) {
-            const revenue = financialData.income_statements.map(stmt => stmt.revenue);
-            const margin = calculateOperatingCashFlowMargin(financialData.cash_flow_statements, revenue);
-            if (margin) margins.push({...margin, hidden: false});
-        }
-
-        return margins;
-    }
-
-    function calculateReturns(financialData: FinancialData, state: ChartStoreState): ChartMetric[] {
-        const returns: ChartMetric[] = [];
-
-        if (!financialData.income_statements?.length || !financialData.balance_sheets?.length) return returns;
-
-        if (state.returnMetrics.roic) {
-            const metric = calculateROICMetric(financialData.income_statements, financialData.balance_sheets);
-            if (metric) returns.push({...metric, hidden: false});
-        }
-
-        if (state.returnMetrics.roce) {
-            const metric = calculateROCEMetric(financialData.income_statements, financialData.balance_sheets);
-            if (metric) returns.push({...metric, hidden: false});
-        }
-
-        if (state.returnMetrics.roe) {
-            const metric = calculateROEMetric(financialData.income_statements, financialData.balance_sheets);
-            if (metric) returns.push({...metric, hidden: false});
-        }
-
-        if (state.returnMetrics.roa) {
-            const metric = calculateROAMetric(financialData.income_statements, financialData.balance_sheets);
-            if (metric) returns.push({...metric, hidden: false});
-        }
-
-        return returns;
-    }
-
     return {
         subscribe,
 
         setSelectedYears: (years: number) => update(state => {
             saveSelectedYears(years);
-            return {
-                ...state,
-                selectedYears: years
-            };
+            return { ...state, selectedYears: years };
         }),
 
         updateMetrics: (financialData: FinancialData) => update(state => {
@@ -140,7 +66,7 @@ function createChartStore(): ChartStoreActions {
             const priceMetric = state.selectedMetrics.find(m => m.name === 'Stock Price');
 
             const updatedMetrics = state.selectedMetricNames
-                .filter(name => name !== 'Stock Price') // Don't process price metric
+                .filter(name => name !== 'Stock Price')
                 .map(name => {
                     const fieldName = getFieldName(name);
 
@@ -168,7 +94,6 @@ function createChartStore(): ChartStoreActions {
             const marginMetrics = calculateMargins(financialData, state);
             const returnMetrics = calculateReturns(financialData, state);
             
-            // Add price metric back
             const allMetrics = [
                 ...updatedMetrics,
                 ...marginMetrics,
@@ -190,232 +115,42 @@ function createChartStore(): ChartStoreActions {
             return newState;
         }),
 
-        handleMetricClick: (name: string, values: number[], dates: string[]) => update(state => {
-            const existingIndex = state.selectedMetricNames.indexOf(name);
-            const existingMetric = state.selectedMetrics.find(m => m.name === name);
+        handleMetricClick: (name: string, values: number[], dates: string[]) => 
+            update(state => {
+                const changes = handleMetricClick(state, name, values, dates);
+                saveShowChart(changes.showChart ?? false);
+                saveSelectedMetrics(changes.selectedMetricNames ?? []);
+                return { ...state, ...changes };
+            }),
 
-            // If no data provided, remove the metric
-            if (!values.length || !dates.length) {
-                const newMetrics = state.selectedMetrics.filter(m => m.name !== name);
-                const newMetricNames = state.selectedMetricNames.filter(n => n !== name);
-                const newVisibility = { ...state.metricVisibility };
-                delete newVisibility[name];
-                
-                saveShowChart(newMetrics.length > 0);
-                saveSelectedMetrics(newMetricNames);
+        toggleMetricVisibility: (metricName: string) => 
+            update(state => {
+                const changes = handleMetricVisibility(state, metricName);
+                return { ...state, ...changes };
+            }),
 
-                return {
-                    ...state,
-                    selectedMetrics: newMetrics,
-                    selectedMetricNames: newMetricNames,
-                    showChart: newMetrics.length > 0,
-                    metricVisibility: newVisibility
-                };
-            }
+        toggleMargin: (marginType) => 
+            update(state => {
+                const changes = handleMarginToggle(state, marginType);
+                return { ...state, ...changes };
+            }),
 
-            // Create or update metric
-            const newMetric = {
-                name,
-                data: dates.map((date, i) => ({
-                    date,
-                    value: values[i]
-                })).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()),
-                hidden: existingMetric ? existingMetric.hidden : false
-            };
+        toggleReturnMetric: (returnType) => 
+            update(state => {
+                const changes = handleReturnToggle(state, returnType);
+                return { ...state, ...changes };
+            }),
 
-            let newMetrics: ChartMetric[];
-            let newMetricNames: string[];
-
-            if (existingIndex !== -1) {
-                // Update existing metric
-                newMetrics = state.selectedMetrics.map(m => 
-                    m.name === name ? newMetric : m
-                );
-                newMetricNames = [...state.selectedMetricNames];
-            } else {
-                // Add new metric
-                newMetrics = [...state.selectedMetrics, newMetric];
-                newMetricNames = [...state.selectedMetricNames, name];
-            }
-
-            saveShowChart(true);
-            saveSelectedMetrics(newMetricNames);
-
-            return {
-                ...state,
-                selectedMetrics: newMetrics,
-                selectedMetricNames: newMetricNames,
-                showChart: true,
-                metricVisibility: {
-                    ...state.metricVisibility,
-                    [name]: true
-                }
-            };
-        }),
-
-        toggleMetricVisibility: (metricName: string) => update(state => {
-            // Only handle visibility for non-margin and non-return metrics
-            if (!metricName.includes('Margin') && !['ROIC', 'ROCE', 'ROE', 'ROA'].includes(metricName)) {
-                const newVisibility = {
-                    ...state.metricVisibility,
-                    [metricName]: !state.metricVisibility[metricName]
-                };
-
-                const updatedMetrics = state.selectedMetrics.map(metric => {
-                    if (metric.name === metricName) {
-                        return {
-                            ...metric,
-                            hidden: !newVisibility[metricName]
-                        };
-                    }
-                    return metric;
-                });
-
-                return {
-                    ...state,
-                    metricVisibility: newVisibility,
-                    selectedMetrics: updatedMetrics
-                };
-            }
-            return state;
-        }),
-
-        toggleMargin: (marginType: MarginType) => update(state => {
-            if (!state.lastFinancialData) return state;
-
-            const newMargins = {
-                ...state.margins,
-                [marginType]: !state.margins[marginType]
-            };
-
-            // Preserve price metric
-            const priceMetric = state.selectedMetrics.find(m => m.name === 'Stock Price');
-
-            const baseMetrics = state.selectedMetrics.filter(m => 
-                !m.name.includes('Margin') && 
-                !['ROIC', 'ROCE', 'ROE', 'ROA', 'Stock Price', 'P/E Ratio'].includes(m.name)
-            );
-
-            const marginMetrics = calculateMargins(state.lastFinancialData, {
-                ...state,
-                margins: newMargins
-            });
-
-            const returnMetrics = calculateReturns(state.lastFinancialData, state);
-
-            return {
-                ...state,
-                margins: newMargins,
-                selectedMetrics: [...baseMetrics, ...marginMetrics, ...returnMetrics, ...(priceMetric ? [priceMetric] : [])]
-            };
-        }),
-
-        toggleReturnMetric: (returnType: ReturnMetricType) => update(state => {
-            if (!state.lastFinancialData) return state;
-
-            const newReturnMetrics = {
-                ...state.returnMetrics,
-                [returnType]: !state.returnMetrics[returnType]
-            };
-
-            // Preserve price metric
-            const priceMetric = state.selectedMetrics.find(m => m.name === 'Stock Price');
-
-            const baseMetrics = state.selectedMetrics.filter(m => 
-                !m.name.includes('Margin') && !['ROIC', 'ROCE', 'ROE', 'ROA', 'Stock Price'].includes(m.name)
-            );
-
-            const marginMetrics = calculateMargins(state.lastFinancialData, state);
-            const returnMetrics = calculateReturns(state.lastFinancialData, {
-                ...state,
-                returnMetrics: newReturnMetrics
-            });
-
-            return {
-                ...state,
-                returnMetrics: newReturnMetrics,
-                selectedMetrics: [...baseMetrics, ...marginMetrics, ...returnMetrics, ...(priceMetric ? [priceMetric] : [])]
-            };
-        }),
-
-        toggleValuationMetric: (valuationType: ValuationMetricType) => update(state => {
-            if (!state.lastFinancialData) return state;
-
-            const newValuationMetrics = {
-                ...state.valuationMetrics,
-                [valuationType]: !state.valuationMetrics[valuationType]
-            };
-
-            // Get the metric name based on valuation type
-            const metricName = {
-                pe: 'P/E Ratio',
-                fcfYield: 'FCF Yield',
-                ps: 'P/S Ratio',
-                evEbitda: 'EV/EBITDA',
-                pgp: 'P/GP Ratio'
-            }[valuationType];
-
-            if (!metricName) return state;
-
-            // If turning on, add to selectedMetricNames
-            // If turning off, remove from selectedMetricNames
-            let newMetricNames = [...state.selectedMetricNames];
-            if (newValuationMetrics[valuationType]) {
-                if (!newMetricNames.includes(metricName)) {
-                    newMetricNames.push(metricName);
-                }
-            } else {
-                newMetricNames = newMetricNames.filter(name => name !== metricName);
-            }
-
-            saveSelectedMetrics(newMetricNames);
-
-            // Update selectedMetrics based on the new metric names
-            const updatedMetrics = state.selectedMetrics.filter(m => 
-                !['P/E Ratio', 'FCF Yield', 'P/S Ratio', 'EV/EBITDA', 'P/GP Ratio'].includes(m.name) ||
-                newMetricNames.includes(m.name)
-            );
-
-            return {
-                ...state,
-                valuationMetrics: newValuationMetrics,
-                selectedMetricNames: newMetricNames,
-                selectedMetrics: updatedMetrics
-            };
-        }),
+        toggleValuationMetric: (valuationType) => 
+            update(state => {
+                const changes = handleValuationToggle(state, valuationType);
+                return { ...state, ...changes };
+            }),
 
         clearChart: () => {
             saveShowChart(false);
             saveSelectedMetrics([]);
-            set({
-                showChart: false,
-                selectedMetrics: [],
-                selectedMetricNames: [],
-                selectedYears: loadSelectedYears(),
-                margins: {
-                    netIncome: false,
-                    grossProfit: false,
-                    operating: false,
-                    ebitda: false,
-                    fcf: false,
-                    operatingCashFlow: false
-                },
-                returnMetrics: {
-                    roic: false,
-                    roce: false,
-                    roe: false,
-                    roa: false
-                },
-                valuationMetrics: {
-                    pe: false,
-                    fcfYield: false,
-                    ps: false,
-                    evEbitda: false,
-                    pgp: false
-                },
-                lastFinancialData: null,
-                metricVisibility: {}
-            });
+            set(initialState);
         }
     };
 }
