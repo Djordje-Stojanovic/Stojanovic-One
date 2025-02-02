@@ -115,6 +115,11 @@
     function handleMetricClick(event: CustomEvent<{ name: string; values: number[]; dates: string[] }>) {
         const { name, values, dates } = event.detail;
         console.log('Metric clicked:', { name, values, dates });
+        
+        // First update the financial data in the store
+        chartStore.updateMetrics(financialData);
+        
+        // Then handle the metric click
         chartStore.handleMetricClick(name, values, dates);
     }
 

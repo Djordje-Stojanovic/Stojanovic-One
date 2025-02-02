@@ -16,6 +16,9 @@
 
     $: showChart = $chartStore.showChart;
     $: darkMode = true;
+    $: if (allFinancialData) {
+        chartStore.updateMetrics(allFinancialData);
+    }
 
     interface GrowthRate {
         name: string;
@@ -123,11 +126,12 @@
 
 {#if showChart}
     <div class="space-y-2">
-        <MarginSelector />
-        <ReturnMetricsSelector />
-        <ValuationMetricsSelector />
+        <MarginSelector financialData={allFinancialData} />
+        <ReturnMetricsSelector financialData={allFinancialData} />
+        <ValuationMetricsSelector financialData={allFinancialData} />
         <PriceSelector />
     </div>
+
     <div class="bg-white dark:bg-[#1F2937] rounded-lg">
         <FinancialChart 
             metrics={$chartStore.selectedMetrics}

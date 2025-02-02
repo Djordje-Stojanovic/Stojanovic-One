@@ -3,6 +3,7 @@
     import type { BaseFinancialStatement } from '$lib/types/financialStatements';
     import { saveSelectedMetrics, saveShowChart, updateChartMetrics } from './state/chartState';
     import { createEventDispatcher } from 'svelte';
+    import LoadingSpinner from '../LoadingSpinner.svelte';
 
     const dispatch = createEventDispatcher();
 
@@ -14,28 +15,52 @@
     let previousStatements = '';
     let previousMetricNames = '';
 
-    function handleMetricClick(name: string, values: number[], dates: string[]) {
-        const existingIndex = selectedMetricNames.indexOf(name);
-        
-        if (existingIndex !== -1) {
-            // Remove metric
-            selectedMetrics = selectedMetrics.filter(m => m.name !== name);
-            selectedMetricNames = selectedMetricNames.filter(n => n !== name);
-        } else {
-            // Add new metric
-            const newMetric = {
-                name,
-                data: dates.map((date, i) => ({
-                    date,
-                    value: values[i]
-                }))
-            };
+    let isLoading = false;
+    let retryTimeout: ReturnType<typeof setTimeout>;
 
-            selectedMetrics = [...selectedMetrics, newMetric];
-            selectedMetricNames = [...selectedMetricNames, name];
+    function handleMetricClick(name: string, values: number[], dates: string[]) {
+        if (!statements.length) {
+            console.warn('Financial statements not loaded yet');
+            return;
         }
 
-        updateMetrics();
+        if (isLoading) return;
+        
+        isLoading = true;
+        clearTimeout(retryTimeout);
+
+        try {
+            const existingIndex = selectedMetricNames.indexOf(name);
+            
+            if (existingIndex !== -1) {
+                // Remove metric
+                selectedMetrics = selectedMetrics.filter(m => m.name !== name);
+                selectedMetricNames = selectedMetricNames.filter(n => n !== name);
+            } else {
+                // Add new metric
+                const newMetric = {
+                    name,
+                    data: dates.map((date, i) => ({
+                        date,
+                        value: values[i]
+                    }))
+                };
+
+                selectedMetrics = [...selectedMetrics, newMetric];
+                selectedMetricNames = [...selectedMetricNames, name];
+            }
+
+            updateMetrics();
+        } catch (error) {
+            console.error('Error updating metrics:', error);
+            // Retry after a short delay
+            retryTimeout = setTimeout(() => {
+                isLoading = false;
+                handleMetricClick(name, values, dates);
+            }, 500);
+        } finally {
+            isLoading = false;
+        }
     }
 
     function clearMetrics() {
@@ -84,4 +109,4 @@
     }
 </script>
 
-<slot {handleMetricClick} {clearMetrics} {selectedMetricNames} />
+<slot {handleMetricClick} {clearMetrics} {selectedMetricNames} {isLoading} />

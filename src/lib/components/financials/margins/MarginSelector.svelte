@@ -2,6 +2,9 @@
 import { chartStore } from '$lib/stores/financial-charts';
 import type { MarginType } from '$lib/stores/financial-charts/types/ChartTypes';
 import { marginColors } from '../utils/chartConfig';
+import type { FinancialData } from '$lib/types/financialStatements';
+
+export let financialData: FinancialData;
 
 interface MarginOption {
     id: MarginType;
@@ -42,27 +45,54 @@ const margins: MarginOption[] = [
     }
 ];
 
-function toggleMargin(margin: MarginOption) {
-    chartStore.toggleMargin(margin.id);
-}
+let loadingMargin: MarginType | null = null;
+let errorMargin: MarginType | null = null;
 
 $: marginStates = $chartStore.margins;
+
+function isDataReady(margin: MarginOption): boolean {
+    // If we have financialData, allow the click - the actual margin calculation
+    // will handle any missing data gracefully
+    return !!financialData;
+}
+
+function toggleMargin(margin: MarginOption) {
+    if (loadingMargin) return;
+    if (!financialData) return;
+    
+    try {
+        chartStore.toggleMargin(margin.id);
+    } catch (error) {
+        console.error('Error toggling margin:', error);
+    }
+}
 </script>
 
 <div class="w-full flex items-center">
     <div class="flex-grow flex flex-wrap gap-2 items-center justify-center">
         {#each margins as margin}
+            {@const isDisabled = loadingMargin === margin.id || errorMargin === margin.id || !isDataReady(margin)}
             <button
                 class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-all duration-200
-                       border border-transparent hover:bg-opacity-10 focus:outline-none"
+                       border border-transparent {!isDisabled && 'hover:bg-opacity-10'} focus:outline-none
+                       {isDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}"
                 class:bg-opacity-10={marginStates[margin.id]}
                 style="color: {margin.color}; 
                        background-color: {marginStates[margin.id] ? margin.color.replace(')', ', 0.1)').replace('rgb', 'rgba') : 'transparent'};
                        border-color: {marginStates[margin.id] ? margin.color : 'transparent'}"
                 on:click={() => toggleMargin(margin)}
+                disabled={isDisabled}
             >
                 <span class="w-1.5 h-1.5 rounded-full mr-1.5" style="background-color: {margin.color}"></span>
                 {margin.name}
+                {#if loadingMargin === margin.id}
+                    <span class="inline-block animate-pulse">...</span>
+                {:else if errorMargin === margin.id}
+                    <span class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-red-500 text-white text-xs px-2 py-1 rounded whitespace-nowrap animate-fade-in z-50 shadow-lg">
+                        {!isDataReady(margin) ? 'Loading financial data...' : `Failed to calculate ${margin.name}`}
+                    </span>
+                    ❌
+                {/if}
             </button>
         {/each}
     </div>

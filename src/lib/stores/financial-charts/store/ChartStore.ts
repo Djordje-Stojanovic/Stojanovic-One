@@ -127,8 +127,6 @@ function createChartStore(): ChartStoreActions {
         updateMetrics: (financialData: FinancialData) => update(state => {
             if (!financialData) return state;
 
-            state.lastFinancialData = financialData;
-
             // Preserve price metric if it exists
             const priceMetric = state.selectedMetrics.find(m => m.name === 'Stock Price');
 
@@ -172,6 +170,7 @@ function createChartStore(): ChartStoreActions {
             const hasAnyData = allMetrics.some(m => m.data.length > 0);
             const newState = {
                 ...state,
+                lastFinancialData: financialData,
                 selectedMetrics: allMetrics,
                 showChart: hasAnyData
             };

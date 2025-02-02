@@ -22,12 +22,9 @@
         evEbitda: false,
         pgp: false
     };
-    let financialData: FinancialData | null = null;
+    export let financialData: FinancialData;
 
-    $: {
-        valuationMetrics = $chartStore.valuationMetrics;
-        financialData = $chartStore.lastFinancialData;
-    }
+    $: valuationMetrics = $chartStore.valuationMetrics;
 
     const metricCalculators: Record<ValuationMetricType, (prices: any[], data: FinancialData) => { values: number[]; dates: string[] }> = {
         pe: calculatePERatio,
@@ -41,6 +38,10 @@
         return type in metricCalculators;
     }
 
+    function isDataReady(type: ValuationMetricType): boolean {
+        return !!financialData;
+    }
+
     async function handleMetricClick(type: string) {
         if (!isValuationMetricType(type)) return;
         if (loadingMetric) return;
@@ -49,21 +50,51 @@
             loadingMetric = type;
 
             if (!valuationMetrics[type]) {
-                // Get stock prices
-                const { data: prices } = await db.from('stock_prices')
-                    .select('*')
-                    .eq('symbol', symbol)
-                    .order('date', { ascending: true });
-
-                if (!prices?.length || !financialData) {
-                    throw new Error('No data available');
+                // Get stock prices with retry logic
+                let retryCount = 0;
+                let prices: any[] | null = null;
+                
+                while (retryCount < 3 && !prices) {
+                    const { data, error } = await db.from('stock_prices')
+                        .select('*')
+                        .eq('symbol', symbol)
+                        .order('date', { ascending: true });
+                    
+                    if (error) throw error;
+                    if (data?.length) {
+                        prices = data;
+                        break;
+                    }
+                    
+                    retryCount++;
+                    if (retryCount < 3) {
+                        await new Promise(resolve => setTimeout(resolve, 500 * retryCount));
+                    }
                 }
 
-                const calculator = metricCalculators[type];
-                const { values, dates } = calculator(prices, financialData);
+                if (!prices?.length) {
+                    throw new Error('No price data available');
+                }
 
-                chartStore.handleMetricClick(metricConfigs[type].name, values, dates);
-                chartStore.toggleValuationMetric(type);
+                // Ensure financialData is not null before proceeding
+                if (!financialData) {
+                    throw new Error('Financial data not available');
+                }
+
+                try {
+                    const calculator = metricCalculators[type];
+                    const { values, dates } = calculator(prices, financialData);
+
+                    if (!values.length || !dates.length) {
+                        throw new Error('Calculation returned no data');
+                    }
+
+                    chartStore.handleMetricClick(metricConfigs[type].name, values, dates);
+                    chartStore.toggleValuationMetric(type);
+                } catch (calcError) {
+                    console.error('Calculation error:', calcError);
+                    throw new Error(`Failed to calculate ${metricConfigs[type].name}`);
+                }
             } else {
                 chartStore.handleMetricClick(metricConfigs[type].name, [], []);
                 chartStore.toggleValuationMetric(type);
@@ -94,22 +125,28 @@
 <div class="w-full flex items-center">
     <div class="flex-grow flex flex-wrap gap-2 items-center justify-center">
         {#each Object.entries(metricConfigs) as [type, config]}
+            {#if isValuationMetricType(type)}
+                {@const isDisabled = loadingMetric === type || errorMetric === type || !isDataReady(type)}
             <button
-                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-all duration-200 border border-transparent {!loadingMetric && 'hover:bg-opacity-10'} focus:outline-none {loadingMetric ? 'cursor-wait opacity-50' : errorMetric === type ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}"
+                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-all duration-200 border border-transparent {!isDisabled && 'hover:bg-opacity-10'} focus:outline-none {isDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}"
                 style="color: {config.color}; background-color: {valuationMetrics[type] ? config.bgColor : 'transparent'}; border-color: transparent;"
                 on:click={() => handleMetricClick(type)}
-                disabled={loadingMetric === type || errorMetric === type}
+                disabled={isDisabled}
             >
                 <span class="w-1.5 h-1.5 rounded-full mr-1.5" style="background-color: {config.color};"></span>
                 <span class="relative">
-                    {config.name} {#if loadingMetric === type}...{:else if errorMetric === type}
+                    {config.name} 
+                    {#if loadingMetric === type}
+                        <span class="inline-block animate-pulse">...</span>
+                    {:else if errorMetric === type}
                         <span class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-red-500 text-white text-xs px-2 py-1 rounded whitespace-nowrap animate-fade-in z-50 shadow-lg">
-                            No valid {config.name} data
+                            {!isDataReady(type) ? 'Loading financial data...' : `No valid ${config.name} data`}
                         </span>
                         ❌
                     {/if}
                 </span>
             </button>
+            {/if}
         {/each}
     </div>
 </div>
