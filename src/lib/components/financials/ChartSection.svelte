@@ -94,7 +94,7 @@
         metrics.forEach((metric, index) => {
             if (!metric.hidden && 
                 !metric.name.includes('Margin') && 
-                !['ROIC', 'ROCE', 'ROE', 'ROA', 'Stock Price', 'P/E Ratio', 'FCF Yield', 'P/S Ratio', 'EV/EBITDA', 'P/GP Ratio'].includes(metric.name)) {
+                !['ROIC', 'ROCE', 'ROE', 'ROA', 'Stock Price', 'P/E Ratio', 'FCF Yield', 'P/S Ratio', 'EV/EBITDA', 'P/GP Ratio', 'P/B Ratio', 'P/Tangible B'].includes(metric.name)) {
                 // Get complete data for calculations
                 const allData = getCompleteMetricData(metric.name);
                 

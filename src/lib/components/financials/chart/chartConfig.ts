@@ -20,13 +20,13 @@ export function getChartConfig(metrics: any[], darkMode: boolean | undefined, al
 
     const valuationDatasets = datasets.filter(d => {
         const label = d.label || '';
-        return ['P/E Ratio', 'FCF Yield', 'P/S Ratio', 'EV/EBITDA', 'P/GP Ratio'].includes(label) && !d.hidden;
+        return ['P/E Ratio', 'FCF Yield', 'P/S Ratio', 'EV/EBITDA', 'P/GP Ratio', 'P/B Ratio', 'P/Tangible B'].includes(label) && !d.hidden;
     });
 
     const visibleNonPercentageDatasets = datasets.filter(d => {
         const label = d.label || '';
         return !label.includes('Margin') && 
-               !['ROIC', 'ROCE', 'ROE', 'ROA', 'Stock Price', 'P/E Ratio', 'FCF Yield', 'P/S Ratio', 'EV/EBITDA', 'P/GP Ratio'].includes(label) && 
+               !['ROIC', 'ROCE', 'ROE', 'ROA', 'Stock Price', 'P/E Ratio', 'FCF Yield', 'P/S Ratio', 'EV/EBITDA', 'P/GP Ratio', 'P/B Ratio', 'P/Tangible B'].includes(label) && 
                !d.hidden;
     });
 
@@ -107,7 +107,7 @@ export function getChartConfig(metrics: any[], darkMode: boolean | undefined, al
                             const label = context.dataset.label || '';
                             const isPercentage = label.includes('Margin') || ['ROIC', 'ROCE', 'ROE', 'ROA'].includes(label);
                             const isPrice = label === 'Stock Price';
-                            const isValuation = ['P/E Ratio', 'FCF Yield', 'P/S Ratio', 'EV/EBITDA', 'P/GP Ratio'].includes(label);
+                            const isValuation = ['P/E Ratio', 'FCF Yield', 'P/S Ratio', 'EV/EBITDA', 'P/GP Ratio', 'P/B Ratio', 'P/Tangible B'].includes(label);
                             const formattedValue = isPercentage || label === 'FCF Yield'
                                 ? `${value.toFixed(2)}%`
                                 : isPrice

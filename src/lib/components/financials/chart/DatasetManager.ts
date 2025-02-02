@@ -8,7 +8,7 @@ export function createDatasets(metrics: ChartProps['metrics'], allDates: string[
         const isMargin = metric.name.includes('Margin');
         const isReturnMetric = ['ROIC', 'ROCE', 'ROE', 'ROA'].includes(metric.name);
         const isPrice = metric.name === 'Stock Price';
-        const isValuation = ['P/E Ratio', 'FCF Yield', 'P/S Ratio', 'EV/EBITDA', 'P/GP Ratio'].includes(metric.name);
+        const isValuation = ['P/E Ratio', 'FCF Yield', 'P/S Ratio', 'EV/EBITDA', 'P/GP Ratio', 'P/B Ratio', 'P/Tangible B'].includes(metric.name);
         
         if (isMargin || isReturnMetric || isPrice || isValuation) {
             let color;
@@ -35,6 +35,12 @@ export function createDatasets(metrics: ChartProps['metrics'], allDates: string[
                         break;
                     case 'P/GP Ratio':
                         color = '#10B981'; // Emerald
+                        break;
+                    case 'P/B Ratio':
+                        color = '#DC2626'; // Red-600
+                        break;
+                    case 'P/Tangible B':
+                        color = '#DB2777'; // Pink-600
                         break;
                     default:
                         color = colors[index % colors.length];

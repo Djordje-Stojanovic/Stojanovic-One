@@ -6,7 +6,9 @@ const VALUATION_METRIC_NAMES: Record<ValuationMetricType, string> = {
     fcfYield: 'FCF Yield',
     ps: 'P/S Ratio',
     evEbitda: 'EV/EBITDA',
-    pgp: 'P/GP Ratio'
+    pgp: 'P/GP Ratio',
+    pb: 'P/B Ratio',
+    ptb: 'P/Tangible B'
 };
 
 export function handleValuationToggle(

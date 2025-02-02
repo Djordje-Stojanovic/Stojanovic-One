@@ -21,7 +21,7 @@
     // Check if price/valuation chart should be shown
     $: priceMetric = $chartStore.selectedMetrics.find(m => m.name === 'Stock Price');
     $: valuationMetrics = $chartStore.selectedMetrics.filter(m => 
-        ['P/E Ratio', 'FCF Yield', 'P/S Ratio', 'EV/EBITDA', 'P/GP Ratio'].includes(m.name) && !m.hidden
+        ['P/E Ratio', 'FCF Yield', 'P/S Ratio', 'EV/EBITDA', 'P/GP Ratio', 'P/B Ratio', 'P/Tangible B'].includes(m.name) && !m.hidden
     );
     $: showPriceChart = (!!priceMetric && !priceMetric.hidden) || valuationMetrics.length > 0;
 
@@ -55,7 +55,7 @@
         const filteredMetrics = metrics.filter(m => {
             const name = m.name || '';
             return name !== 'Stock Price' && 
-                !['P/E Ratio', 'FCF Yield', 'P/S Ratio', 'EV/EBITDA', 'P/GP Ratio'].includes(name);
+                !['P/E Ratio', 'FCF Yield', 'P/S Ratio', 'EV/EBITDA', 'P/GP Ratio', 'P/B Ratio', 'P/Tangible B'].includes(name);
         });
 
         // Get all unique dates and sort them

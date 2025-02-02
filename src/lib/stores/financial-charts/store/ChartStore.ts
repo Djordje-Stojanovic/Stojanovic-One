@@ -43,7 +43,9 @@ function createChartStore(): ChartStoreActions {
             fcfYield: false,
             ps: false,
             evEbitda: false,
-            pgp: false
+            pgp: false,
+            pb: false,
+            ptb: false
         },
         lastFinancialData: null,
         metricVisibility: {}

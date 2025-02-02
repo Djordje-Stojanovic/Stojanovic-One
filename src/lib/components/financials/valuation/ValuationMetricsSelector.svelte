@@ -13,6 +13,8 @@
     import { calculatePSRatio } from './metrics/psRatio';
     import { calculateEVEBITDA } from './metrics/evEbitda';
     import { calculatePGPRatio } from './metrics/pgpRatio';
+    import { calculatePBRatio } from './metrics/pb';
+    import { calculatePTBRatio } from './metrics/ptb';
 
     let symbol = $page.params.symbol;
     let loadingMetric: ValuationMetricType | null = null;
@@ -24,7 +26,9 @@
         fcfYield: false,
         ps: false,
         evEbitda: false,
-        pgp: false
+        pgp: false,
+        pb: false,
+        ptb: false
     };
     export let financialData: FinancialData;
 
@@ -35,7 +39,9 @@
         fcfYield: calculateFCFYield,
         ps: calculatePSRatio,
         evEbitda: calculateEVEBITDA,
-        pgp: calculatePGPRatio
+        pgp: calculatePGPRatio,
+        pb: calculatePBRatio,
+        ptb: calculatePTBRatio
     };
 
     function isValuationMetricType(type: string): type is ValuationMetricType {

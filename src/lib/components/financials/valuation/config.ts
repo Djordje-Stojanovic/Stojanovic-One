@@ -25,5 +25,15 @@ export const metricConfigs: Record<string, ValuationMetricConfig> = {
         name: 'P/GP Ratio',
         color: 'rgb(16, 185, 129)',
         bgColor: 'rgba(16, 185, 129, 0.1)'
+    },
+    pb: {
+        name: 'P/B Ratio',
+        color: 'rgb(220, 38, 38)', // Red-600
+        bgColor: 'rgba(220, 38, 38, 0.1)'
+    },
+    ptb: {
+        name: 'P/Tangible B',
+        color: 'rgb(219, 39, 119)', // Pink-600
+        bgColor: 'rgba(219, 39, 119, 0.1)'
     }
 };
