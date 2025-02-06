@@ -39,6 +39,10 @@
         period = newPeriod;
         dispatch('periodChange', { period: newPeriod });
     }
+
+    function handleDefaultView() {
+        dispatch('defaultView');
+    }
 </script>
 
 <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
@@ -52,11 +56,12 @@
                         {symbol} Financial Statements
                     {/if}
                 </h1>
-                <button
-                    class="min-w-[150px] font-bold bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm transition-colors duration-300"
-                    on:click={handleSync}
-                    disabled={loading}
-                >
+                <div class="flex items-center gap-2">
+                    <button
+                        class="min-w-[150px] font-bold bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm transition-colors duration-300"
+                        on:click={handleSync}
+                        disabled={loading}
+                    >
                     {#if loading}
                         <span class="flex items-center gap-2">
                             <div class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
@@ -70,7 +75,20 @@
                             Sync All Data
                         </span>
                     {/if}
-                </button>
+                    </button>
+                    <button
+                        class="min-w-[150px] font-bold bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm transition-colors duration-300"
+                        on:click={handleDefaultView}
+                    >
+                        <span class="flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                                <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+                            </svg>
+                            Default View
+                        </span>
+                    </button>
+                </div>
             </div>
             <div class="flex flex-wrap items-center gap-2">
                 <div class="flex items-center gap-2 border-r dark:border-gray-600 pr-2 mr-2">
