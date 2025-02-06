@@ -13,7 +13,7 @@
     import { loadFinancialPageData, loadStockPriceData } from '$lib/services/financialPageService';
     import { getHistoricalPrices } from '$lib/services/stockPriceService';
     import type { StockPrice } from '$lib/types/stockPrices';
-    import { handleValuationMetricClick } from '$lib/components/financials/valuation/utils/metricHandlers';
+    import { handleValuationMetricClick, updateMetricData } from '$lib/components/financials/valuation/utils/metricHandlers';
     import { chartStore } from '$lib/stores/chartStore';
     import { filterFinancialStatementsByPeriod } from '$lib/utils/financialStatementFilters';
     import { loadSelectedPeriod, saveSelectedPeriod, loadSelectedYears, saveSelectedYears } from '$lib/components/financials/state/chartState';
@@ -219,7 +219,7 @@
                     chartStore.handleMetricClick('Stock Price', priceValues, priceDates);
                 }
                 if (hasPERatio) {
-                    await handleValuationMetricClick('pe', symbol, selectedYears, financialData);
+                    await updateMetricData('pe', symbol, selectedYears, financialData);
                 }
             }
         }
@@ -244,7 +244,7 @@
                     chartStore.handleMetricClick('Stock Price', priceValues, priceDates);
                 }
                 if (hasPERatio) {
-                    await handleValuationMetricClick('pe', symbol, selectedYears, financialData);
+                    await updateMetricData('pe', symbol, selectedYears, financialData);
                 }
             }
         }

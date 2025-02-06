@@ -22,7 +22,7 @@ const metricCalculators = {
     ptb: calculatePTBRatio
 };
 
-export async function handleValuationMetricClick(type: ValuationMetricType, symbol: string, selectedYears: number, financialData: FinancialData) {
+export async function updateMetricData(type: ValuationMetricType, symbol: string, selectedYears: number, financialData: FinancialData) {
     try {
         const prices = await getHistoricalPrices(symbol, selectedYears);
         
@@ -46,7 +46,16 @@ export async function handleValuationMetricClick(type: ValuationMetricType, symb
             throw new Error('Calculation returned no data');
         }
 
+        // Update data without toggling the metric state
         chartStore.handleMetricClick(metricConfigs[type].name, values, dates);
+    } catch (error) {
+        console.error('Error updating metric:', error);
+    }
+}
+
+export async function handleValuationMetricClick(type: ValuationMetricType, symbol: string, selectedYears: number, financialData: FinancialData) {
+    try {
+        await updateMetricData(type, symbol, selectedYears, financialData);
         chartStore.toggleValuationMetric(type);
     } catch (error) {
         console.error('Error in handleMetricClick:', error);

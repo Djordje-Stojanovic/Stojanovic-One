@@ -51,10 +51,19 @@
     }
 
     function handleClose() {
+        // Clear Stock Price
         chartStore.handleMetricClick('Stock Price', [], []);
-        // Clear any selected valuation metrics
+
+        // Clear and toggle off any selected valuation metrics
         valuationMetrics.forEach(m => {
             chartStore.handleMetricClick(m.name, [], []);
+            if (m.name === 'P/E Ratio') chartStore.toggleValuationMetric('pe');
+            if (m.name === 'FCF Yield') chartStore.toggleValuationMetric('fcfYield');
+            if (m.name === 'P/S Ratio') chartStore.toggleValuationMetric('ps');
+            if (m.name === 'EV/EBITDA') chartStore.toggleValuationMetric('evEbitda');
+            if (m.name === 'P/GP Ratio') chartStore.toggleValuationMetric('pgp');
+            if (m.name === 'P/B Ratio') chartStore.toggleValuationMetric('pb');
+            if (m.name === 'P/Tangible B') chartStore.toggleValuationMetric('ptb');
         });
     }
 
