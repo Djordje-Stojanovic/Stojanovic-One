@@ -51,7 +51,7 @@ function createChartStore(): ChartStoreActions {
         metricVisibility: {}
     };
 
-    const { subscribe, set, update } = writable(initialState);
+    const { subscribe, update } = writable(initialState);
 
     return {
         subscribe,
@@ -149,11 +149,40 @@ function createChartStore(): ChartStoreActions {
                 return { ...state, ...changes };
             }),
 
-        clearChart: () => {
+        clearChart: () => update(state => {
             saveShowChart(false);
             saveSelectedMetrics([]);
-            set(initialState);
-        }
+            return {
+                ...state,
+                showChart: false,
+                selectedMetrics: [],
+                selectedMetricNames: [],
+                margins: {
+                    netIncome: false,
+                    grossProfit: false,
+                    operating: false,
+                    ebitda: false,
+                    fcf: false,
+                    operatingCashFlow: false
+                },
+                returnMetrics: {
+                    roic: false,
+                    roce: false,
+                    roe: false,
+                    roa: false
+                },
+                valuationMetrics: {
+                    pe: false,
+                    fcfYield: false,
+                    ps: false,
+                    evEbitda: false,
+                    pgp: false,
+                    pb: false,
+                    ptb: false
+                },
+                metricVisibility: {}
+            };
+        })
     };
 }
 

@@ -12,12 +12,13 @@
     import type { FinancialData } from '$lib/types/financialStatements';
     import type { ChartDataPoint, ChartMetric } from '$lib/stores/financial-charts/types/ChartTypes';
 
-    export let allFinancialData: FinancialData;
+    export let financialData: FinancialData;
 
     $: showChart = $chartStore.showChart;
     $: darkMode = true;
-    $: if (allFinancialData) {
-        chartStore.updateMetrics(allFinancialData);
+    
+    $: if (financialData) {
+        chartStore.updateMetrics(financialData);
     }
 
     interface GrowthRate {
@@ -32,8 +33,8 @@
         let data: ChartDataPoint[] = [];
         
         // First try revenue segments and geographic segments since they use raw names
-        if (allFinancialData?.revenue_segments && allFinancialData.revenue_segments.length > 0) {
-            const segments = allFinancialData.revenue_segments;
+        if (financialData?.revenue_segments && financialData.revenue_segments.length > 0) {
+            const segments = financialData.revenue_segments;
             if (segments.some(stmt => metricName in stmt.segments)) {
                 data = segments
                     .map(stmt => ({
@@ -44,8 +45,8 @@
             }
         }
         
-        if (data.length === 0 && allFinancialData?.revenue_geo_segments && allFinancialData.revenue_geo_segments.length > 0) {
-            const geoSegments = allFinancialData.revenue_geo_segments;
+        if (data.length === 0 && financialData?.revenue_geo_segments && financialData.revenue_geo_segments.length > 0) {
+            const geoSegments = financialData.revenue_geo_segments;
             if (geoSegments.some(stmt => metricName in stmt.segments)) {
                 data = geoSegments
                     .map(stmt => ({
@@ -61,26 +62,26 @@
             const fieldName = getFieldName(metricName);
             
             // Try income statements
-            if (allFinancialData?.income_statements?.length > 0 && 
-                fieldName in allFinancialData.income_statements[0]) {
+            if (financialData?.income_statements?.length > 0 && 
+                fieldName in financialData.income_statements[0]) {
                 data = extractMetricData(
-                    allFinancialData.income_statements.filter(stmt => stmt.period !== 'FY' && stmt.period !== 'TTM'),
+                    financialData.income_statements,
                     fieldName
                 );
             }
             // Try balance sheets
-            else if (allFinancialData?.balance_sheets?.length > 0 && 
-                     fieldName in allFinancialData.balance_sheets[0]) {
+            else if (financialData?.balance_sheets?.length > 0 && 
+                     fieldName in financialData.balance_sheets[0]) {
                 data = extractMetricData(
-                    allFinancialData.balance_sheets.filter(stmt => stmt.period !== 'FY' && stmt.period !== 'TTM'),
+                    financialData.balance_sheets,
                     fieldName
                 );
             }
             // Try cash flow statements
-            else if (allFinancialData?.cash_flow_statements?.length > 0 && 
-                     fieldName in allFinancialData.cash_flow_statements[0]) {
+            else if (financialData?.cash_flow_statements?.length > 0 && 
+                     fieldName in financialData.cash_flow_statements[0]) {
                 data = extractMetricData(
-                    allFinancialData.cash_flow_statements.filter(stmt => stmt.period !== 'FY' && stmt.period !== 'TTM'),
+                    financialData.cash_flow_statements,
                     fieldName
                 );
             }
@@ -126,9 +127,9 @@
 
 {#if showChart}
     <div class="space-y-2">
-        <MarginSelector financialData={allFinancialData} />
-        <ReturnMetricsSelector financialData={allFinancialData} />
-        <ValuationMetricsSelector financialData={allFinancialData} />
+        <MarginSelector {financialData} />
+        <ReturnMetricsSelector {financialData} />
+        <ValuationMetricsSelector {financialData} />
         <PriceSelector />
     </div>
 

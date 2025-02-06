@@ -20,11 +20,28 @@
     async function searchStocks(term: string) {
         loading = true;
         try {
-            const { data, error } = await db
+            // First try exact symbol match
+            let { data: exactMatch, error: exactError } = await db
                 .from('stock_metadata')
                 .select('symbol, company_name')
-                .or(`symbol.ilike.%${term}%,company_name.ilike.%${term}%`)
-                .limit(10);
+                .eq('symbol', term.toUpperCase())
+                .limit(1);
+
+            if (exactError) throw exactError;
+
+            // Then get other matches with priority ordering
+            const { data: otherMatches, error } = await db
+                .from('stock_metadata')
+                .select('symbol, company_name')
+                .or(`symbol.ilike.${term}%,symbol.ilike.%${term}%,company_name.ilike.%${term}%`)
+                .not('symbol', 'eq', term.toUpperCase())
+                .order('symbol', { ascending: true })
+                .limit(9);
+
+            if (error) throw error;
+
+            // Combine exact match with other matches
+            const data = [...(exactMatch || []), ...(otherMatches || [])];
 
             if (error) throw error;
             return data || [];

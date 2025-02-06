@@ -192,7 +192,7 @@
         on:periodChange={handlePeriodChange}
     />
 
-    <ChartSection {allFinancialData} />
+    <ChartSection {financialData} />
 
     {#if !hasData && !loading && !error}
         <div class="p-4 bg-yellow-100 dark:bg-yellow-900 border border-yellow-400 dark:border-yellow-700 text-yellow-700 dark:text-yellow-200 rounded-lg" role="alert">
