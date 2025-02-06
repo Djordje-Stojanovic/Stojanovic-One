@@ -67,24 +67,31 @@ export function handleMetricClick(
     let newMetricNames: string[];
 
     if (existingIndex !== -1) {
-        // Update existing metric
-        newMetrics = state.selectedMetrics.map(m => 
-            m.name === name ? newMetric : m
-        );
-        newMetricNames = [...state.selectedMetricNames];
+        // Remove existing metric
+        newMetrics = state.selectedMetrics.filter(m => m.name !== name);
+        newMetricNames = state.selectedMetricNames.filter(n => n !== name);
+        const newVisibility = { ...state.metricVisibility };
+        delete newVisibility[name];
+
+        return {
+            selectedMetrics: newMetrics,
+            selectedMetricNames: newMetricNames,
+            showChart: newMetrics.length > 0,
+            metricVisibility: newVisibility
+        };
     } else {
         // Add new metric
         newMetrics = [...state.selectedMetrics, newMetric];
         newMetricNames = [...state.selectedMetricNames, name];
-    }
 
-    return {
-        selectedMetrics: newMetrics,
-        selectedMetricNames: newMetricNames,
-        showChart: true,
-        metricVisibility: {
-            ...state.metricVisibility,
-            [name]: true
-        }
-    };
+        return {
+            selectedMetrics: newMetrics,
+            selectedMetricNames: newMetricNames,
+            showChart: true,
+            metricVisibility: {
+                ...state.metricVisibility,
+                [name]: true
+            }
+        };
+    }
 }
