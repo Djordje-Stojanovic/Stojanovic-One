@@ -214,10 +214,33 @@
         updateData();
     }
 
-    // Watch for symbol changes - only load financial data, not stock prices
+    // Watch for symbol changes and reload all data
     $: if ($page.params.symbol !== symbol) {
+        const prevSymbol = symbol;
         symbol = $page.params.symbol;
-        loadData(false); // Load financial data without force refresh
+        
+        // Save current state
+        const hasStockPrice = $chartStore.selectedMetricNames.includes('Stock Price');
+        const hasPERatio = $chartStore.valuationMetrics.pe;
+
+        // Load financial data first
+        loadData(false).then(async () => {
+            // Then reload price-based metrics if they were selected
+            if (hasStockPrice || hasPERatio) {
+                const prices = await getHistoricalPrices(symbol, selectedYears);
+                if (prices.length > 0) {
+                    if (hasStockPrice) {
+                        const priceValues = prices.map((p: StockPrice) => p.adj_close ?? 0);
+                        const priceDates = prices.map((p: StockPrice) => p.date);
+                        chartStore.handleMetricClick('Stock Price', priceValues, priceDates);
+                    }
+
+                    if (hasPERatio) {
+                        await handleValuationMetricClick('pe', symbol, selectedYears, financialData);
+                    }
+                }
+            }
+        });
     }
 
     // Watch for tab changes
