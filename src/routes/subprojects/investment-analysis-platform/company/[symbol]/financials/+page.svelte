@@ -201,46 +201,59 @@
         }
     }
 
-    function handlePeriodChange(event: CustomEvent<{ period: 'annual' | 'quarterly' | 'ttm' }>) {
+    async function handlePeriodChange(event: CustomEvent<{ period: 'annual' | 'quarterly' | 'ttm' }>) {
         selectedPeriod = event.detail.period;
         saveSelectedPeriod(selectedPeriod);
         updateData();
+
+        // Update price-based metrics if they're selected
+        const hasStockPrice = $chartStore.selectedMetricNames.includes('Stock Price');
+        const hasPERatio = $chartStore.valuationMetrics.pe;
+
+        if (hasStockPrice || hasPERatio) {
+            const prices = await getHistoricalPrices(symbol, selectedYears);
+            if (prices.length > 0) {
+                if (hasStockPrice) {
+                    const priceValues = prices.map((p: StockPrice) => p.adj_close ?? 0);
+                    const priceDates = prices.map((p: StockPrice) => p.date);
+                    chartStore.handleMetricClick('Stock Price', priceValues, priceDates);
+                }
+                if (hasPERatio) {
+                    await handleValuationMetricClick('pe', symbol, selectedYears, financialData);
+                }
+            }
+        }
     }
 
-    function handleYearChange(event: CustomEvent<{ years: number }>) {
+    async function handleYearChange(event: CustomEvent<{ years: number }>) {
         selectedYears = event.detail.years;
         saveSelectedYears(selectedYears);
         chartStore.setSelectedYears(selectedYears);
         updateData();
-    }
 
-    // Watch for symbol changes and reload all data
-    $: if ($page.params.symbol !== symbol) {
-        const prevSymbol = symbol;
-        symbol = $page.params.symbol;
-        
-        // Save current state
+        // Update price-based metrics if they're selected
         const hasStockPrice = $chartStore.selectedMetricNames.includes('Stock Price');
         const hasPERatio = $chartStore.valuationMetrics.pe;
 
-        // Load financial data first
-        loadData(false).then(async () => {
-            // Then reload price-based metrics if they were selected
-            if (hasStockPrice || hasPERatio) {
-                const prices = await getHistoricalPrices(symbol, selectedYears);
-                if (prices.length > 0) {
-                    if (hasStockPrice) {
-                        const priceValues = prices.map((p: StockPrice) => p.adj_close ?? 0);
-                        const priceDates = prices.map((p: StockPrice) => p.date);
-                        chartStore.handleMetricClick('Stock Price', priceValues, priceDates);
-                    }
-
-                    if (hasPERatio) {
-                        await handleValuationMetricClick('pe', symbol, selectedYears, financialData);
-                    }
+        if (hasStockPrice || hasPERatio) {
+            const prices = await getHistoricalPrices(symbol, selectedYears);
+            if (prices.length > 0) {
+                if (hasStockPrice) {
+                    const priceValues = prices.map((p: StockPrice) => p.adj_close ?? 0);
+                    const priceDates = prices.map((p: StockPrice) => p.date);
+                    chartStore.handleMetricClick('Stock Price', priceValues, priceDates);
+                }
+                if (hasPERatio) {
+                    await handleValuationMetricClick('pe', symbol, selectedYears, financialData);
                 }
             }
-        });
+        }
+    }
+
+    // Watch for symbol changes - only load financial data, not stock prices
+    $: if ($page.params.symbol !== symbol) {
+        symbol = $page.params.symbol;
+        loadData(false); // Load financial data without force refresh
     }
 
     // Watch for tab changes
