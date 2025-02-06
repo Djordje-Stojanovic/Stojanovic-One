@@ -37,7 +37,7 @@
         ['P/E Ratio', 'FCF Yield', 'P/S Ratio', 'EV/EBITDA', 'P/GP Ratio', 'P/B Ratio', 'P/Tangible B'].includes(m.name)
     );
 
-    // Deduplicate data points by date for each metric
+    // Deduplicate data points by date for each metrics
     function deduplicateData(data: any[]) {
         const seen = new Set();
         return data.filter(d => {
