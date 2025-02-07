@@ -166,45 +166,84 @@ ${stockPriceData?.historical.slice(0, 5).map(price => `- ${price.date}: ${format
 Company Description:
 ${data.companyInfo?.description || 'No description available.'}
 
-Please provide a comprehensive analysis with the following sections (use ** for section headers):
+Format your analysis as a professional buy-side equity research report. Use the following formatting:
+- Use ** for main section headers (e.g., **Executive Summary**)
+- Use * ** for subsection headers (e.g., * **Growth Drivers**)
+- Use + for bullet points (e.g., + Key point here)
+- Use blank lines between sections for readability
+- Keep paragraphs concise and focused
 
-**Business Overview**
-- Core business model explanation
-- How the company makes money (unit economics)
-- Key revenue streams and pricing strategy
-- Main products/services
+Structure your report as follows:
+
+**Executive Summary**
+* **Investment Recommendation**
+- Concise overview of the business and investment thesis
+- Key competitive advantages and market position
+- Primary growth drivers and risks
+- Clear buy/hold/sell recommendation with price target rationale
+
+**Business Analysis**
+* **Business Model**
+* **Unit Economics**
+* **Competitive Position**
+- Detailed explanation of the business model and how value is created
+- Unit economics: revenue model, cost structure, and profit drivers
+- Pricing power and customer relationships
+- Competitive advantages (moats) and their sustainability
+- Industry structure and competitive dynamics
+- Market share analysis and competitive positioning
 
 **Financial Analysis**
-- Revenue and profitability trends
-- Cash flow analysis
-- Balance sheet strength
-- Key financial ratios and metrics
+* **Capital Allocation**
+* **Balance Sheet Analysis**
+* **Cash Flow Analysis**
+- Capital allocation strategy and historical returns on capital
+- Balance sheet strength and financial flexibility
+- Cash flow generation and conversion metrics
+- Working capital management
+- Key performance indicators and their trends
+- Quality of earnings assessment
 
-**Market Position**
-- Competitive advantages
-- Market share and industry position
-- Key competitors
-- Barriers to entry
+**Growth Opportunities**
+* **Organic Growth**
+* **Strategic Initiatives**
+* **Market Expansion**
+- Organic growth initiatives and market expansion plans
+- R&D pipeline and innovation strategy
+- M&A opportunities and capital deployment strategy
+- Market size and penetration potential
+- Long-term secular trends supporting growth
 
-**Growth Strategy**
-- Current growth initiatives
-- Market expansion opportunities
-- R&D and innovation focus
-- M&A strategy (if applicable)
-
-**Risk Analysis**
-- Key business risks
-- Industry challenges
-- Regulatory concerns
-- Competitive threats
+**Risk Assessment**
+* **Business Risks**
+* **Financial Risks**
+* **Market Risks**
+- Business model risks and competitive threats
+- Industry disruption potential
+- Regulatory and compliance concerns
+- Financial risks and leverage considerations
+- Management and governance risks
 
 **Investment Thesis**
-- Key investment merits
-- Growth catalysts
-- Valuation perspective
-- Potential red flags
+* **Value Drivers**
+* **Catalysts**
+* **Valuation**
+- Clear articulation of why this is a compelling investment
+- Key catalysts and timeline for value realization
+- Valuation framework and methodology
+- Downside protection and margin of safety
+- Expected returns and investment horizon
 
-Format the response with clear sections using ** headers and bullet points for easy reading. Focus on providing actionable insights for investors.`;
+Content Guidelines:
+- Write in a clear, professional style suitable for sophisticated investors
+- Support all assertions with specific data and examples
+- Focus on long-term value creation rather than short-term metrics
+- Provide concrete examples of competitive advantages and their durability
+- Include specific numbers and metrics when discussing financial performance
+- Emphasize quality of the business over short-term price movements
+- Conclude with a clear, actionable investment recommendation
+
+Your analysis should reflect deep business understanding and focus on fundamental value drivers rather than market sentiment or technical factors.`;
 }
 
 function formatEmployees(value: number): string {

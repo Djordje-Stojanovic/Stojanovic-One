@@ -40,16 +40,17 @@
                     <div class="prose dark:prose-invert max-w-none">
                         {#each summary.split('\n') as line}
                             {#if line.startsWith('**') && line.endsWith('**')}
-                                <h3 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent mt-8 mb-4">
+                                <h3 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent mt-10 mb-6 pb-2 border-b border-gray-200 dark:border-gray-700">
                                     {line.replace(/\*\*/g, '')}
                                 </h3>
                             {:else if line.trim().startsWith('* **')}
-                                <h4 class="text-lg font-semibold text-blue-600 dark:text-blue-400 mt-6 mb-3">
+                                <h4 class="text-lg font-semibold text-blue-600 dark:text-blue-400 mt-8 mb-4 flex items-center">
+                                    <span class="w-1.5 h-1.5 bg-blue-500 rounded-full mr-2"></span>
                                     {line.replace(/\* \*\*/g, '').replace(/\*\*/g, '')}
                                 </h4>
                             {:else if line.trim().startsWith('+')}
-                                <p class="mb-3 ml-4 text-gray-700 dark:text-gray-300 flex items-start">
-                                    <span class="mr-3 text-blue-500 font-bold">•</span>
+                                <p class="mb-3 ml-6 text-gray-700 dark:text-gray-300 flex items-start">
+                                    <span class="mr-3 text-blue-500">•</span>
                                     <span class="flex-1">{line.replace('+', '').trim()}</span>
                                 </p>
                             {:else if line.trim()}
