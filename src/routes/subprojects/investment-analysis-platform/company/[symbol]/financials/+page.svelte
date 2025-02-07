@@ -300,6 +300,7 @@
         {numberFormat}
         {selectedYears}
         period={selectedPeriod}
+        {financialData}
         on:sync={handleSync}
         on:formatChange={(e) => numberFormat = e.detail}
         on:yearChange={handleYearChange}

@@ -3,6 +3,7 @@
     
     export let loading = false;
     export let summary: string | null = null;
+    export let selectedModel: string;
     
     const dispatch = createEventDispatcher();
     
@@ -15,7 +16,10 @@
     <div class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
         <div class="bg-white/95 dark:bg-gray-900/95 rounded-xl shadow-2xl max-w-4xl w-full max-h-[85vh] flex flex-col">
             <div class="p-6 flex justify-between items-center">
-                <h2 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">AI Company Summary</h2>
+                <div>
+                    <h2 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">AI Company Summary</h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Using {selectedModel.split('/')[1]}</p>
+                </div>
                 <button 
                     on:click={handleClose}
                     class="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
