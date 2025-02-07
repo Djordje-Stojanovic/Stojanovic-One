@@ -1,7 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestEvent } from '@sveltejs/kit';
-
-const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY;
+import { OPENROUTER_API_KEY } from '$env/static/private';
 
 export async function POST({ request }: RequestEvent) {
     try {
