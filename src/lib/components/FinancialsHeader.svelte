@@ -72,7 +72,6 @@
                 companyInfo
             };
             
-            console.log('Prompt Data:', JSON.stringify(promptData, null, 2));
             const prompt = generateAIPrompt(promptData);
             console.log('Generated Prompt:\n', prompt);
 

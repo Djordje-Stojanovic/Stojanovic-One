@@ -2,28 +2,8 @@ import { json } from '@sveltejs/kit';
 import type { RequestEvent } from '@sveltejs/kit';
 import { OPENROUTER_API_KEY } from '$env/static/private';
 
-export async function POST({ request, getClientAddress }: RequestEvent) {
+export async function POST({ request }: RequestEvent) {
     try {
-        const clientIp = getClientAddress();
-        const cfIp = request.headers.get('cf-connecting-ip') || clientIp;
-        const realIp = request.headers.get('x-real-ip');
-        const forwardedFor = request.headers.get('x-forwarded-for');
-        
-        console.log('IP Debug:', {
-            clientIp,
-            cfIp,
-            realIp,
-            forwardedFor,
-            relevantHeaders: {
-                'user-agent': request.headers.get('user-agent'),
-                'origin': request.headers.get('origin'),
-                'referer': request.headers.get('referer'),
-                'host': request.headers.get('host'),
-                'cf-ipcountry': request.headers.get('cf-ipcountry'),
-                'cf-ray': request.headers.get('cf-ray')
-            }
-        });
-        
         const body = await request.json();
         
         const result = await fetch('https://openrouter.ai/api/v1/chat/completions', {
