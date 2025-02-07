@@ -166,12 +166,19 @@ ${stockPriceData?.historical.slice(0, 5).map(price => `- ${price.date}: ${format
 Company Description:
 ${data.companyInfo?.description || 'No description available.'}
 
-Format your analysis as a professional buy-side equity research report. Use the following formatting:
+Format your analysis as a professional buy-side equity research report. Follow these formatting guidelines:
+
+Writing Style:
+- Write in clear, well-structured paragraphs for main analysis and insights
+- Use bullet points (starting with +) only for listing specific metrics, features, or brief points
+- Keep paragraphs focused and concise (3-4 sentences)
+- Use data and specific examples to support your analysis
+
+Section Structure:
 - Use ** for main section headers (e.g., **Executive Summary**)
 - Use * ** for subsection headers (e.g., * **Growth Drivers**)
-- Use + for bullet points (e.g., + Key point here)
-- Use blank lines between sections for readability
-- Keep paragraphs concise and focused
+- Include a blank line between sections and paragraphs
+- Start each main section with a brief overview paragraph
 
 Structure your report as follows:
 
@@ -184,25 +191,41 @@ Structure your report as follows:
 
 **Business Analysis**
 * **Business Model**
++ Detailed explanation of the business model and how value is created
++ Core revenue streams and pricing strategy
++ Customer acquisition and retention model
++ Key partnerships and supplier relationships
+
 * **Unit Economics**
++ Revenue model and pricing structure
++ Cost structure and margins
++ Customer lifetime value analysis
++ Operational efficiency metrics
+
 * **Competitive Position**
-- Detailed explanation of the business model and how value is created
-- Unit economics: revenue model, cost structure, and profit drivers
-- Pricing power and customer relationships
-- Competitive advantages (moats) and their sustainability
-- Industry structure and competitive dynamics
-- Market share analysis and competitive positioning
++ Sustainable competitive advantages (moats)
++ Market share and industry position
++ Competitive landscape analysis
++ Barriers to entry and defensibility
 
 **Financial Analysis**
 * **Capital Allocation**
++ Historical returns on invested capital
++ Capital deployment strategy
++ Dividend and buyback history
++ M&A track record
+
 * **Balance Sheet Analysis**
++ Financial flexibility and liquidity
++ Debt structure and coverage ratios
++ Working capital efficiency
++ Asset quality assessment
+
 * **Cash Flow Analysis**
-- Capital allocation strategy and historical returns on capital
-- Balance sheet strength and financial flexibility
-- Cash flow generation and conversion metrics
-- Working capital management
-- Key performance indicators and their trends
-- Quality of earnings assessment
++ Cash flow generation consistency
++ Free cash flow conversion metrics
++ Working capital management
++ Quality of earnings analysis
 
 **Growth Opportunities**
 * **Organic Growth**
