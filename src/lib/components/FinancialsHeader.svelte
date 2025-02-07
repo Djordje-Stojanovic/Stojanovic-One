@@ -93,7 +93,7 @@
                     }
                 ],
                 temperature: 0.7,
-                max_tokens: 2000,
+                max_tokens: 8192,
                 stream: false,
                 ...modelParams[selectedModel as keyof typeof modelParams]
             };
@@ -281,7 +281,7 @@
 </div>
 
 {#if showAISummary}
-    <AISummaryModal 
+G    <AISummaryModal 
         loading={aiSummaryLoading}
         summary={aiSummaryText}
         {selectedModel}
