@@ -1,30 +1,20 @@
 <script lang="ts">
     import { createEventDispatcher } from 'svelte';
 
-    export let selectedModel = 'meta-llama/llama-3.2-3b-instruct';
+    export let selectedModel = 'amazon/nova-lite-v1';
 
     const dispatch = createEventDispatcher();
 
     const models = [
         {
-            name: 'Meta: Llama 3.2 3B Instruct',
-            id: 'meta-llama/llama-3.2-3b-instruct',
-            description: 'Optimized for advanced NLP tasks, supports 8 languages'
-        },
-        {
-            name: 'Meta: Llama 3.1 8B Instruct',
-            id: 'meta-llama/llama-3.1-8b-instruct',
-            description: 'Fast and efficient 8B parameter model'
-        },
-        {
-            name: 'Amazon: Nova Micro 1.0',
-            id: 'amazon/nova-micro-v1',
-            description: 'Low latency, optimized for speed and cost'
-        },
-        {
             name: 'Amazon: Nova Lite 1.0',
             id: 'amazon/nova-lite-v1',
             description: 'Low-cost multimodal model for text and images'
+        },
+        {
+            name: 'DeepSeek: R1 Distill Qwen 32B',
+            id: 'deepseek/deepseek-r1-distill-qwen-32b',
+            description: 'Distilled 32B model outperforming OpenAI o1-mini across benchmarks'
         },
         {
             name: 'Google: Gemini Flash 2.0',
