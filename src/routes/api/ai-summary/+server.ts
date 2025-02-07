@@ -59,15 +59,7 @@ export async function POST({ request, getClientAddress }: RequestEvent) {
             const result = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${body.model}:generateContent?key=${GEMINI_API_KEY}`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-Forwarded-For': realIp || cfIp,
-                    'Origin': request.headers.get('origin') || 'https://stojanovic-one.com',
-                    'User-Agent': request.headers.get('user-agent') || 'Stojanovic-One/1.0',
-                    'X-Location': request.headers.get('cf-ipcountry') || 'AT',
-                    'X-Client-Region': 'EU',
-                    'Accept-Language': 'en-GB,en;q=0.9',
-                    'X-Real-IP': realIp || cfIp,
-                    'X-Forwarded-Host': request.headers.get('host') || 'stojanovic-one.com'
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     contents: [{
@@ -96,6 +88,10 @@ export async function POST({ request, getClientAddress }: RequestEvent) {
                         {
                             category: "HARM_CATEGORY_DANGEROUS_CONTENT",
                             threshold: "BLOCK_NONE"
+                        },
+                        {
+                            category: "HARM_CATEGORY_CIVIC_INTEGRITY",
+                            threshold: "BLOCK_NONE"
                         }
                     ]
                 })
@@ -108,7 +104,6 @@ export async function POST({ request, getClientAddress }: RequestEvent) {
             }
 
             const data = await result.json();
-            // Transform Gemini response to match OpenRouter format
             return json({
                 choices: [{
                     message: {
