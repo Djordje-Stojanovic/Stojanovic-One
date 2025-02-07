@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestEvent } from '@sveltejs/kit';
 
-const OPENROUTER_API_KEY = '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';
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 
 export async function POST({ request }: RequestEvent) {
     try {
