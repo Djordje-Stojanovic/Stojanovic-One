@@ -34,21 +34,52 @@ export function generateAIPrompt(data: CompanyData): string {
     return `As a buy-side investment analyst at a high-quality value investment firm, provide a comprehensive business analysis and investment thesis for ${companyName || symbol}. Focus on understanding the business model deeply, competitive advantages, and long-term value creation potential.
 
 Key Analysis Requirements:
-- Deep dive into how the business actually works and makes money
-- Focus on unit economics and value creation at the operational level
+Focus your analysis on these critical elements:
+
+Business Quality:
+- Explain how the business makes money in simple terms
+- Identify any monopoly-like characteristics or dominant market positions
+- Analyze pricing power and ability to raise prices
+- Evaluate customer lock-in and switching costs
+- Assess network effects and flywheel dynamics
+- Look for evidence of scale advantages
+
+Competitive Position:
 - Identify and analyze sustainable competitive advantages (moats)
-- Understand the industry structure and competitive dynamics
-- Evaluate management's capital allocation and reinvestment opportunities
-- Assess the durability and sustainability of the business model
-- Identify key risks to the business model and competitive position
+- Evaluate barriers to entry and competitive threats
+- Assess brand strength and market leadership
+- Analyze vendor/supplier relationships and bargaining power
+- Understand customer concentration and relationships
+
+Unit Economics & Profitability:
+- Break down revenue streams and their quality
+- Analyze gross margins and operating leverage
+- Evaluate capital intensity and reinvestment needs
+- Assess free cash flow generation and conversion
+- Look for evidence of pricing power in financial metrics
+
+Analysis Requirements:
+- Be brutally honest and ultra-realistic in your analysis
+- Do not sugarcoat problems or try to find silver linings in bad businesses
+- Focus on facts, data, and objective analysis rather than promotional language
+- If a business is poor quality, say so directly and explain why
+- Base all conclusions on concrete evidence and specific examples
+- Consider both positive and negative factors equally
 
 Analysis Style:
-- Write as if you're researching and then presenting a potential long-term investment to Warren Buffett or telling him why you're not interested
-- Focus on business quality and competitive position rather than short-term metrics
-- Emphasize understanding the business model over technical analysis
-- Look for evidence of pricing power and high returns on invested capital
-- Consider both qualitative and quantitative factors that drive long-term success
-- Provide the latest developments and news that may impact the investment thesis
+- Write as if you're a skeptical buy-side analyst evaluating a potential investment
+- Focus on long-term business fundamentals and competitive position
+- Emphasize understanding the business model and unit economics
+- Look for evidence of real competitive advantages and pricing power
+- Pay special attention to management quality and capital allocation
+- Incorporate latest news and developments that impact the business
+
+Current Events & News:
+- Include recent significant developments affecting the business
+- Analyze management's response to challenges and opportunities
+- Consider industry trends and competitive moves
+- Evaluate impact of macro factors on the business model
+- Look for evidence of strengthening or weakening competitive position
 
 Company Profile:
 Symbol: ${symbol}
@@ -202,11 +233,38 @@ Structure your report as follows:
 + Customer lifetime value analysis
 + Operational efficiency metrics
 
-* **Competitive Position**
-+ Sustainable competitive advantages (moats)
-+ Market share and industry position
-+ Competitive landscape analysis
-+ Barriers to entry and defensibility
+* **Competitive Advantages (Moat Analysis)**
+Analyze each potential source of competitive advantage:
+
++ Network Effects
+- Strength and scalability of network effects
+- User/customer network benefits
+- Platform or marketplace dynamics
+- Network growth and engagement metrics
+
++ Switching Costs
+- Customer lock-in mechanisms
+- Integration with customer operations
+- Switching cost types (financial, operational, technical)
+- Customer retention metrics and trends
+
++ Scale Advantages
+- Fixed cost leverage
+- Purchasing power advantages
+- Distribution efficiency
+- Market share benefits
+
++ Brand/IP Advantages
+- Brand strength and recognition
+- Patents and proprietary technology
+- Regulatory licenses or approvals
+- Industry standards ownership
+
++ Counter-Positioning
+- Structural advantages vs competitors
+- Business model innovation
+- Disruptive potential
+- Competitive response barriers
 
 **Financial Analysis**
 * **Capital Allocation**
@@ -247,15 +305,79 @@ Structure your report as follows:
 - Financial risks and leverage considerations
 - Management and governance risks
 
+**Management & Leadership Analysis**
+* **CEO & Management Team**
+- CEO's background, track record, and leadership style
+- Management team's experience and capabilities
+- Capital allocation history and decision-making
+- Alignment with shareholder interests
+- Communication style and transparency
+
+* **Corporate Culture & Governance**
+- Company culture and values
+- Board composition and effectiveness
+- Insider ownership and incentives
+- Related party transactions
+- ESG considerations and risks
+
 **Investment Thesis**
 * **Value Drivers**
-* **Catalysts**
-* **Valuation**
-- Clear articulation of why this is a compelling investment
-- Key catalysts and timeline for value realization
-- Valuation framework and methodology
-- Downside protection and margin of safety
-- Expected returns and investment horizon
+- Key factors driving business value
+- Competitive advantages and their durability
+- Growth opportunities and reinvestment potential
+- Management's ability to execute
+
+* **Catalysts & Risks**
+- Near-term and long-term catalysts
+- Key risks and mitigating factors
+- Industry headwinds and tailwinds
+- Regulatory and competitive threats
+
+* **Valuation & Return Potential**
+- Current valuation metrics
+- Historical valuation ranges
+- Peer comparison analysis
+- Expected return scenarios
+
+**Business Quality Rating**
+Based on the comprehensive analysis above, assign one of these five ratings and provide detailed justification:
+
+1. Leader & Disruptor
+- Dominant market position
+- Strong and expanding moat
+- Superior management and execution
+- High returns on capital
+- Clear path to continued growth
+
+2. Compounder & Future Leader
+- Strong competitive position
+- Growing market share
+- Good management and execution
+- Above-average returns
+- Solid growth prospects
+
+3. Average Business
+- Moderate competitive position
+- Stable market share
+- Adequate management
+- Average returns
+- Limited growth potential
+
+4. Laggard or Disruptee
+- Weak competitive position
+- Losing market share
+- Poor execution
+- Below-average returns
+- Facing disruption
+
+5. Value Destroyer
+- No sustainable competitive advantage
+- Broken business model
+- Poor management
+- Negative returns
+- High risk of failure
+
+Provide specific evidence and examples to support the assigned rating. Be brutally honest - if the business is poor quality, say so directly and explain why.
 
 Content Guidelines:
 - Write in a clear, professional style suitable for sophisticated investors
