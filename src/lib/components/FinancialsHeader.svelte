@@ -1,6 +1,11 @@
 <script lang="ts">
     import { createEventDispatcher } from 'svelte';
     import type { NumberFormat } from '$lib/utils/numberFormat';
+    import { generateAIPrompt } from '$lib/utils/aiPrompt';
+    import AISummaryModal from './AISummaryModal.svelte';
+    import { session } from '$lib/stores/sessionStore';
+    import { financialStore } from '$lib/stores/financialDataStore';
+    import { stockPriceStore } from '$lib/stores/stockPriceStore';
 
     export let symbol: string;
     export let companyName: string | null = null;
@@ -10,7 +15,64 @@
     export let customYears: string = '';
     export let period: 'annual' | 'quarterly' | 'ttm' = 'annual';
 
+    let showAISummary = false;
+    let aiSummaryLoading = false;
+    let aiSummaryText: string | null = null;
+
     const dispatch = createEventDispatcher();
+
+    async function handleAISummary() {
+        if (!$session) return;
+        
+        showAISummary = true;
+        aiSummaryLoading = true;
+        aiSummaryText = null;
+
+        try {
+            // Get company info from the due diligence page URL
+            const response = await fetch(`/api/company-info/${symbol}`, {
+                headers: {
+                    'Authorization': `Bearer ${$session.access_token}`
+                }
+            });
+            const companyInfo = await response.json();
+
+            const prompt = generateAIPrompt({
+                symbol,
+                companyName,
+                financialData: $financialStore.filteredData,
+                stockPriceData: $stockPriceStore.allData,
+                companyInfo
+            });
+
+            const result = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                method: "POST",
+                headers: {
+                    "Authorization": "Bearer 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",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    "model": "meta-llama/llama-3.2-3b-instruct",
+                    "messages": [
+                        {"role": "user", "content": prompt}
+                    ]
+                })
+            });
+
+            const data = await result.json();
+            aiSummaryText = data.choices[0].message.content;
+        } catch (error) {
+            console.error('Error generating AI summary:', error);
+            aiSummaryText = 'Failed to generate AI summary. Please try again.';
+        } finally {
+            aiSummaryLoading = false;
+        }
+    }
+
+    function handleCloseSummary() {
+        showAISummary = false;
+        aiSummaryText = null;
+    }
 
     function handleSync() {
         dispatch('sync');
@@ -88,6 +150,17 @@
                             Default View
                         </span>
                     </button>
+                    <button
+                        class="min-w-[150px] font-bold bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded text-sm transition-colors duration-300"
+                        on:click={handleAISummary}
+                    >
+                        <span class="flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
+                            </svg>
+                            AI Summary
+                        </span>
+                    </button>
                 </div>
             </div>
             <div class="flex flex-wrap items-center gap-2">
@@ -141,3 +214,11 @@
         </div>
     </div>
 </div>
+
+{#if showAISummary}
+    <AISummaryModal 
+        loading={aiSummaryLoading}
+        summary={aiSummaryText}
+        on:close={handleCloseSummary}
+    />
+{/if}
