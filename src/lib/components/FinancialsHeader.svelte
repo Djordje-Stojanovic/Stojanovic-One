@@ -18,9 +18,7 @@
     let showAISummary = false;
     let aiSummaryLoading = false;
     let aiSummaryText: string | null = null;
-    let selectedModel = 'amazon/nova-lite-v1';
-    let selectedApi = 'openrouter';
-
+    let selectedModel = 'amazon/nova-lite-v1';  // Start with lowest strength model
     const modelParams = {
         'amazon/nova-lite-v1': {
             top_p: 1,
@@ -34,11 +32,11 @@
             top_p: 1,
             temperature: 0.7
         },
-        'gemini-2.0-pro-exp-02-05': {
+        'google/gemini-2.0-pro-exp-02-05:free': {
             temperature: 0.7,
             top_p: 1
         },
-        'gemini-2.0-flash-thinking-exp-01-21': {
+        'google/gemini-2.0-flash-thinking-exp:free': {
             temperature: 0.7,
             top_p: 1
         }
@@ -46,9 +44,8 @@
 
     const dispatch = createEventDispatcher();
 
-    function handleModelChange(event: CustomEvent<{model: string, api: string}>) {
+    function handleModelChange(event: CustomEvent<{model: string}>) {
         selectedModel = event.detail.model;
-        selectedApi = event.detail.api;
     }
 
     async function handleAISummary() {
@@ -80,7 +77,6 @@
             console.log('Generated Prompt:\n', prompt);
 
             const modelConfig = {
-                api: selectedApi,
                 model: selectedModel,
                 messages: [
                     {
@@ -281,11 +277,10 @@
 </div>
 
 {#if showAISummary}
-G    <AISummaryModal 
+    <AISummaryModal 
         loading={aiSummaryLoading}
         summary={aiSummaryText}
         {selectedModel}
-        {selectedApi}
         on:close={handleCloseSummary}
     />
 {/if}
