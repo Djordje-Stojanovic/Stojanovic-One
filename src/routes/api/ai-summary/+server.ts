@@ -7,8 +7,28 @@ interface ChatMessage {
     content: string;
 }
 
-export async function POST({ request }: RequestEvent) {
+export async function POST({ request, getClientAddress }: RequestEvent) {
     try {
+        const clientIp = getClientAddress();
+        const cfIp = request.headers.get('cf-connecting-ip') || clientIp;
+        const realIp = request.headers.get('x-real-ip');
+        const forwardedFor = request.headers.get('x-forwarded-for');
+        
+        console.log('IP Debug:', {
+            clientIp,
+            cfIp,
+            realIp,
+            forwardedFor,
+            relevantHeaders: {
+                'user-agent': request.headers.get('user-agent'),
+                'origin': request.headers.get('origin'),
+                'referer': request.headers.get('referer'),
+                'host': request.headers.get('host'),
+                'cf-ipcountry': request.headers.get('cf-ipcountry'),
+                'cf-ray': request.headers.get('cf-ray')
+            }
+        });
+        
         const { api, ...body } = await request.json();
         
         if (api === 'openrouter') {
@@ -19,9 +39,10 @@ export async function POST({ request }: RequestEvent) {
                     'Content-Type': 'application/json',
                     'HTTP-Referer': 'https://stojanovic-one.com',
                     'X-Title': 'Investment Analysis Platform',
-                    'X-Forwarded-For': '159.69.6.133',
+                    'X-Forwarded-For': cfIp,
                     'Origin': 'https://stojanovic-one.com',
-                    'User-Agent': 'Stojanovic-One/1.0'
+                    'User-Agent': 'Stojanovic-One/1.0',
+                    'X-Location': request.headers.get('cf-ipcountry') || 'AT'
                 },
                 body: JSON.stringify(body)
             });
@@ -39,9 +60,12 @@ export async function POST({ request }: RequestEvent) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-Forwarded-For': '159.69.6.133',
+                    'X-Forwarded-For': cfIp,
                     'Origin': 'https://stojanovic-one.com',
-                    'User-Agent': 'Stojanovic-One/1.0'
+                    'User-Agent': 'Stojanovic-One/1.0',
+                    'X-Location': request.headers.get('cf-ipcountry') || 'AT',
+                    'X-Client-Region': 'EU',
+                    'Accept-Language': 'en-GB,en;q=0.9'
                 },
                 body: JSON.stringify({
                     contents: [{
