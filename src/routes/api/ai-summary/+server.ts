@@ -17,8 +17,11 @@ export async function POST({ request }: RequestEvent) {
                 headers: {
                     'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
                     'Content-Type': 'application/json',
-                    'HTTP-Referer': 'https://stojanovic.one',
-                    'X-Title': 'Investment Analysis Platform'
+                    'HTTP-Referer': 'https://stojanovic-one.com',
+                    'X-Title': 'Investment Analysis Platform',
+                    'X-Forwarded-For': '159.69.6.133',
+                    'Origin': 'https://stojanovic-one.com',
+                    'User-Agent': 'Stojanovic-One/1.0'
                 },
                 body: JSON.stringify(body)
             });
@@ -35,7 +38,10 @@ export async function POST({ request }: RequestEvent) {
             const result = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${body.model}:generateContent?key=${GEMINI_API_KEY}`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-Forwarded-For': '159.69.6.133',
+                    'Origin': 'https://stojanovic-one.com',
+                    'User-Agent': 'Stojanovic-One/1.0'
                 },
                 body: JSON.stringify({
                     contents: [{
