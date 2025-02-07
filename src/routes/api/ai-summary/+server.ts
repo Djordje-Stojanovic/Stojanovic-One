@@ -60,12 +60,14 @@ export async function POST({ request, getClientAddress }: RequestEvent) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-Forwarded-For': cfIp,
-                    'Origin': 'https://stojanovic-one.com',
-                    'User-Agent': 'Stojanovic-One/1.0',
+                    'X-Forwarded-For': realIp || cfIp,
+                    'Origin': request.headers.get('origin') || 'https://stojanovic-one.com',
+                    'User-Agent': request.headers.get('user-agent') || 'Stojanovic-One/1.0',
                     'X-Location': request.headers.get('cf-ipcountry') || 'AT',
                     'X-Client-Region': 'EU',
-                    'Accept-Language': 'en-GB,en;q=0.9'
+                    'Accept-Language': 'en-GB,en;q=0.9',
+                    'X-Real-IP': realIp || cfIp,
+                    'X-Forwarded-Host': request.headers.get('host') || 'stojanovic-one.com'
                 },
                 body: JSON.stringify({
                     contents: [{
