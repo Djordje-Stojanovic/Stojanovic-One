@@ -31,7 +31,24 @@ interface CompanyData {
 export function generateAIPrompt(data: CompanyData): string {
     const { symbol, companyName, financialData, stockPriceData } = data;
     
-    return `As an expert financial analyst, provide a detailed investment analysis for ${companyName || symbol}.
+    return `As a buy-side investment analyst at a high-quality value investment firm, provide a comprehensive business analysis and investment thesis for ${companyName || symbol}. Focus on understanding the business model deeply, competitive advantages, and long-term value creation potential.
+
+Key Analysis Requirements:
+- Deep dive into how the business actually works and makes money
+- Focus on unit economics and value creation at the operational level
+- Identify and analyze sustainable competitive advantages (moats)
+- Understand the industry structure and competitive dynamics
+- Evaluate management's capital allocation and reinvestment opportunities
+- Assess the durability and sustainability of the business model
+- Identify key risks to the business model and competitive position
+
+Analysis Style:
+- Write as if you're researching and then presenting a potential long-term investment to Warren Buffett or telling him why you're not interested
+- Focus on business quality and competitive position rather than short-term metrics
+- Emphasize understanding the business model over technical analysis
+- Look for evidence of pricing power and high returns on invested capital
+- Consider both qualitative and quantitative factors that drive long-term success
+- Provide the latest developments and news that may impact the investment thesis
 
 Company Profile:
 Symbol: ${symbol}
@@ -66,8 +83,8 @@ ${stmt.calendar_year}:
 - Revenue: ${formatCurrency(revenue.toString())}
 - Operating Income: ${formatCurrency(operatingIncome.toString())}
 - Net Income: ${formatCurrency(netIncome.toString())}
-- Operating Margin: ${((operatingIncome / revenue) * 100).toFixed(1)}%
-- Net Margin: ${((netIncome / revenue) * 100).toFixed(1)}%`;
+- Operating Margin: ${((operatingIncome / revenue) * 100).toFixed(1).toString()}%
+- Net Margin: ${((netIncome / revenue) * 100).toFixed(1).toString()}%`;
     }).join('\n')}
 
 Balance Sheet Metrics (Latest):
@@ -83,9 +100,9 @@ ${(() => {
 - Total Debt: ${formatCurrency(totalDebt.toString())}
 - Net Debt: ${formatCurrency(netDebt.toString())}
 - Total Equity: ${formatCurrency(totalEquity.toString())}
-- Debt/Equity: ${(totalDebt / totalEquity).toFixed(2)}
-- Return on Equity: ${formatCurrency(((parseFloat(financialData.income_statements[0].net_income) / totalEquity) * 100).toFixed(1) + '%')}
-- Return on Assets: ${formatCurrency(((parseFloat(financialData.income_statements[0].net_income) / totalAssets) * 100).toFixed(1) + '%')}`;
+- Debt/Equity: ${(totalDebt / totalEquity).toFixed(2).toString()}
+- Return on Equity: ${((parseFloat(financialData.income_statements[0].net_income) / totalEquity) * 100).toFixed(1).toString()}%
+- Return on Assets: ${((parseFloat(financialData.income_statements[0].net_income) / totalAssets) * 100).toFixed(1).toString()}%`;
 })()}
 
 Cash Flow & Shareholder Returns (Latest Annual):
@@ -101,7 +118,7 @@ ${(() => {
     return `
 - Operating Cash Flow: ${formatCurrency(operatingCashFlow.toString())}
 - Free Cash Flow: ${formatCurrency(freeCashFlow.toString())}
-- FCF Margin: ${((freeCashFlow / revenue) * 100).toFixed(1)}%
+- FCF Margin: ${((freeCashFlow / revenue) * 100).toFixed(1).toString()}%
 - Capital Expenditure: ${formatCurrency(Math.abs(capex).toString())}
 - Dividends Paid: ${formatCurrency(Math.abs(dividendsPaid).toString())}
 - Stock Buybacks: ${formatCurrency(Math.abs(stockRepurchased).toString())}
