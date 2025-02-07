@@ -18,37 +18,37 @@
     let showAISummary = false;
     let aiSummaryLoading = false;
     let aiSummaryText: string | null = null;
-    let selectedModel = 'meta-llama/llama-3.2-3b-instruct';
+    let selectedModel = 'amazon/nova-lite-v1';
+    let selectedApi = 'openrouter';
 
     const modelParams = {
-        'meta-llama/llama-3.2-3b-instruct': {
-            top_p: 1,
-            repetition_penalty: 1
-        },
-        'meta-llama/llama-3.1-8b-instruct': {
-            top_p: 1,
-            temperature: 0.7,
-            repetition_penalty: 1
-        },
-        'amazon/nova-micro-v1': {
-            top_p: 1,
-            temperature: 0.6,
-            repetition_penalty: 1
-        },
         'amazon/nova-lite-v1': {
             top_p: 1,
             repetition_penalty: 1
         },
+        'deepseek/deepseek-r1-distill-qwen-32b': {
+            top_p: 1,
+            temperature: 0.7
+        },
         'google/gemini-2.0-flash-001': {
             top_p: 1,
             temperature: 0.7
+        },
+        'gemini-2.0-pro-exp-02-05': {
+            temperature: 0.7,
+            top_p: 1
+        },
+        'gemini-2.0-flash-thinking-exp-01-21': {
+            temperature: 0.7,
+            top_p: 1
         }
     };
 
     const dispatch = createEventDispatcher();
 
-    function handleModelChange(event: CustomEvent<string>) {
-        selectedModel = event.detail;
+    function handleModelChange(event: CustomEvent<{model: string, api: string}>) {
+        selectedModel = event.detail.model;
+        selectedApi = event.detail.api;
     }
 
     async function handleAISummary() {
@@ -80,6 +80,7 @@
             console.log('Generated Prompt:\n', prompt);
 
             const modelConfig = {
+                api: selectedApi,
                 model: selectedModel,
                 messages: [
                     {
@@ -284,6 +285,7 @@
         loading={aiSummaryLoading}
         summary={aiSummaryText}
         {selectedModel}
+        {selectedApi}
         on:close={handleCloseSummary}
     />
 {/if}

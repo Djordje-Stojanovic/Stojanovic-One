@@ -4,8 +4,13 @@
     export let loading = false;
     export let summary: string | null = null;
     export let selectedModel: string;
-    
+    export let selectedApi: string;
+
     const dispatch = createEventDispatcher();
+    
+    $: modelName = selectedApi === 'openrouter' 
+        ? selectedModel.split('/')[1]
+        : selectedModel.replace('gemini-', '').replace('-exp-', ' ');
     
     function handleClose() {
         dispatch('close');
@@ -18,7 +23,9 @@
             <div class="p-6 flex justify-between items-center border-b border-gray-200 dark:border-gray-700">
                 <div>
                     <h2 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">AI Company Summary</h2>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Using {selectedModel.split('/')[1]}</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                        Using {selectedApi === 'openrouter' ? 'OpenRouter' : 'Gemini'} - {modelName}
+                    </p>
                 </div>
                 <button 
                     on:click={handleClose}
