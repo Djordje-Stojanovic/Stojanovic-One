@@ -233,38 +233,42 @@ Structure your report as follows:
 + Customer lifetime value analysis
 + Operational efficiency metrics
 
-* **Competitive Advantages (Moat Analysis)**
-Analyze each potential source of competitive advantage:
+* **Market Structure & Competition**
+Analyze the competitive landscape in detail:
 
-+ Network Effects
-- Strength and scalability of network effects
-- User/customer network benefits
-- Platform or marketplace dynamics
-- Network growth and engagement metrics
++ Market Structure
+- Is it a monopoly, duopoly, oligopoly, or fragmented market?
+- Market concentration and key players' market shares
+- Barriers to entry and regulatory environment
+- Industry profit pool distribution
 
-+ Switching Costs
-- Customer lock-in mechanisms
-- Integration with customer operations
-- Switching cost types (financial, operational, technical)
-- Customer retention metrics and trends
++ Competitor Analysis
+- Direct competitors and their relative strengths/weaknesses
+- Product/service comparison with competitors
+- Competitor market shares and growth trends
+- Who is gaining/losing share and why?
 
-+ Scale Advantages
-- Fixed cost leverage
-- Purchasing power advantages
-- Distribution efficiency
-- Market share benefits
++ Competitive Dynamics
+- Price competition vs. differentiation
+- Innovation and R&D capabilities comparison
+- Distribution and scale advantages
+- Customer relationships and loyalty
 
-+ Brand/IP Advantages
-- Brand strength and recognition
-- Patents and proprietary technology
-- Regulatory licenses or approvals
-- Industry standards ownership
++ Consolidation Potential
+- Fragmentation and roll-up opportunities
+- History of M&A in the industry
+- Potential acquisition targets
+- Benefits of being a serial acquirer
 
-+ Counter-Positioning
-- Structural advantages vs competitors
-- Business model innovation
-- Disruptive potential
-- Competitive response barriers
+* **Competitive Advantages**
+Evaluate the company's competitive position:
+
++ Moat Analysis
+- Network effects and their strength
+- Switching costs and customer lock-in
+- Scale advantages and operating leverage
+- Brand strength and IP protection
+- Regulatory or standard-setting advantages
 
 **Financial Analysis**
 * **Capital Allocation**
