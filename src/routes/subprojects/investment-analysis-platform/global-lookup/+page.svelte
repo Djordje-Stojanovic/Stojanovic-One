@@ -24,6 +24,7 @@
   let sortColumn: keyof StockMetadata = 'market_cap';
   let sortDirection = -1;
   let sectorFilter = '';
+  let industryFilter = '';
   let exchangeFilter = '';
   let marketCapFilter: MarketCapCategory = '';
   let countryFilter = '';
@@ -41,6 +42,7 @@
 
   // Derived values for filters
   $: sectors = [...new Set(stocks.map(stock => stock.sector).filter(Boolean))].sort();
+  $: industries = [...new Set(stocks.map(stock => stock.industry).filter(Boolean))].sort();
   $: exchanges = [...new Set(stocks.map(stock => stock.exchange).filter(Boolean))].sort();
   $: countries = [...new Set(stocks.map(stock => stock.country).filter(Boolean))].sort();
 
@@ -49,6 +51,7 @@
     stocks,
     searchQuery,
     sectorFilter,
+    industryFilter,
     exchangeFilter,
     countryFilter,
     marketCapFilter,
@@ -179,10 +182,12 @@
       bind:searchQuery
       bind:marketCapFilter
       bind:sectorFilter
+      bind:industryFilter
       bind:exchangeFilter
       bind:countryFilter
       bind:listFilter
       {sectors}
+      {industries}
       {exchanges}
       {countries}
     />

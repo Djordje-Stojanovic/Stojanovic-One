@@ -3,6 +3,7 @@
   import type { StockMetadata, UserStock } from './Types';
   import TableHeader from './TableHeader.svelte';
   import StockRow from './StockRow.svelte';
+  import Pagination from './Pagination.svelte';
 
   export let userStocks: UserStock[] = [];
   export let loading = false;
@@ -10,9 +11,26 @@
   export let addingStockId: string | null = null;
   export let filteredStocks: StockMetadata[] = [];
 
+  const ITEMS_PER_PAGE = 100;
+
   // Sorting state
   let sortColumn: keyof StockMetadata | null = 'market_cap';
   let sortDirection: 'asc' | 'desc' = 'desc';
+
+  // Pagination state
+  let currentPage = 1;
+
+  // Reactive calculations
+  $: totalPages = Math.ceil(filteredStocks.length / ITEMS_PER_PAGE);
+  $: startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  $: endIndex = startIndex + ITEMS_PER_PAGE;
+
+  // Reset to first page when filtered stocks change
+  $: {
+    if (filteredStocks) {
+      currentPage = 1;
+    }
+  }
 
   function handleSort(event: CustomEvent<keyof StockMetadata>) {
     const column = event.detail;
@@ -24,6 +42,12 @@
       sortColumn = column;
       sortDirection = 'desc';
     }
+  }
+
+  function handlePageChange(event: CustomEvent<number>) {
+    currentPage = event.detail;
+    // Scroll to top of table
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   // Reactive sorting of stocks
@@ -50,6 +74,9 @@
     return sortDirection === 'asc' ? comparison : -comparison;
   });
 
+  // Get current page stocks
+  $: paginatedStocks = sortedStocks.slice(startIndex, endIndex);
+
   function handleError(event: CustomEvent<string | null>) {
     error = event.detail;
   }
@@ -73,7 +100,14 @@
     <p>No stocks found matching your criteria.</p>
   </div>
 {:else}
-  <div class="overflow-x-auto rounded-[0.375rem] border-2 border-[#4B5563]">
+  <Pagination
+    {currentPage}
+    {totalPages}
+    itemsPerPage={ITEMS_PER_PAGE}
+    totalItems={filteredStocks.length}
+    on:pageChange={handlePageChange}
+  />
+  <div class="mt-4 overflow-x-auto rounded-[0.375rem] border-2 border-[#4B5563]">
     <table class="w-full">
       <TableHeader
         {sortColumn}
@@ -81,7 +115,7 @@
         on:sort={handleSort}
       />
       <tbody class="bg-[#1F2937]">
-        {#each sortedStocks as stock (stock.id)}
+        {#each paginatedStocks as stock (stock.id)}
           <StockRow
             {stock}
             {userStocks}
@@ -94,4 +128,11 @@
       </tbody>
     </table>
   </div>
+  <Pagination
+    {currentPage}
+    {totalPages}
+    itemsPerPage={ITEMS_PER_PAGE}
+    totalItems={filteredStocks.length}
+    on:pageChange={handlePageChange}
+  />
 {/if}

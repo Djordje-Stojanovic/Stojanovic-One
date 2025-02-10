@@ -54,6 +54,7 @@
   </td>
   <td class="py-4 px-4 text-[#F9FAFB] border-l border-[#374151]">{stock.company_name}</td>
   <td class="py-4 px-4 text-[#F9FAFB] border-l border-[#374151]">{stock.sector || 'N/A'}</td>
+  <td class="py-4 px-4 text-[#F9FAFB] border-l border-[#374151]">{stock.industry || 'N/A'}</td>
   <td class="py-4 px-4 text-[#F9FAFB] border-l border-[#374151]">{formatMarketCap(stock.market_cap)}</td>
   <td class="py-4 px-4 text-[#F9FAFB] border-l border-[#374151]">
     {#if stock.country}

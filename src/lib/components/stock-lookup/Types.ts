@@ -3,6 +3,7 @@ export interface StockMetadata {
   symbol: string;
   company_name: string;
   sector: string;
+  industry: string;
   market_cap: number;
   exchange: string;
   logo_url: string;

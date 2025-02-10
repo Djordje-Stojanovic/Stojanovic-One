@@ -33,6 +33,7 @@ export function filterStocks(
   stocks: StockMetadata[],
   searchQuery: string,
   sectorFilter: string,
+  industryFilter: string,
   exchangeFilter: string,
   countryFilter: string,
   marketCapFilter: MarketCapCategory,
@@ -48,11 +49,12 @@ export function filterStocks(
         stock.symbol.toLowerCase().includes(query) ||
         stock.company_name.toLowerCase().includes(query);
       const matchesSector = !sectorFilter || stock.sector === sectorFilter;
+      const matchesIndustry = !industryFilter || stock.industry === industryFilter;
       const matchesExchange = !exchangeFilter || stock.exchange === exchangeFilter;
       const matchesCountry = !countryFilter || stock.country === countryFilter;
       const matchesMarketCap = !marketCapFilter || getMarketCapCategory(stock.market_cap) === marketCapFilter;
       const matchesList = !listFilter || userStocks.some(us => us.stock_metadata_id === stock.id && us.list_name === listFilter);
-      return matchesSearch && matchesSector && matchesExchange && matchesCountry && matchesMarketCap && matchesList;
+      return matchesSearch && matchesSector && matchesIndustry && matchesExchange && matchesCountry && matchesMarketCap && matchesList;
     })
     .sort((a, b) => compareValues(a[sortColumn], b[sortColumn], sortDirection));
 }

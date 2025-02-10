@@ -6,10 +6,12 @@
   export let searchQuery = '';
   export let marketCapFilter = '';
   export let sectorFilter = '';
+  export let industryFilter = '';
   export let exchangeFilter = '';
   export let countryFilter = '';
   export let listFilter: ListName | '' = '';
   export let sectors: string[] = [];
+  export let industries: string[] = [];
   export let exchanges: string[] = [];
   export let countries: string[] = [];
 
@@ -27,6 +29,11 @@
     ...sectors.map(sector => ({ value: sector, label: sector }))
   ];
 
+  $: industryOptions = [
+    { value: '', label: 'All Industries' },
+    ...industries.map(industry => ({ value: industry, label: industry }))
+  ];
+
   $: exchangeOptions = [
     { value: '', label: 'All Exchanges' },
     ...exchanges.map(exchange => ({ value: exchange, label: exchange }))
@@ -39,7 +46,7 @@
 </script>
 
 <div class="bg-[#374151] rounded-[0.375rem] border-2 border-[#4B5563] p-6 mb-6">
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4">
     <input
       type="text"
       placeholder="Search by symbol or company name..."
@@ -57,6 +64,12 @@
       bind:value={sectorFilter}
       options={sectorOptions}
       placeholder="All Sectors"
+    />
+
+    <ModernSelect
+      bind:value={industryFilter}
+      options={industryOptions}
+      placeholder="All Industries"
     />
     
     <ModernSelect
