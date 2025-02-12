@@ -1,8 +1,8 @@
 <script lang="ts">
     import { createEventDispatcher } from 'svelte';
     import type { NumberFormat } from '$lib/utils/numberFormat';
-    import type { FinancialData } from '$lib/types/financialStatements';
-    import { generateAIPrompt } from '$lib/utils/aiPrompt';
+    import type { FinancialData, FinancialPeriod } from '$lib/types/financialStatements';
+    import { generateAIPrompt } from '$lib/utils/ai-prompt';
     import AISummaryModal from './AISummaryModal.svelte';
     import ModelSelector from './ModelSelector.svelte';
     import { session } from '$lib/stores/sessionStore';
@@ -12,7 +12,7 @@
     export let numberFormat: NumberFormat;
     export let selectedYears: number = 10;
     export let customYears: string = '';
-    export let period: 'annual' | 'quarterly' | 'ttm' = 'annual';
+    export let period: FinancialPeriod = 'FY';
     export let financialData: FinancialData;
 
     let showAISummary = false;
@@ -64,10 +64,28 @@
             });
             const companyInfo = await response.json();
 
+            // Filter financial data to use only annual statements for the AI summary
+            const filteredFinancialData = {
+                ...financialData,
+                income_statements: financialData.income_statements
+                    .filter(stmt => stmt.period === 'FY')
+                    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+                balance_sheets: financialData.balance_sheets
+                    .filter(stmt => stmt.period === 'FY')
+                    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+                cash_flow_statements: financialData.cash_flow_statements
+                    .filter(stmt => stmt.period === 'FY')
+                    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+                revenue_segments: financialData.revenue_segments
+                    ?.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+                revenue_geo_segments: financialData.revenue_geo_segments
+                    ?.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+            };
+
             const promptData = {
                 symbol,
                 companyName,
-                financialData,
+                financialData: filteredFinancialData,
                 stockPriceData: null, // We don't need stock price data for the summary
                 companyInfo
             };
@@ -149,7 +167,7 @@
         }
     }
 
-    function setPeriod(newPeriod: 'annual' | 'quarterly' | 'ttm') {
+    function setPeriod(newPeriod: FinancialPeriod) {
         period = newPeriod;
         dispatch('periodChange', { period: newPeriod });
     }
@@ -226,14 +244,14 @@
             <div class="flex flex-wrap items-center gap-2">
                 <div class="flex items-center gap-2 border-r dark:border-gray-600 pr-2 mr-2">
                     <button 
-                        class="px-3 py-1 text-sm rounded transition-colors duration-300 {period === 'annual' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700'}"
-                        on:click={() => setPeriod('annual')}>Annual</button>
+                        class="px-3 py-1 text-sm rounded transition-colors duration-300 {period === 'FY' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700'}"
+                        on:click={() => setPeriod('FY')}>Annual</button>
                     <button 
-                        class="px-3 py-1 text-sm rounded transition-colors duration-300 {period === 'quarterly' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700'}"
-                        on:click={() => setPeriod('quarterly')}>Quarterly</button>
+                        class="px-3 py-1 text-sm rounded transition-colors duration-300 {period === 'Q1' || period === 'Q2' || period === 'Q3' || period === 'Q4' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700'}"
+                        on:click={() => setPeriod('Q1')}>Quarterly</button>
                     <button 
-                        class="px-3 py-1 text-sm rounded transition-colors duration-300 {period === 'ttm' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700'}"
-                        on:click={() => setPeriod('ttm')}>TTM</button>
+                        class="px-3 py-1 text-sm rounded transition-colors duration-300 {period === 'TTM' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700'}"
+                        on:click={() => setPeriod('TTM')}>TTM</button>
                 </div>
                 <div class="flex items-center gap-2">
                     <button 

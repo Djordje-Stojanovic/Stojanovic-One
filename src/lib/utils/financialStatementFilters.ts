@@ -44,7 +44,7 @@ function calculateTTM(statements: FinancialStatement[]): FinancialStatement[] {
     }
 
     return ttmStatements.sort((a, b) => 
-        new Date(a.date).getTime() - new Date(b.date).getTime()
+        new Date(b.date).getTime() - new Date(a.date).getTime()
     );
 }
 
@@ -88,7 +88,7 @@ function calculateSegmentsTTM<T extends RevenueSegment | RevenueGeoSegment>(segm
     }
 
     return ttmSegments.sort((a, b) => 
-        new Date(a.date).getTime() - new Date(b.date).getTime()
+        new Date(b.date).getTime() - new Date(a.date).getTime()
     );
 }
 
@@ -121,9 +121,7 @@ function filterSegments<T extends RevenueSegment | RevenueGeoSegment>(
     const limit = period === 'annual' ? years : years * 4;
     const filtered = sorted.slice(0, limit);
     
-    return filtered.sort((a, b) => 
-        new Date(a.date).getTime() - new Date(b.date).getTime()
-    );
+    return filtered;
 }
 
 export function filterFinancialStatementsByPeriod(
@@ -141,7 +139,7 @@ export function filterFinancialStatementsByPeriod(
             }
         } else {
             periodFiltered = statements.filter(stmt => 
-                period === 'annual' ? stmt.period === 'FY' : (stmt.period !== 'FY' && stmt.period !== 'TTM')
+                period === 'annual' ? stmt.period === 'FY' : stmt.period !== 'FY'
             );
         }
 
@@ -154,9 +152,7 @@ export function filterFinancialStatementsByPeriod(
         const limit = period === 'annual' ? years : years * 4;
         const filtered = sorted.slice(0, limit);
         
-        return filtered.sort((a, b) => 
-            new Date(a.date).getTime() - new Date(b.date).getTime()
-        );
+        return filtered;
     };
 
     return {

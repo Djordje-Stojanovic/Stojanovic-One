@@ -3,7 +3,7 @@
     import { onMount } from 'svelte';
     import { session } from '$lib/stores/sessionStore';
     import type { NumberFormat } from '$lib/utils/numberFormat';
-    import type { FinancialData } from '$lib/types/financialStatements';
+    import type { FinancialData, FinancialPeriod } from '$lib/types/financialStatements';
     import type { ListName } from '$lib/constants/listNames';
     import { loadFinancialPageData, loadStockPriceData } from '$lib/services/financialPageService';
     import { getHistoricalPrices } from '$lib/services/stockPriceService';
@@ -38,7 +38,7 @@
     let activeTab: 'income' | 'balance' | 'cashflow' | 'segments' | 'geo_segments' = 'income';
     let companyName: string | null = null;
     let companyList: ListName | null = null;
-    let selectedPeriod: 'annual' | 'quarterly' | 'ttm' = loadSelectedPeriod();
+    let selectedPeriod: 'annual' | 'quarterly' | 'ttm' = 'annual';
 
     async function loadData(forceRefresh = false) {
         if (!$session) return;
