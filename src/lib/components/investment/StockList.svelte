@@ -150,7 +150,7 @@
                                         </tr>
                                     </thead>
                                     <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-900 dark:divide-gray-700">
-                                        <VirtualList items={stocksByList[listName]} let:item={userStock} itemHeight={48}>
+                                        {#each stocksByList[listName] as userStock}
                                             {#if userStock.metadata}
                                                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-150">
                                                     <td class="px-3 py-2 whitespace-nowrap">
@@ -215,7 +215,7 @@
                                                     </td>
                                                 </tr>
                                             {/if}
-                                        </VirtualList>
+                                        {/each}
                                     </tbody>
                                 </table>
                             </div>
