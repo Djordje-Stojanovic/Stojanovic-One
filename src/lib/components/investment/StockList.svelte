@@ -7,6 +7,7 @@
     import type { UserStock } from '$lib/types';
     import { goto } from '$app/navigation';
     import StockPageButton from '../StockPageButton.svelte';
+    import VirtualList from '@sveltejs/svelte-virtual-list';
 
     export let isCompactView: boolean;
 
@@ -117,7 +118,7 @@
                                         </tr>
                                     </thead>
                                     <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-900 dark:divide-gray-700">
-                                        {#each stocksByList[listName] as userStock (userStock.id)}
+                                        <VirtualList items={stocksByList[listName]} let:item={userStock} itemHeight={48}>
                                             {#if userStock.metadata}
                                                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-150">
                                                     <td class="px-3 py-2 whitespace-nowrap">
@@ -182,7 +183,7 @@
                                                     </td>
                                                 </tr>
                                             {/if}
-                                        {/each}
+                                        </VirtualList>
                                     </tbody>
                                 </table>
                             </div>
@@ -210,15 +211,12 @@
                             {stocksByList[listName].length} {stocksByList[listName].length === 1 ? 'stock' : 'stocks'}
                         </span>
                     </div>
-                    <div class="space-y-4 h-[calc(100vh-36rem)] overflow-y-auto pr-2">
-                        {#each stocksByList[listName] as userStock (userStock.id)}
-                            <div 
-                                role="listitem"
-                                class="transform transition-transform duration-300 hover:-translate-y-1"
-                            >
+                    <div class="h-[calc(100vh-36rem)] overflow-y-auto pr-2">
+                        <VirtualList items={stocksByList[listName]} let:item={userStock} itemHeight={180}>
+                            <div class="mb-4">
                                 <StockItem
                                     item={userStock.metadata}
-                                    userStock={userStock}
+                                    {userStock}
                                     on:moveItem={({ detail }) => investmentStore.moveStock(detail.stockId, detail.newListName)}
                                     on:deleteItem={handleDeleteItem}
                                     on:dragStart={(e) => investmentStore.setDragSourceList(e.detail)}
@@ -228,7 +226,7 @@
                                     }}
                                 />
                             </div>
-                        {/each}
+                        </VirtualList>
                     </div>
                 </div>
             {/each}

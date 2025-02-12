@@ -45,6 +45,7 @@
 	"type": "module",
 	"dependencies": {
 		"@supabase/supabase-js": "^2.45.2",
+		"@sveltejs/svelte-virtual-list": "^3.0.1",
 		"@types/pdfjs-dist": "^2.10.377",
 		"chart.js": "^4.4.6",
 		"chartjs-adapter-date-fns": "^3.0.0",
