@@ -206,6 +206,21 @@ export const POST: RequestHandler = async ({ request }) => {
             // Use existing stock metadata
             stockMetadataId = existingStock.id;
             symbol = existingStock.symbol;
+
+            // Check if user already has this stock in any list
+            const { data: existingUserStock } = await db
+                .from('user_stocks')
+                .select('list_name')
+                .eq('user_id', user.id)
+                .eq('stock_metadata_id', stockMetadataId)
+                .single();
+
+            if (existingUserStock) {
+                return json({ 
+                    error: `${symbol} is already in your ${existingUserStock.list_name} list`,
+                    code: 'DUPLICATE_ENTRY'
+                }, { status: 409 });
+            }
         } else {
             // Fetch stock data from Financial Modeling Prep
             const fmpResponse = await fetch(
@@ -260,8 +275,16 @@ export const POST: RequestHandler = async ({ request }) => {
         if (userStockError) {
             // Check for unique constraint violation
             if (userStockError.code === '23505') {
+                // Get the list where the stock currently exists
+                const { data: existingStock } = await db
+                    .from('user_stocks')
+                    .select('list_name')
+                    .eq('user_id', user.id)
+                    .eq('stock_metadata_id', stockMetadataId)
+                    .single();
+
                 return json({ 
-                    error: `This stock is already in your ${listName} list`,
+                    error: `${symbol} is already in your ${existingStock?.list_name} list`,
                     code: 'DUPLICATE_ENTRY'
                 }, { status: 409 });
             }

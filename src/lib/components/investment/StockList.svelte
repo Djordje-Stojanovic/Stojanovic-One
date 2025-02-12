@@ -10,6 +10,7 @@
     import VirtualList from '@sveltejs/svelte-virtual-list';
 
     export let isCompactView: boolean;
+    let searchQuery = '';
 
     function handleDragOver(e: DragEvent, listName: ListName) {
         e.preventDefault();
@@ -72,8 +73,18 @@
         goto(`/subprojects/investment-analysis-platform/${listName.toLowerCase()}/${symbol.toLowerCase()}`);
     }
 
+    function filterStocks(stocks: UserStock[], query: string): UserStock[] {
+        if (!query) return stocks;
+        const lowerQuery = query.toLowerCase();
+        return stocks.filter(stock => 
+            stock.metadata?.symbol.toLowerCase().includes(lowerQuery) ||
+            stock.metadata?.company_name.toLowerCase().includes(lowerQuery)
+        );
+    }
+
     $: stocksByList = listNames.reduce((acc, listName) => {
-        acc[listName] = $investmentStore.stocks.filter(stock => stock.list_name === listName);
+        const stocks = $investmentStore.stocks.filter(stock => stock.list_name === listName);
+        acc[listName] = filterStocks(stocks, searchQuery);
         return acc;
     }, {} as Record<ListName, UserStock[]>);
 
@@ -93,6 +104,27 @@
         No stocks added yet. Click "Add Stock" to get started.
     </div>
 {:else}
+    <div class="mb-4">
+        <div class="relative">
+            <input
+                type="text"
+                bind:value={searchQuery}
+                placeholder="Search stocks by symbol or company name..."
+                class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-300"
+            />
+            {#if searchQuery}
+                <button
+                    class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                    on:click={() => searchQuery = ''}
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            {/if}
+        </div>
+    </div>
+
     {#if isCompactView}
         <!-- Table View -->
         <div class="grid grid-cols-1 gap-6">
