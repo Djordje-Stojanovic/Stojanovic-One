@@ -1,4 +1,4 @@
-import { json } from '@sveltejs/kit';
+    import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { supabase, db } from '$lib/supabaseClient';
 import { FMP_API_KEY } from '$env/static/private';

@@ -190,6 +190,7 @@
       {industries}
       {exchanges}
       {countries}
+      {stocks}
     />
 
     <StockTable

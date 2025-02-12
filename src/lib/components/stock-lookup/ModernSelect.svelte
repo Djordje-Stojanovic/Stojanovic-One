@@ -2,6 +2,7 @@
   export let value: string = '';
   export let options: { value: string; label: string }[] = [];
   export let placeholder = '';
+  export let disabled = false;
 
   let isOpen = false;
   let containerRef: HTMLDivElement;
@@ -26,6 +27,12 @@
     }
   }
 
+  function toggleDropdown() {
+    if (!disabled) {
+      isOpen = !isOpen;
+    }
+  }
+
   $: selectedLabel = options.find(opt => opt.value === value)?.label || placeholder;
 </script>
 
@@ -34,10 +41,11 @@
 <div class="relative" bind:this={containerRef}>
   <button
     type="button"
-    class="w-full px-4 py-3 rounded-[0.375rem] bg-[#1F2937] text-[#F9FAFB] border border-[#4B5563] focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-[#3B82F6] transition-colors duration-200 text-left flex items-center justify-between"
-    on:click={() => isOpen = !isOpen}
+    class="w-full px-4 py-3 rounded-[0.375rem] bg-[#1F2937] text-[#F9FAFB] border border-[#4B5563] focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-[#3B82F6] transition-colors duration-200 text-left flex items-center justify-between {disabled ? 'opacity-50 cursor-not-allowed' : ''}"
+    on:click={toggleDropdown}
     aria-haspopup="listbox"
     aria-expanded={isOpen}
+    {disabled}
   >
     <span>{selectedLabel}</span>
     <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -45,7 +53,7 @@
     </svg>
   </button>
 
-  {#if isOpen}
+  {#if isOpen && !disabled}
     <div 
       class="absolute z-50 w-full mt-1 bg-[#1F2937] border border-[#4B5563] rounded-[0.375rem] shadow-lg max-h-60 overflow-y-auto"
       role="listbox"

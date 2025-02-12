@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 declare module '@sveltejs/svelte-virtual-list' {
     import { SvelteComponentTyped } from 'svelte';
 

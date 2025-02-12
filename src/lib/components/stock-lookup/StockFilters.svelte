@@ -14,6 +14,7 @@
   export let industries: string[] = [];
   export let exchanges: string[] = [];
   export let countries: string[] = [];
+  export let stocks: Array<{ sector: string; industry: string }> = [];
 
   const marketCapOptions = [
     { value: '', label: 'All Market Caps' },
@@ -29,10 +30,26 @@
     ...sectors.map(sector => ({ value: sector, label: sector }))
   ];
 
+  // Filter industries based on selected sector
+  $: availableIndustries = sectorFilter
+    ? [...new Set(stocks
+        .filter(stock => stock.sector === sectorFilter)
+        .map(stock => stock.industry)
+        .filter(Boolean))]
+        .sort()
+    : industries;
+
   $: industryOptions = [
     { value: '', label: 'All Industries' },
-    ...industries.map(industry => ({ value: industry, label: industry }))
+    ...availableIndustries.map(industry => ({ value: industry, label: industry }))
   ];
+
+  // Reset industry filter when sector changes
+  $: if (sectorFilter) {
+    if (!availableIndustries.includes(industryFilter)) {
+      industryFilter = '';
+    }
+  }
 
   $: exchangeOptions = [
     { value: '', label: 'All Exchanges' },
@@ -70,6 +87,7 @@
       bind:value={industryFilter}
       options={industryOptions}
       placeholder="All Industries"
+      disabled={!sectorFilter}
     />
     
     <ModernSelect
