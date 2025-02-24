@@ -1,6 +1,7 @@
 <script lang="ts">
     import { createEventDispatcher } from 'svelte';
     import { formatCurrency, formatNumber } from '$lib/utils/numberFormat';
+    import VirtualList from '@sveltejs/svelte-virtual-list';
     
     export let loading = false;
     export let stockMetadata: any = null;
@@ -151,17 +152,19 @@
                         {#if sortedStatements.length > 0}
                             <div class="mt-6">
                                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">SEC Filings</h3>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                    {#each sortedStatements.slice(0, 10) as stmt}
-                                        <a
-                                            href={stmt.final_link}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 border rounded dark:border-gray-700"
-                                        >
-                                            {new Date(stmt.date).getFullYear()} {stmt.period} Report
-                                        </a>
-                                    {/each}
+                                <div class="max-h-[300px] overflow-y-auto pr-2">
+                                    <VirtualList items={sortedStatements} let:item={stmt} height="300px" itemHeight={50}>
+                                        <div class="py-1">
+                                            <a
+                                                href={stmt.final_link}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 border rounded dark:border-gray-700"
+                                            >
+                                                {new Date(stmt.date).getFullYear()} {stmt.period} Report
+                                            </a>
+                                        </div>
+                                    </VirtualList>
                                 </div>
                             </div>
                         {/if}
