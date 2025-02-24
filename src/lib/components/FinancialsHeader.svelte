@@ -4,8 +4,10 @@
     import type { FinancialData } from '$lib/types/financialStatements';
     import { generateAIPrompt } from '$lib/utils/ai-prompt';
     import AISummaryModal from './AISummaryModal.svelte';
+    import CompanyInfoModal from './CompanyInfoModal.svelte';
     import ModelSelector from './ModelSelector.svelte';
     import { session } from '$lib/stores/sessionStore';
+    import { db } from '$lib/supabaseClient';
     export let symbol: string;
     export let companyName: string | null = null;
     export let loading: boolean = false;
@@ -18,6 +20,11 @@
     let showAISummary = false;
     let aiSummaryLoading = false;
     let aiSummaryText: string | null = null;
+    
+    let showCompanyInfo = false;
+    let companyInfoLoading = false;
+    let stockMetadata: any = null;
+    let incomeStatements: any[] = [];
     let selectedModel = 'amazon/nova-lite-v1';  // Start with lowest strength model
     const modelParams = {
         'amazon/nova-lite-v1': {
@@ -143,6 +150,48 @@
         showAISummary = false;
         aiSummaryText = null;
     }
+    
+    async function handleCompanyInfo() {
+        if (!$session) return;
+        
+        showCompanyInfo = true;
+        companyInfoLoading = true;
+        stockMetadata = null;
+        incomeStatements = [];
+
+        try {
+            // Get company info directly from the database
+            const { data: metadataData, error: metadataError } = await db
+                .from('stock_metadata')
+                .select('*')
+                .eq('symbol', symbol)
+                .single();
+            
+            if (metadataError) throw metadataError;
+            stockMetadata = metadataData;
+            
+            // Get income statements for SEC filings
+            const { data: statementsData, error: statementsError } = await db
+                .from('income_statements')
+                .select('*')
+                .eq('symbol', symbol)
+                .order('date', { ascending: false });
+            
+            if (statementsError) throw statementsError;
+            incomeStatements = statementsData || [];
+            
+        } catch (error) {
+            console.error('Error loading company info:', error);
+        } finally {
+            companyInfoLoading = false;
+        }
+    }
+    
+    function handleCloseCompanyInfo() {
+        showCompanyInfo = false;
+        stockMetadata = null;
+        incomeStatements = [];
+    }
 
     function handleSync() {
         dispatch('sync');
@@ -227,17 +276,30 @@
                             bind:selectedModel
                             on:change={handleModelChange}
                         />
-                        <button
-                            class="min-w-[150px] font-bold bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded text-sm transition-colors duration-300"
-                            on:click={handleAISummary}
-                        >
-                            <span class="flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
-                                </svg>
-                                AI Summary
-                            </span>
-                        </button>
+                        <div class="flex items-center gap-2">
+                            <button
+                                class="min-w-[150px] font-bold bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded text-sm transition-colors duration-300"
+                                on:click={handleAISummary}
+                            >
+                                <span class="flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
+                                    </svg>
+                                    AI Summary
+                                </span>
+                            </button>
+                            <button
+                                class="min-w-[150px] font-bold bg-cyan-500 hover:bg-cyan-600 text-white px-3 py-1 rounded text-sm transition-colors duration-300"
+                                on:click={handleCompanyInfo}
+                            >
+                                <span class="flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                    </svg>
+                                    Company Info
+                                </span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -299,5 +361,14 @@
         summary={aiSummaryText}
         {selectedModel}
         on:close={handleCloseSummary}
+    />
+{/if}
+
+{#if showCompanyInfo}
+    <CompanyInfoModal 
+        loading={companyInfoLoading}
+        {stockMetadata}
+        {incomeStatements}
+        on:close={handleCloseCompanyInfo}
     />
 {/if}
