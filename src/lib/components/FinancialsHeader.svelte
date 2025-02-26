@@ -90,6 +90,7 @@
             };
             
             const prompt = generateAIPrompt(promptData);
+            console.log('Generated Prompt:\n', prompt);
 
             const modelConfig = {
                 model: selectedModel,
@@ -107,6 +108,9 @@
                 stream: false,
                 ...modelParams[selectedModel as keyof typeof modelParams]
             };
+
+            console.log('Sending AI request with model:', selectedModel);
+            console.log('Model config:', modelConfig);
 
             const result = await fetch("/api/ai-summary", {
                 method: "POST",
