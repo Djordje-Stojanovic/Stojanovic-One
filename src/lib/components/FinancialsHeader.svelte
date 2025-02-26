@@ -26,23 +26,16 @@
     let companyInfoLoading = false;
     let stockMetadata: any = null;
     let incomeStatements: any[] = [];
-    let selectedModel = 'amazon/nova-lite-v1';
+    let selectedModel = 'anthropic/claude-3.7-sonnet';
     const modelParams = {
-        'amazon/nova-lite-v1': {
-            top_p: 1,
-            repetition_penalty: 1
-        },
-        'deepseek/deepseek-r1-distill-qwen-32b': {
-            top_p: 1,
-            temperature: 0.7
-        },
-        'google/gemini-2.0-flash-001': {
-            top_p: 1,
-            temperature: 0.7
-        },
-        'google/gemini-2.0-pro-exp-02-05:free': {
+        'anthropic/claude-3.7-sonnet': {
             temperature: 0.7,
             top_p: 1
+        },
+        'deepseek/deepseek-r1': {
+            temperature: 0.85,
+            top_p: 1,
+            repetition_penalty: 1
         },
         'google/gemini-2.0-flash-thinking-exp:free': {
             temperature: 0.7,
@@ -110,8 +103,7 @@
                         "content": prompt
                     }
                 ],
-                temperature: 0.7,
-                max_tokens: 8192,
+                max_tokens: 16384,
                 stream: false,
                 ...modelParams[selectedModel as keyof typeof modelParams]
             };

@@ -1,30 +1,20 @@
 <script lang="ts">
     import { createEventDispatcher } from 'svelte';
 
-    export let selectedModel = 'amazon/nova-lite-v1';
+    export let selectedModel = 'anthropic/claude-3.7-sonnet';
 
     const dispatch = createEventDispatcher();
 
     const models = [
         {
-            name: 'Amazon Nova Lite',
-            id: 'amazon/nova-lite-v1',
-            description: 'Low-cost multimodal model for text and images'
+            name: 'Claude 3.7 Sonnet',
+            id: 'anthropic/claude-3.7-sonnet',
+            description: 'Advanced LLM with improved reasoning, coding, and problem-solving capabilities'
         },
         {
-            name: 'DeepSeek R1 Distill',
-            id: 'deepseek/deepseek-r1-distill-qwen-32b',
-            description: 'Distilled 32B model outperforming OpenAI o1-mini across benchmarks'
-        },
-        {
-            name: 'Gemini Flash 2.0',
-            id: 'google/gemini-2.0-flash-001',
-            description: 'Fast TTFT with quality on par with larger models'
-        },
-        {
-            name: 'Gemini 2.0 Pro',
-            id: 'google/gemini-2.0-pro-exp-02-05:free',
-            description: 'Improved quality, especially for world knowledge, code, and long context'
+            name: 'DeepSeek R1',
+            id: 'deepseek/deepseek-r1',
+            description: 'Performance on par with OpenAI o1, but open-sourced with fully open reasoning tokens. MIT licensed.'
         },
         {
             name: 'Gemini 2.0 Flash Thinking',
