@@ -22,6 +22,8 @@
                 return '#DC2626'; // Red-600
             case 'P/Tangible B':
                 return '#DB2777'; // Pink-600
+            case 'P/Operating Income':
+                return '#7C3AED'; // Violet-600
             default:
                 return '#6B7280'; // Gray
         }
@@ -34,7 +36,7 @@
     let selectedYears = loadSelectedYears();
     let priceMetric = $chartStore.selectedMetrics.find(m => m.name === 'Stock Price');
     let valuationMetrics = $chartStore.selectedMetrics.filter(m => 
-        ['P/E Ratio', 'FCF Yield', 'P/S Ratio', 'EV/EBITDA', 'P/GP Ratio', 'P/B Ratio', 'P/Tangible B'].includes(m.name)
+        ['P/E Ratio', 'FCF Yield', 'P/S Ratio', 'EV/EBITDA', 'P/GP Ratio', 'P/B Ratio', 'P/Tangible B', 'P/Operating Income'].includes(m.name)
     );
 
     // Deduplicate data points by date for each metrics
@@ -64,6 +66,7 @@
             if (m.name === 'P/GP Ratio') chartStore.toggleValuationMetric('pgp');
             if (m.name === 'P/B Ratio') chartStore.toggleValuationMetric('pb');
             if (m.name === 'P/Tangible B') chartStore.toggleValuationMetric('ptb');
+            if (m.name === 'P/Operating Income') chartStore.toggleValuationMetric('poi');
         });
     }
 
@@ -225,7 +228,7 @@
         selectedYears = loadSelectedYears();
         priceMetric = $chartStore.selectedMetrics.find(m => m.name === 'Stock Price');
         valuationMetrics = $chartStore.selectedMetrics.filter(m => 
-            ['P/E Ratio', 'FCF Yield', 'P/S Ratio', 'EV/EBITDA', 'P/GP Ratio', 'P/B Ratio', 'P/Tangible B'].includes(m.name) && !m.hidden
+            ['P/E Ratio', 'FCF Yield', 'P/S Ratio', 'EV/EBITDA', 'P/GP Ratio', 'P/B Ratio', 'P/Tangible B', 'P/Operating Income'].includes(m.name) && !m.hidden
         );
         if (priceMetric?.data.length || valuationMetrics.length > 0) {
             updateChart();

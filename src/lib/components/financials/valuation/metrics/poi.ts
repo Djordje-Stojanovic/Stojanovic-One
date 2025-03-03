@@ -7,7 +7,7 @@ interface StockPrice {
 }
 
 export function calculatePOIRatio(prices: StockPrice[], financialData: FinancialData) {
-    if (!prices?.length || !financialData?.income_statements.length) {
+    if (!prices?.length || !financialData?.income_statements.length || !financialData.income_statements[0]?.weighted_average_shs_out) {
         throw new Error('No data available');
     }
 
@@ -46,14 +46,16 @@ export function calculatePOIRatio(prices: StockPrice[], financialData: Financial
 
         // Only calculate P/Operating Income if we have valid Operating Income (non-zero and positive)
         if (validOperatingIncome?.operating_income && validOperatingIncome.operating_income > 0) {
-            // Calculate market cap (price * shares outstanding)
-            // For P/Operating Income, we divide market cap by operating income
-            // Since we don't have shares outstanding directly, we'll use price / operating income per share
-            // We can approximate this by using the same approach as P/E ratio but with operating income
-            const poiRatio = price.adj_close / (validOperatingIncome.operating_income / 1000000); // Assuming operating_income is in millions
+            // Calculate operating income per share using the most recent shares outstanding
+            // This is a simplification but provides consistent results
+            const operatingIncomePerShare = validOperatingIncome.operating_income / 
+                financialData.income_statements[0].weighted_average_shs_out;
             
-            // Filter out unreasonable ratios (e.g., > 1000)
-            if (poiRatio > 0 && poiRatio < 1000) {
+            // Calculate P/Operating Income ratio
+            const poiRatio = price.adj_close / operatingIncomePerShare;
+            
+            // Filter out unreasonable ratios
+            if (poiRatio > 0 && poiRatio < 100) {
                 return {
                     date: price.date,
                     value: poiRatio
