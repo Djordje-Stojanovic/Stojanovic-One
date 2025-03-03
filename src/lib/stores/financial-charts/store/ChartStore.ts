@@ -45,7 +45,8 @@ function createChartStore(): ChartStoreActions {
             evEbitda: false,
             pgp: false,
             pb: false,
-            ptb: false
+            ptb: false,
+            poi: false
         },
         lastFinancialData: null,
         metricVisibility: {}
@@ -178,7 +179,8 @@ function createChartStore(): ChartStoreActions {
                     evEbitda: false,
                     pgp: false,
                     pb: false,
-                    ptb: false
+                    ptb: false,
+                    poi: false
                 },
                 metricVisibility: {}
             };

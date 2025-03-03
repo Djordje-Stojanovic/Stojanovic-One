@@ -8,13 +8,14 @@
     import { loadSelectedYears, loadSelectedPeriod } from '../state/chartState';
     import { getHistoricalPrices } from '$lib/services/stockPriceService';
     import { metricConfigs } from './config';
-    import { calculatePERatio } from './metrics/peRatio';
-    import { calculateFCFYield } from './metrics/fcfYield';
-    import { calculatePSRatio } from './metrics/psRatio';
-    import { calculateEVEBITDA } from './metrics/evEbitda';
-    import { calculatePGPRatio } from './metrics/pgpRatio';
-    import { calculatePBRatio } from './metrics/pb';
-    import { calculatePTBRatio } from './metrics/ptb';
+import { calculatePERatio } from './metrics/peRatio';
+import { calculateFCFYield } from './metrics/fcfYield';
+import { calculatePSRatio } from './metrics/psRatio';
+import { calculateEVEBITDA } from './metrics/evEbitda';
+import { calculatePGPRatio } from './metrics/pgpRatio';
+import { calculatePBRatio } from './metrics/pb';
+import { calculatePTBRatio } from './metrics/ptb';
+import { calculatePOIRatio } from './metrics/poi';
 
     let symbol = $page.params.symbol;
     let loadingMetric: ValuationMetricType | null = null;
@@ -28,7 +29,8 @@
         evEbitda: false,
         pgp: false,
         pb: false,
-        ptb: false
+        ptb: false,
+        poi: false
     };
     export let financialData: FinancialData;
 
@@ -41,7 +43,8 @@
         evEbitda: calculateEVEBITDA,
         pgp: calculatePGPRatio,
         pb: calculatePBRatio,
-        ptb: calculatePTBRatio
+        ptb: calculatePTBRatio,
+        poi: calculatePOIRatio
     };
 
     function isValuationMetricType(type: string): type is ValuationMetricType {

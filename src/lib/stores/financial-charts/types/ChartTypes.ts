@@ -13,7 +13,7 @@ export interface ChartDataPoint {
 
 export type MarginType = 'netIncome' | 'grossProfit' | 'operating' | 'ebitda' | 'fcf' | 'operatingCashFlow';
 export type ReturnMetricType = 'roic' | 'roce' | 'roe' | 'roa';
-export type ValuationMetricType = 'pe' | 'fcfYield' | 'ps' | 'evEbitda' | 'pgp' | 'pb' | 'ptb';
+export type ValuationMetricType = 'pe' | 'fcfYield' | 'ps' | 'evEbitda' | 'pgp' | 'pb' | 'ptb' | 'poi';
 
 export interface MarginState {
     [key: string]: boolean;
@@ -42,6 +42,7 @@ export interface ValuationMetricState {
     pgp: boolean;
     pb: boolean;
     ptb: boolean;
+    poi: boolean;
 }
 
 export interface ChartStoreState {

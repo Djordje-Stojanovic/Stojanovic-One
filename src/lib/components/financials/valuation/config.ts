@@ -35,5 +35,10 @@ export const metricConfigs: Record<string, ValuationMetricConfig> = {
         name: 'P/Tangible B',
         color: 'rgb(219, 39, 119)', // Pink-600
         bgColor: 'rgba(219, 39, 119, 0.1)'
+    },
+    poi: {
+        name: 'P/Operating Income',
+        color: 'rgb(124, 58, 237)', // Violet-600
+        bgColor: 'rgba(124, 58, 237, 0.1)'
     }
 };

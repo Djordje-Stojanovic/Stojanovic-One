@@ -8,7 +8,8 @@ const VALUATION_METRIC_NAMES: Record<ValuationMetricType, string> = {
     evEbitda: 'EV/EBITDA',
     pgp: 'P/GP Ratio',
     pb: 'P/B Ratio',
-    ptb: 'P/Tangible B'
+    ptb: 'P/Tangible B',
+    poi: 'P/Operating Income'
 };
 
 export function handleValuationToggle(
