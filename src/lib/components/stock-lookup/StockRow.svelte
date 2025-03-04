@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { StockMetadata, UserStock } from './Types';
-  import { formatMarketCap } from './Types';
+  import { formatMarketCap, formatPERatio } from './Types';
   import AddToWatchlistButton from './AddToWatchlistButton.svelte';
 
   export let stock: StockMetadata;
@@ -56,6 +56,7 @@
   <td class="py-4 px-4 text-[#F9FAFB] border-l border-[#374151]">{stock.sector || 'N/A'}</td>
   <td class="py-4 px-4 text-[#F9FAFB] border-l border-[#374151]">{stock.industry || 'N/A'}</td>
   <td class="py-4 px-4 text-[#F9FAFB] border-l border-[#374151]">{formatMarketCap(stock.market_cap)}</td>
+  <td class="py-4 px-4 text-[#F9FAFB] border-l border-[#374151]">{formatPERatio(stock.pe_ratio)}</td>
   <td class="py-4 px-4 text-[#F9FAFB] border-l border-[#374151]">
     {#if stock.country}
       <div class="flex items-center">

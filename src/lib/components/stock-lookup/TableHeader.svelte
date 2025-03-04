@@ -47,6 +47,12 @@
     </th>
     <th 
       class="text-left py-4 px-4 text-[#60A5FA] font-semibold border-l border-[#374151] cursor-pointer hover:text-blue-400"
+      on:click={() => dispatch('sort', 'pe_ratio')}
+    >
+      P/E Ratio {getSortIcon('pe_ratio')}
+    </th>
+    <th 
+      class="text-left py-4 px-4 text-[#60A5FA] font-semibold border-l border-[#374151] cursor-pointer hover:text-blue-400"
       on:click={() => dispatch('sort', 'country')}
     >
       Country {getSortIcon('country')}

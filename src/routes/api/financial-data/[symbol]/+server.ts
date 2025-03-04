@@ -6,6 +6,59 @@ import { getExistingData, upsertFinancialData, upsertRevenueSegments, upsertReve
 import { FMP_API_KEY } from '$env/static/private';
 import { getExchangeRate, convertToUSD } from '$lib/utils/currencyConverter';
 import { db } from '$lib/supabaseClient';
+import type { IncomeStatement } from '$lib/types/financialStatements';
+
+// Function to calculate the latest P/E Ratio using Market Cap / Net Income
+async function calculateLatestPERatio(incomeStatements: IncomeStatement[], stockData: { market_cap: number; currency?: string }): Promise<number | undefined> {
+    if (!incomeStatements?.length || !stockData?.market_cap) return undefined;
+    
+    const marketCap = stockData.market_cap;
+    
+    // Sort statements by date (newest first)
+    const sortedStatements = [...incomeStatements].sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+    
+    // Method 1: Use TTM data first (priority)
+    const ttmStatement = sortedStatements.find(stmt => stmt.period === 'TTM');
+    
+    if (ttmStatement?.net_income && ttmStatement.net_income > 0) {
+        const peRatio = marketCap / ttmStatement.net_income;
+        if (peRatio > 0) {
+            return peRatio;
+        }
+    }
+    
+    // Method 2: Sum the latest 4 quarters if TTM not found
+    const quarterlyStatements = sortedStatements.filter(
+        stmt => ['Q1', 'Q2', 'Q3', 'Q4'].includes(stmt.period)
+    ).slice(0, 4);
+    
+    if (quarterlyStatements.length === 4) {
+        const ttmNetIncome = quarterlyStatements.reduce((sum, stmt) => {
+            return sum + (stmt.net_income || 0);
+        }, 0);
+        
+        if (ttmNetIncome > 0) {
+            const peRatio = marketCap / ttmNetIncome;
+            if (peRatio > 0) {
+                return peRatio;
+            }
+        }
+    }
+    
+    // Method 3: Use annual data as last resort
+    const latestAnnual = sortedStatements.find(stmt => stmt.period === 'FY');
+    
+    if (latestAnnual?.net_income && latestAnnual.net_income > 0) {
+        const peRatio = marketCap / latestAnnual.net_income;
+        if (peRatio > 0) {
+            return peRatio;
+        }
+    }
+    
+    return undefined;
+}
 
 interface FMPStockData {
     symbol: string;
@@ -145,7 +198,7 @@ export const GET = (async ({ params, url }) => {
         // First try to get existing data from database
         const existingData = await getExistingData(symbol);
         
-        // If we have data and no force refresh, return it immediately
+        // If we have data and no force refresh, calculate P/E Ratio and return
         if (!forceRefresh && (
             existingData.income_statements.length || 
             existingData.balance_sheets.length || 
@@ -153,6 +206,28 @@ export const GET = (async ({ params, url }) => {
             existingData.revenue_segments.length ||
             existingData.revenue_geo_segments?.length
         )) {
+            // Get stock metadata to calculate P/E Ratio
+            const { data: stockData, error: stockError } = await db
+                .from('stock_metadata')
+                .select('*')
+                .eq('symbol', symbol)
+                .single();
+            
+            if (!stockError && stockData && stockData.price && existingData.income_statements.length > 0) {
+                // No need to handle currency conversion here as we're using market cap directly
+                
+                // Calculate P/E Ratio with the stock data
+                const peRatio = await calculateLatestPERatio(existingData.income_statements, stockData);
+                
+                if (peRatio) {
+                    // Update stock metadata with P/E Ratio
+                    await db
+                        .from('stock_metadata')
+                        .update({ pe_ratio: peRatio })
+                        .eq('symbol', symbol);
+                }
+            }
+            
             return json({
                 success: true,
                 data: existingData
@@ -260,6 +335,32 @@ export const GET = (async ({ params, url }) => {
 
         // Get final data after all upserts
         const finalData = await getExistingData(symbol);
+        
+        // Calculate P/E Ratio and update stock metadata
+        if (finalData.income_statements.length > 0) {
+            // Get the latest stock price
+            const { data: stockData, error: stockError } = await db
+                .from('stock_metadata')
+                .select('*')
+                .eq('symbol', symbol)
+                .single();
+            
+            if (!stockError && stockData && stockData.price) {
+                // No need to convert price as we're using market cap directly
+                
+                // Only calculate P/E if we have valid data
+                if (stockData.market_cap > 0) {
+                    const peRatio = await calculateLatestPERatio(finalData.income_statements, stockData);
+                    
+                    if (peRatio) {
+                        await db
+                            .from('stock_metadata')
+                            .update({ pe_ratio: peRatio })
+                            .eq('symbol', symbol);
+                    }
+                }
+            }
+        }
 
         return json({
             success: true,

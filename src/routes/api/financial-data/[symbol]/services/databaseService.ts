@@ -37,10 +37,19 @@ export async function upsertFinancialData<T extends { symbol: string; date: stri
     }
 
     try {
+        // Deduplicate data based on symbol, date, period
+        const uniqueData = data.reduce((acc, curr) => {
+            const key = `${curr.symbol}-${curr.date}-${curr.period}`;
+            if (!acc.has(key)) {
+                acc.set(key, curr);
+            }
+            return acc;
+        }, new Map<string, T>());
+
         const query = db
             .from(tableName)
-            .upsert(data, {
-                onConflict: 'symbol,date,period'  // Removed ignoreDuplicates: true to allow updates
+            .upsert([...uniqueData.values()], {
+                onConflict: 'symbol,date,period'
             });
 
         if (returnData) {
@@ -67,12 +76,30 @@ export async function upsertRevenueSegments(
     symbol: string
 ): Promise<RevenueSegment[]> {
     try {
+        // Deduplicate annual data based on symbol, date, period
+        const uniqueAnnualData = annualData.reduce((acc, curr) => {
+            const key = `${curr.symbol}-${curr.date}-${curr.period}`;
+            if (!acc.has(key)) {
+                acc.set(key, curr);
+            }
+            return acc;
+        }, new Map<string, RevenueSegment>());
+
+        // Deduplicate quarterly data based on symbol, date, period
+        const uniqueQuarterlyData = quarterlyData.reduce((acc, curr) => {
+            const key = `${curr.symbol}-${curr.date}-${curr.period}`;
+            if (!acc.has(key)) {
+                acc.set(key, curr);
+            }
+            return acc;
+        }, new Map<string, RevenueSegment>());
+
         // Insert annual data
-        if (annualData.length > 0) {
+        if (uniqueAnnualData.size > 0) {
             const { error: annualError } = await db
                 .from('revenue_segments')
-                .upsert(annualData, {
-                    onConflict: 'symbol,date,period'  // Removed ignoreDuplicates: true
+                .upsert([...uniqueAnnualData.values()], {
+                    onConflict: 'symbol,date,period'
                 })
                 .select();
 
@@ -83,11 +110,11 @@ export async function upsertRevenueSegments(
         }
 
         // Insert quarterly data
-        if (quarterlyData.length > 0) {
+        if (uniqueQuarterlyData.size > 0) {
             const { error: quarterlyError } = await db
                 .from('revenue_segments')
-                .upsert(quarterlyData, {
-                    onConflict: 'symbol,date,period'  // Removed ignoreDuplicates: true
+                .upsert([...uniqueQuarterlyData.values()], {
+                    onConflict: 'symbol,date,period'
                 })
                 .select();
 
@@ -122,12 +149,30 @@ export async function upsertRevenueGeoSegments(
     symbol: string
 ): Promise<RevenueGeoSegment[]> {
     try {
+        // Deduplicate annual data based on symbol, date, period
+        const uniqueAnnualData = annualData.reduce((acc, curr) => {
+            const key = `${curr.symbol}-${curr.date}-${curr.period}`;
+            if (!acc.has(key)) {
+                acc.set(key, curr);
+            }
+            return acc;
+        }, new Map<string, RevenueGeoSegment>());
+
+        // Deduplicate quarterly data based on symbol, date, period
+        const uniqueQuarterlyData = quarterlyData.reduce((acc, curr) => {
+            const key = `${curr.symbol}-${curr.date}-${curr.period}`;
+            if (!acc.has(key)) {
+                acc.set(key, curr);
+            }
+            return acc;
+        }, new Map<string, RevenueGeoSegment>());
+
         // Insert annual data
-        if (annualData.length > 0) {
+        if (uniqueAnnualData.size > 0) {
             const { error: annualError } = await db
                 .from('revenue_geo_segments')
-                .upsert(annualData, {
-                    onConflict: 'symbol,date,period'  // Removed ignoreDuplicates: true
+                .upsert([...uniqueAnnualData.values()], {
+                    onConflict: 'symbol,date,period'
                 })
                 .select();
 
@@ -138,11 +183,11 @@ export async function upsertRevenueGeoSegments(
         }
 
         // Insert quarterly data
-        if (quarterlyData.length > 0) {
+        if (uniqueQuarterlyData.size > 0) {
             const { error: quarterlyError } = await db
                 .from('revenue_geo_segments')
-                .upsert(quarterlyData, {
-                    onConflict: 'symbol,date,period'  // Removed ignoreDuplicates: true
+                .upsert([...uniqueQuarterlyData.values()], {
+                    onConflict: 'symbol,date,period'
                 })
                 .select();
 
