@@ -12,6 +12,26 @@
     export let symbol: string;
     export let companyName: string | null = null;
     export let loading: boolean = false;
+    let wasLoading: boolean = false;
+    let syncSuccess: boolean = false;
+    let syncSuccessTimeout: ReturnType<typeof setTimeout> | null = null;
+    
+    // Watch for loading state changes
+    $: {
+        if (wasLoading && !loading) {
+            // Loading just finished
+            syncSuccess = true;
+            
+            // Clear success message after 3 seconds
+            if (syncSuccessTimeout) {
+                clearTimeout(syncSuccessTimeout);
+            }
+            syncSuccessTimeout = setTimeout(() => {
+                syncSuccess = false;
+            }, 3000);
+        }
+        wasLoading = loading;
+    }
     export let numberFormat: NumberFormat;
     export let selectedYears: number = 10;
     export let customYears: string = '';
@@ -182,6 +202,10 @@
     }
 
     function handleSync() {
+        // Reset success state
+        syncSuccess = false;
+        
+        // Dispatch sync event
         dispatch('sync');
     }
 
@@ -214,6 +238,40 @@
     }
 </script>
 
+<style>
+    /* Custom button active state styles */
+    .btn-with-active:active {
+        transform: scale(0.95);
+        transition: transform 0.1s;
+    }
+    
+    .blue-btn:active {
+        background-color: #1d4ed8 !important; /* blue-700 */
+    }
+    
+    .green-btn:active {
+        background-color: #15803d !important; /* green-700 */
+    }
+    
+    .purple-btn:active {
+        background-color: #7e22ce !important; /* purple-700 */
+    }
+    
+    .cyan-btn:active {
+        background-color: #0e7490 !important; /* cyan-700 */
+    }
+    
+    /* Success message animation */
+    @keyframes fadeIn {
+        0% { opacity: 0; transform: translateY(-10px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+    
+    .success-message {
+        animation: fadeIn 0.3s ease-out;
+    }
+</style>
+
 <!-- Main header matching the screenshot exactly -->
 <div class="bg-[#1F2937] p-4">
     <!-- Company title -->
@@ -226,30 +284,47 @@
     </h1>
     
     <!-- Main action buttons row -->
-    <div class="flex space-x-4 mb-4">
-        <!-- Sync Data button -->
-        <button 
-            class="bg-blue-500 hover:bg-blue-600 text-white rounded shadow-sm flex items-center justify-center transition-colors gap-2 px-4 py-2"
-            on:click={handleSync}
-            disabled={loading}
-        >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
-            </svg>
-            <span>Sync Data</span>
-        </button>
+    <div class="flex flex-col space-y-2 mb-4">
+        <div class="flex space-x-4">
+            <!-- Sync Data button -->
+            <button 
+                class="{loading ? 'bg-blue-400' : 'bg-blue-500 hover:bg-blue-600'} text-white rounded shadow-sm flex items-center justify-center transition-all duration-300 gap-2 px-4 py-2 btn-with-active blue-btn"
+                on:click={handleSync}
+                disabled={loading}
+            >
+                {#if loading}
+                    <div class="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                    <span>Syncing...</span>
+                {:else}
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+                    </svg>
+                    <span>Sync Data</span>
+                {/if}
+            </button>
 
-        <!-- Default View button -->
-        <button 
-            class="bg-green-500 hover:bg-green-600 text-white rounded shadow-sm flex items-center justify-center transition-colors gap-2 px-4 py-2"
-            on:click={handleDefaultView}
-        >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
-            </svg>
-            <span>Default View</span>
-        </button>
+            <!-- Default View button -->
+            <button 
+                class="bg-green-500 hover:bg-green-600 text-white rounded shadow-sm flex items-center justify-center transition-all duration-300 gap-2 px-4 py-2 btn-with-active green-btn"
+                on:click={handleDefaultView}
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                    <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+                </svg>
+                <span>Default View</span>
+            </button>
+        </div>
+        
+        <!-- Success message -->
+        {#if syncSuccess}
+            <div class="bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-100 px-4 py-2 rounded-md flex items-center success-message">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+                <span>Data synced successfully!</span>
+            </div>
+        {/if}
     </div>
 
     <!-- Period selection row -->
@@ -352,7 +427,7 @@
         <div class="flex space-x-2">
             <!-- AI Summary button -->
             <button 
-                class="bg-purple-500 hover:bg-purple-600 text-white rounded flex items-center justify-center transition-colors gap-2 px-4 py-2"
+                class="bg-purple-500 hover:bg-purple-600 text-white rounded flex items-center justify-center transition-all duration-300 gap-2 px-4 py-2 btn-with-active purple-btn"
                 on:click={handleAISummary}
             >
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -363,7 +438,7 @@
             
             <!-- Info button -->
             <button 
-                class="bg-cyan-500 hover:bg-cyan-600 text-white rounded flex items-center justify-center transition-colors gap-2 px-4 py-2"
+                class="bg-cyan-500 hover:bg-cyan-600 text-white rounded flex items-center justify-center transition-all duration-300 gap-2 px-4 py-2 btn-with-active cyan-btn"
                 on:click={handleCompanyInfo}
             >
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
