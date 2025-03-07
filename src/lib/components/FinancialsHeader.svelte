@@ -5,6 +5,7 @@
     import { generateAIPrompt } from '$lib/utils/ai-prompt';
     import AISummaryModal from './AISummaryModal.svelte';
     import CompanyInfoModal from './CompanyInfoModal.svelte';
+    import ValuationCalculatorModal from './financials/valuation/ValuationCalculatorModal.svelte';
     import ModelSelector from './ModelSelector.svelte';
     import { session } from '$lib/stores/sessionStore';
     import { db } from '$lib/supabaseClient';
@@ -47,6 +48,9 @@
     let stockMetadata: any = null;
     let incomeStatements: any[] = [];
     let selectedModel = 'anthropic/claude-3.7-sonnet';
+    
+    let showValuationCalculator = false;
+    let valuationCalculatorLoading = false;
     const modelParams = {
         'anthropic/claude-3.7-sonnet': {
             temperature: 0.7,
@@ -200,6 +204,32 @@
         stockMetadata = null;
         incomeStatements = [];
     }
+    
+    async function handleValuationCalculator() {
+        if (!$session) return;
+        
+        showValuationCalculator = true;
+        valuationCalculatorLoading = true;
+        
+        try {
+            const { data: metadataData, error: metadataError } = await db
+                .from('stock_metadata')
+                .select('*')
+                .eq('symbol', symbol)
+                .single();
+            
+            if (metadataError) throw metadataError;
+            stockMetadata = metadataData;
+        } catch (error) {
+            console.error('Error loading company info for valuation calculator:', error);
+        } finally {
+            valuationCalculatorLoading = false;
+        }
+    }
+    
+    function handleCloseValuationCalculator() {
+        showValuationCalculator = false;
+    }
 
     function handleSync() {
         // Reset success state
@@ -313,6 +343,17 @@
                     <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
                 </svg>
                 <span>Default View</span>
+            </button>
+            
+            <!-- Calculate Value button -->
+            <button 
+                class="bg-purple-500 hover:bg-purple-600 text-white rounded shadow-sm flex items-center justify-center transition-all duration-300 gap-2 px-4 py-2 btn-with-active purple-btn"
+                on:click={handleValuationCalculator}
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2H6zm1 2a1 1 0 000 2h6a1 1 0 100-2H7zm6 7a1 1 0 011 1v3a1 1 0 11-2 0v-3a1 1 0 011-1zm-3 3a1 1 0 100 2h.01a1 1 0 100-2H10zm-4 1a1 1 0 011-1h.01a1 1 0 110 2H7a1 1 0 01-1-1zm1-4a1 1 0 100 2h.01a1 1 0 100-2H7zm2 1a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1zm4-4a1 1 0 100 2h.01a1 1 0 100-2H13zM9 9a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1zM7 8a1 1 0 000 2h.01a1 1 0 000-2H7z" clip-rule="evenodd" />
+                </svg>
+                <span>Calculate Value</span>
             </button>
         </div>
         
@@ -466,5 +507,14 @@
         {stockMetadata}
         {incomeStatements}
         on:close={handleCloseCompanyInfo}
+    />
+{/if}
+
+{#if showValuationCalculator}
+    <ValuationCalculatorModal 
+        loading={valuationCalculatorLoading}
+        {financialData}
+        {stockMetadata}
+        on:close={handleCloseValuationCalculator}
     />
 {/if}
