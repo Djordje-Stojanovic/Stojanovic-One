@@ -27,7 +27,7 @@ export function convertToUSD(value: number | null, exchangeRate: number): number
 export function convertStatementToUSD(
     statement: Record<string, unknown>,
     exchangeRate: number,
-    excludeFields: string[] = ['eps', 'eps_diluted', 'ratio', 'date', 'symbol', 'reported_currency', 'cik', 'filling_date', 'accepted_date', 'calendar_year', 'period']
+    excludeFields: string[] = ['ratio', 'date', 'symbol', 'reported_currency', 'cik', 'filling_date', 'accepted_date', 'calendar_year', 'period']
 ): Record<string, unknown> {
     return Object.fromEntries(
         Object.entries(statement).map(([key, value]) => [

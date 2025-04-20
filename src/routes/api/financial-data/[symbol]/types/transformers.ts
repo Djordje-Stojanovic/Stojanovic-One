@@ -42,11 +42,11 @@ export function transformIncomeStatement(stmt: FMPIncomeStatement, symbol: strin
         income_before_tax_ratio: safeNumber(stmt.incomeBeforeTaxRatio),
         income_tax_expense: safeNumber(convertedStmt.incomeTaxExpense),
         net_income: safeNumber(convertedStmt.netIncome),
-        net_income_ratio: safeNumber(stmt.netIncomeRatio),
-        eps: safeNumber(stmt.eps),
-        eps_diluted: safeNumber(stmt.epsdiluted),
-        weighted_average_shs_out: safeNumber(stmt.weightedAverageShsOut),
-        weighted_average_shs_out_dil: safeNumber(stmt.weightedAverageShsOutDil)
+        net_income_ratio: safeNumber(stmt.netIncomeRatio), // Ratios should not be converted
+        eps: safeNumber(convertedStmt.eps), // Use converted value
+        eps_diluted: safeNumber(convertedStmt.epsdiluted), // Use converted value
+        weighted_average_shs_out: safeNumber(stmt.weightedAverageShsOut), // Shares outstanding should not be converted
+        weighted_average_shs_out_dil: safeNumber(stmt.weightedAverageShsOutDil) // Shares outstanding should not be converted
     };
 }
 
